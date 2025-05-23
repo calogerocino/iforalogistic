@@ -1,0 +1,18 @@
+.dashboard-home-container {
+  padding: 20px;
+  background-color: #fff; // Sfondo bianco per il contenuto se diverso da quello di page-content
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+  h1 {
+    font-size: 26px;
+    color: #2c3e50; // Stesso colore scuro della sidebar per coerenza
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  p {
+    font-size: 16px;
+    color: #555;
+    line-height: 1.6;
+  }
+}

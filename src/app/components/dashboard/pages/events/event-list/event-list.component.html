@@ -1,0 +1,70 @@
+<div class="event-list-page">
+  <header class="page-header">
+    <h1>Lista Eventi</h1>
+    <div class="actions-container">
+      <div class="create-event-dropdown-wrapper">
+        <button class="btn-primary" (click)="toggleCreateDropdown()">
+          Crea Evento
+          <svg class="dropdown-arrow" [class.open]="isCreateDropdownOpen" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 10l5 5 5-5H7z"></path></svg>
+        </button>
+        <div class="create-event-dropdown" *ngIf="isCreateDropdownOpen" (clickOutside)="closeCreateDropdown()">
+          <ul>
+            <li><button (click)="navigateToCreateEvent('internal')">Evento Interno</button></li>
+            <li><button (click)="navigateToCreateEvent('external')" title="Funzionalità da implementare">Evento Esterno</button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div *ngIf="showExternalEventWarning" class="feature-disabled-toast">
+    La creazione di eventi esterni non è ancora supportata.
+  </div>
+
+  <div *ngIf="deleteSuccess" class="success-message global-message">
+    {{ deleteSuccess }}
+  </div>
+  <div *ngIf="deleteError" class="error-message global-message">
+    {{ deleteError }}
+  </div>
+
+  <div *ngIf="isLoading && !deleteSuccess && !deleteError" class="loading-indicator"> <p>Caricamento eventi...</p>
+  </div>
+
+  <div *ngIf="!isLoading && error" class="error-message global-message"> <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!isLoading && !error" class="events-container">
+    <ng-container *ngIf="(events$ | async) as events; else noEvents">
+      <div *ngIf="events.length > 0; else noEvents" class="events-grid">
+        <div *ngFor="let event of events" class="event-card card">
+          <div class="event-card-header">
+            <h3>{{ event.name }}</h3>
+            <span class="event-state" [ngClass]="getEventStateClass(event.state)">
+              {{ event.state | titlecase }}
+            </span>
+          </div>
+          <div class="event-card-body">
+            <p *ngIf="event.description">{{ event.description }}</p>
+            <p class="event-dates">
+              <strong>Ora di Ritrovo:</strong> {{ event.startDate?.seconds ? (event.startDate.seconds * 1000 | date:'dd/MM/yyyy HH:mm') : 'Non specificato' }}
+              <ng-container *ngIf="event.endDate">
+                <br><strong>Ora di Inizio:</strong> {{ event.endDate?.seconds ? (event.endDate.seconds * 1000 | date:'dd/MM/yyyy HH:mm') : 'Non specificato' }}
+              </ng-container>
+            </p>
+          </div>
+          <div class="event-card-actions">
+            <button class="btn-small btn-outline-primary" [routerLink]="['/dashboard/eventi', event.id]">Dettagli</button>
+            <button class="btn-small btn-outline-secondary" [routerLink]="['/dashboard/eventi/modifica', event.id]">Modifica</button>
+            <button class="btn-small btn-danger" (click)="deleteEvent(event.id, event.name)">Elimina</button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+    <ng-template #noEvents>
+      <div class="no-events-message">
+        <p>Nessun evento da visualizzare al momento.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

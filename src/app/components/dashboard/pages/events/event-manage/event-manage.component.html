@@ -1,0 +1,195 @@
+<div class="event-manage-page">
+  <header class="page-header">
+    <h1>{{ pageTitle }}</h1>
+    <button type="button" class="btn-outline-secondary" (click)="goBack()">
+      &larr; Torna alla Lista
+    </button>
+  </header>
+
+  <div *ngIf="isLoading && !(isUploadingPhotoArea || isUploadingRouteImage)" class="loading-indicator">
+    <p>Caricamento...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message-form">
+    {{ errorMessage }}
+  </div>
+   <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
+  </div>
+
+  <div class="form-container card" *ngIf="!isLoading || isUploadingPhotoArea || isUploadingRouteImage">
+
+    <ng-container *ngIf="mode !== 'view'; else viewModeContent">
+      <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+        <div class="form-columns-wrapper">
+          <div class="form-column">
+            <div class="form-section">
+              <h3>Informazioni Base Evento</h3>
+              <div class="form-group">
+                <label for="name">Nome Evento</label>
+                <input id="name" type="text" formControlName="name">
+                <div *ngIf="eventForm.get('name')?.invalid && eventForm.get('name')?.touched" class="error-messages">
+                  <small *ngIf="eventForm.get('name')?.errors?.['required']">Il nome è obbligatorio.</small>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="description">Descrizione</label>
+                <textarea id="description" formControlName="description" rows="4"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="meetingTime">Ora di Ritrovo</label>
+                  <input id="meetingTime" type="datetime-local" formControlName="meetingTime">
+                   <div *ngIf="eventForm.get('meetingTime')?.invalid && eventForm.get('meetingTime')?.touched" class="error-messages">
+                    <small *ngIf="eventForm.get('meetingTime')?.errors?.['required']">L'ora di ritrovo è obbligatoria.</small>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="startTime">Ora di Inizio</label>
+                  <input id="startTime" type="datetime-local" formControlName="startTime">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="state">Stato Evento</label>
+                <select id="state" formControlName="state">
+                  <option *ngFor="let stateOpt of availableEventStates" [value]="stateOpt">{{ stateOpt | titlecase }}</option>
+                </select>
+                 <div *ngIf="eventForm.get('state')?.invalid && eventForm.get('state')?.touched" class="error-messages">
+                  <small *ngIf="eventForm.get('state')?.errors?.['required']">Lo stato è obbligatorio.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="form-section">
+              <h3>Dettagli Evento (Gioco)</h3>
+              <div class="form-group">
+                <label for="server">Server</label>
+                <select id="server" formControlName="server">
+                  <option [ngValue]="null" disabled>Seleziona un server</option>
+                  <option *ngFor="let serverOpt of serverOptions" [value]="serverOpt">{{ serverOpt }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>DLC Richiesti</label>
+                <div formGroupName="dlcs" class="dlc-checkbox-group">
+                  <div *ngFor="let dlc of dlcOptions" class="checkbox-item">
+                    <input type="checkbox" [id]="'dlc-' + dlc.name" [formControlName]="dlc.name">
+                    <label [for]="'dlc-' + dlc.name">{{ dlc.label }}</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="departure">Partenza</label>
+                <input id="departure" type="text" formControlName="departure">
+              </div>
+              <div class="form-group">
+                <label for="destination">Destinazione</label>
+                <input id="destination" type="text" formControlName="destination">
+              </div>
+               <div class="form-group">
+                <label for="trailerType">Tipo di Rimorchio</label>
+                <div class="radio-group">
+                  <label *ngFor="let type of trailerTypeOptions" class="radio-label">
+                    <input type="radio" formControlName="trailerType" [value]="type"> {{ type }}
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="cargo">Carico</label>
+                <input id="cargo" type="text" formControlName="cargo">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-column">
+              <div class="form-section">
+                  <h3>Immagini Evento</h3>
+                  <div class="form-group image-upload-group">
+                      <label>Area Foto</label>
+                      <div class="image-preview-box">
+                          <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" alt="Anteprima Area Foto" class="image-preview">
+                      </div>
+                      <div class="image-actions">
+                          <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('photoArea')" [disabled]="isUploadingPhotoArea">
+                              <span *ngIf="!isUploadingPhotoArea">{{ eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl ? 'Modifica' : 'Carica' }} Immagine</span>
+                              <span *ngIf="isUploadingPhotoArea">Caricamento...</span>
+                          </button>
+                          <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('photoArea')" *ngIf="eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl && eventId" [disabled]="isUploadingPhotoArea">
+                              Elimina
+                          </button>
+                      </div>
+                      <input type="file" #photoAreaInput hidden (change)="onImageSelected($event, 'photoArea')" accept="image/png, image/jpeg, image/gif">
+                      <div *ngIf="isUploadingPhotoArea && photoAreaUploadProgress !== undefined" class="upload-progress-bar-small">
+                          <div class="progress" [style.width.%]="photoAreaUploadProgress"></div>
+                      </div>
+                  </div>
+                  <div class="form-group image-upload-group">
+                      <label>Percorso (Immagine)</label>
+                       <div class="image-preview-box">
+                          <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" alt="Anteprima Percorso" class="image-preview">
+                      </div>
+                      <div class="image-actions">
+                          <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('routePath')" [disabled]="isUploadingRouteImage">
+                               <span *ngIf="!isUploadingRouteImage">{{ eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl ? 'Modifica' : 'Carica' }} Immagine</span>
+                              <span *ngIf="isUploadingRouteImage">Caricamento...</span>
+                          </button>
+                           <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('routePath')" *ngIf="eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl && eventId" [disabled]="isUploadingRouteImage">
+                              Elimina
+                          </button>
+                      </div>
+                      <input type="file" #routeImageInput hidden (change)="onImageSelected($event, 'routePath')" accept="image/png, image/jpeg, image/gif">
+                      <div *ngIf="isUploadingRouteImage && routeImageUploadProgress !== undefined" class="upload-progress-bar-small">
+                          <div class="progress" [style.width.%]="routeImageUploadProgress"></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="eventForm.invalid || isLoading || isUploadingPhotoArea || isUploadingRouteImage">
+            <span *ngIf="!isLoading">{{ mode === 'create' ? 'Crea Evento' : 'Salva Modifiche' }}</span>
+            <span *ngIf="isLoading">{{ mode === 'create' ? 'Creazione...' : 'Salvataggio...' }}</span>
+          </button>
+          <button type="button" class="btn-secondary" (click)="goBack()" [disabled]="isLoading">
+            Annulla
+          </button>
+        </div>
+      </form>
+    </ng-container>
+
+    <ng-template #viewModeContent>
+      <div *ngIf="currentEvent" class="view-details"> <div class="view-columns-wrapper">
+              <div class="view-column">
+                  <p><strong>Descrizione:</strong> {{ currentEvent.description || 'N/D' }}</p>
+                  <p><strong>Ora di Ritrovo:</strong> {{ currentEvent.startDate?.seconds ? (currentEvent.startDate.seconds * 1000 | date:'full') : 'N/D' }}</p>
+                  <p><strong>Ora di Inizio:</strong> {{ currentEvent.endDate?.seconds ? (currentEvent.endDate.seconds * 1000 | date:'full') : 'N/D' }}</p>
+                  <p><strong>Stato:</strong> <span class="event-state-view" [ngClass]="'event-state-' + currentEvent.state">{{ currentEvent.state | titlecase }}</span></p>
+              </div>
+              <div class="view-column">
+                  <p><strong>Server:</strong> {{ currentEvent.server || 'N/D' }}</p>
+                  <p><strong>DLC Richiesti:</strong></p>
+                  <ul class="dlc-list-view" *ngIf="currentEvent.dlcs && dlcOptions.length > 0">
+                      <ng-container *ngFor="let dlc of dlcOptions">
+                          <li *ngIf="currentEvent.dlcs![dlc.name]">{{ dlc.label }}</li>
+                      </ng-container>
+                      <li *ngIf="!hasSelectedDlcs(currentEvent.dlcs!)">Nessun DLC specifico richiesto.</li>
+                  </ul>
+                   <p><strong>Partenza:</strong> {{ currentEvent.departure || 'N/D' }}</p>
+                  <p><strong>Destinazione:</strong> {{ currentEvent.destination || 'N/D' }}</p>
+                  <p><strong>Tipo Rimorchio:</strong> {{ currentEvent.trailerType || 'N/D' }}</p>
+                  <p><strong>Carico:</strong> {{ currentEvent.cargo || 'N/D' }}</p>
+              </div>
+               <div class="view-column">
+                  <p><strong>Area Foto:</strong></p>
+                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" class="image-preview-view">
+                  <p><strong>Percorso:</strong></p>
+                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" class="image-preview-view">
+              </div>
+          </div>
+      </div>
+    </ng-template>
+  </div>
+</div>

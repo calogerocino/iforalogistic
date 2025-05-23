@@ -1,0 +1,301 @@
+:host {
+  display: block;
+  padding: 20px;
+}
+
+.profile-page-container {
+  h1 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 15px;
+  }
+}
+
+.profile-grid-container {
+  display: grid;
+  grid-template-columns: 250px 1fr 1fr;
+  gap: 30px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr 1fr;
+    .profile-picture-column {
+      grid-column: span 2;
+      margin-bottom: 0; // Era 30px, ora gestito da gap o se è l'ultimo
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    .profile-picture-column {
+      grid-column: span 1;
+    }
+  }
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 25px 30px;
+  display: flex;
+  flex-direction: column;
+
+  h2 {
+    font-size: 22px;
+    color: #34495e;
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+
+  > p {
+    font-size: 15px;
+    color: #7f8c8d;
+    margin-bottom: 25px;
+    line-height: 1.6;
+  }
+}
+
+.profile-picture-column {
+  align-items: center;
+  position: relative; // NECESSARIO per posizionare il dropdown menu
+
+  h2 {
+    text-align: center;
+  }
+  .profile-image-preview-wrapper {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden; // Manteniamo overflow hidden per l'immagine circolare
+    margin: 0 auto;
+    border: 3px solid #ecf0f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    position: relative; // Per il FAB al suo interno
+
+    .profile-image-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .edit-photo-button-wrapper { // Questo wrapper contiene solo il FAB ora
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 5; // Il FAB stesso avrà uno z-index più alto se necessario
+  }
+
+  .btn-edit-photo-fab {
+    background-color: white;
+    border: 1px solid #dfe3e8;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    // z-index è ereditato o può essere aggiunto se necessario
+
+    svg {
+      fill: #3498db;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background-color: #f8f9fa;
+      transform: scale(1.1);
+    }
+  }
+
+  // Nuovo contenitore per il dropdown, posizionato rispetto alla colonna
+  .photo-dropdown-menu-container {
+    position: absolute;
+    // Posizioniamo il contenitore del dropdown vicino al FAB.
+    // Il FAB è a circa right: (larghezza colonna / 2) - (larghezza immagine / 2) + (larghezza immagine - raggio fab - offset fab)
+    // E top: altezza titolo + altezza immagine - raggio fab - offset fab
+    // Per semplicità, lo posizioniamo sotto l'immagine, centrato o allineato a destra della colonna.
+    // Questo richiede aggiustamenti fini o JS per un posizionamento perfetto rispetto al FAB.
+    // Tentativo di posizionamento sotto l'area dell'immagine, leggermente a destra:
+    top: calc(60px + 180px + 10px); // Altezza approx titolo + altezza immagine + piccolo spazio
+    left: 50%; // Inizia dal centro della colonna
+    transform: translateX(-30%); // Sposta indietro per allineare il menu a tendina (largo 200px)
+                                // in modo che il suo lato destro sia vicino al FAB
+    width: 200px; // Larghezza del dropdown
+    z-index: 100; // Assicura che sia sopra altri elementi della colonna
+  }
+
+
+  .photo-dropdown-menu {
+    // Non più position: absolute qui, perché il suo contenitore (.photo-dropdown-menu-container) lo è.
+    // Oppure, se .photo-dropdown-menu-container non è usato, allora .photo-dropdown-menu è absolute.
+    // Manteniamo la logica precedente ma ora è relativo a .profile-picture-column
+    // e il suo contenitore .photo-dropdown-menu-container
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    width: 100%; // Occupa la larghezza del suo contenitore
+    overflow: hidden;
+    animation: fadeInDropdown 0.15s ease-out;
+
+
+    ul {
+      list-style: none;
+      padding: 5px 0;
+      margin: 0;
+      li button {
+        display: block;
+        width: 100%;
+        padding: 10px 15px;
+        text-align: left;
+        background: none;
+        border: none;
+        font-size: 14px;
+        color: #333;
+        cursor: pointer;
+        &:hover {
+          background-color: #f0f4f8;
+        }
+        &:disabled {
+          color: #aaa;
+          cursor: not-allowed;
+          background-color: transparent;
+        }
+      }
+    }
+  }
+
+
+  .upload-progress-bar {
+    width: 80%;
+    max-width: 200px;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    margin: 20px auto 10px auto;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+    color: #495057;
+
+    .progress {
+      height: 100%;
+      background-color: #28a745;
+      border-radius: 10px 0 0 10px;
+      transition: width 0.3s ease;
+    }
+    span {
+        position: absolute;
+        width: 100%;
+        left: 0;
+    }
+  }
+}
+
+
+.form-group {
+  margin-bottom: 20px;
+  label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #333;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    &:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+    &:disabled {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+      color: #777;
+    }
+  }
+}
+
+.error-messages {
+  margin-top: 5px;
+  small {
+    color: #e74c3c;
+    font-size: 13px;
+  }
+}
+
+.error-message-form {
+  background-color: #fbeaea;
+  color: #c0392b;
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border: 1px solid #e74c3c;
+}
+
+.success-message {
+  background-color: #eaf7eb;
+  color: #27ae60;
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border: 1px solid #2ecc71;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 180px;
+  &:hover:not(:disabled) {
+    background-color: #2980b9;
+  }
+  &:disabled {
+    background-color: #a0b3c1;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes fadeInDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

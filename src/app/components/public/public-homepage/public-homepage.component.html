@@ -1,0 +1,189 @@
+<app-public-navbar></app-public-navbar>
+
+<main class="homepage-content-wrapper">
+  <section class="hero-section">
+    <h1>Presentazione <span class="highlight-skin">nuova skin</span></h1>
+    <p class="subtitle">Siamo entusiasti di presentarvi la nostra nuova skin, lanciata a novembre scorso, che combina design elegante e funzionalità avanzate per un'esperienza utente senza pari.</p>
+    <button class="play-video-button" (click)="openVideoModal()" aria-label="Guarda il video di presentazione">
+      <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+    </button>
+  </section>
+
+  <section class="upcoming-events-section">
+    <h2>Eventi Interni in Programma</h2>
+    <div *ngIf="isLoadingEvents" class="loading-events">
+      <p>Caricamento eventi...</p>
+    </div>
+
+    <ng-container *ngIf="!isLoadingEvents && (upcomingEvents$ | async) as events">
+      <div *ngIf="events && events.length > 0; else noUpcomingEvents" class="events-showcase-grid">
+        <div *ngFor="let event of events" class="event-showcase-card">
+          <div class="event-image-placeholder" *ngIf="!event.photoAreaImageUrl || event.photoAreaImageUrl === eventService.defaultEventPhotoAreaUrl">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.5l-2.14 2.58h10.3z"></path></svg>
+          </div>
+          <img *ngIf="event.photoAreaImageUrl && event.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl" [src]="event.photoAreaImageUrl" alt="Area Foto Evento {{event.name}}" class="event-image">
+
+          <div class="event-showcase-content">
+            <span class="event-showcase-state" [ngClass]="getEventStateClass(event.state)">
+              {{ event.state | titlecase }}
+            </span>
+            <h3>{{ event.name }}</h3>
+            <p class="event-showcase-date">
+              <span class="label">Ritrovo:</span> {{ event.startDate?.seconds ? (event.startDate.seconds * 1000 | date:'dd MMM, HH:mm') : 'Da definire' }}
+            </p>
+            <p class="event-showcase-server" *ngIf="event.server">
+              <span class="label">Server:</span> {{ event.server }}
+            </p>
+            <button (click)="openEventModal(event)" class="details-link-button">Vedi Dettagli →</button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noUpcomingEvents>
+        <p class="no-events-info">Nessun evento interno programmato o in corso al momento.</p>
+      </ng-template>
+    </ng-container>
+  </section>
+
+  <section class="vtc-partners-section">
+    <h2>VTC Partner</h2>
+    <p class="section-subtitle">I nostri stimati partner strategici, con i quali abbiamo instaurato solide collaborazioni.</p>
+    <div class="partners-grid">
+      <div class="partner-logo-placeholder"><span>Logo Partner 1</span></div>
+      <div class="partner-logo-placeholder"><span>Logo Partner 2</span></div>
+      <div class="partner-logo-placeholder"><span>Logo Partner 3</span></div>
+      <div class="partner-logo-placeholder"><span>Logo Partner 4</span></div>
+    </div>
+  </section>
+
+  <section class="team-section">
+    <h2>Il nostro Team</h2>
+    <div class="team-grid">
+      <div class="team-member-card">
+        <div class="team-member-image-wrapper placeholder-bg-1">
+          </div>
+        <h3 class="team-member-name">Nome Membro 1</h3>
+        <p class="team-member-role">Ruolo Membro 1</p>
+      </div>
+      <div class="team-member-card">
+        <div class="team-member-image-wrapper placeholder-bg-2">
+        </div>
+        <h3 class="team-member-name">Nome Membro 2</h3>
+        <p class="team-member-role">Ruolo Membro 2</p>
+      </div>
+      <div class="team-member-card">
+        <div class="team-member-image-wrapper placeholder-bg-3">
+        </div>
+        <h3 class="team-member-name">Nome Membro 3</h3>
+        <p class="team-member-role">Ruolo Membro 3</p>
+      </div>
+      <div class="team-member-card">
+        <div class="team-member-image-wrapper placeholder-bg-4">
+        </div>
+        <h3 class="team-member-name">Nome Membro 4</h3>
+        <p class="team-member-role">Ruolo Membro 4</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="public-footer">
+  <p>© {{ currentYear }} IFL byPixElSmart. Tutti i diritti riservati.</p>
+</footer>
+
+<div class="modal-overlay" *ngIf="isEventModalOpen" (click)="closeEventModal()">
+  <div class="modal-content-wrapper" [class.registration-open]="isRegistrationPanelOpen">
+    <div class="modal-content event-details-panel" *ngIf="selectedEventForModal" (click)="$event.stopPropagation()">
+      <!--
+      <div style="background-color: yellow; color: black; padding: 10px; border: 1px solid red; margin-bottom: 10px;">
+        <strong>DEBUG MODAL DATA:</strong>
+        <pre>{{ selectedEventForModal | json }}</pre>
+      </div>
+      -->
+      <div class="modal-header">
+        <h2>{{ selectedEventForModal.name }}</h2>
+        <div class="modal-header-actions">
+          <button class="btn-register-event" (click)="toggleRegistrationPanel()">Registrati</button>
+          <button class="modal-close-button" (click)="closeEventModal()" aria-label="Chiudi modale">×</button>
+        </div>
+      </div>
+
+      <div class="modal-details-grid">
+          <div class="modal-detail-item">
+              <span class="modal-label">Stato:</span>
+              <span class="modal-value event-showcase-state" [ngClass]="getEventStateClass(selectedEventForModal.state)">
+                {{ selectedEventForModal.state | titlecase }}
+              </span>
+          </div>
+          <div class="modal-detail-item full-width" *ngIf="selectedEventForModal.description">
+              <span class="modal-label">Descrizione:</span>
+              <p class="modal-value description">{{ selectedEventForModal.description }}</p>
+          </div>
+          <div class="modal-detail-item">
+              <span class="modal-label">Ora di Ritrovo:</span>
+              <span class="modal-value">{{ selectedEventForModal.startDate?.seconds ? (selectedEventForModal.startDate.seconds * 1000 | date:'EEEE, dd MMMM finalList, HH:mm') : 'N/D' }}</span>
+          </div>
+          <div class="modal-detail-item" *ngIf="selectedEventForModal.endDate">
+              <span class="modal-label">Ora di Inizio:</span>
+              <span class="modal-value">{{ selectedEventForModal.endDate?.seconds ? (selectedEventForModal.endDate.seconds * 1000 | date:'EEEE, dd MMMM finalList, HH:mm') : 'N/D' }}</span>
+          </div>
+          <div class="modal-detail-item" *ngIf="selectedEventForModal.server">
+              <span class="modal-label">Server:</span>
+              <span class="modal-value">{{ selectedEventForModal.server }}</span>
+          </div>
+          <div class="modal-detail-item" *ngIf="selectedEventForModal.departure">
+              <span class="modal-label">Partenza:</span>
+              <span class="modal-value">{{ selectedEventForModal.departure }}</span>
+          </div>
+          <div class="modal-detail-item" *ngIf="selectedEventForModal.destination">
+              <span class="modal-label">Destinazione:</span>
+              <span class="modal-value">{{ selectedEventForModal.destination }}</span>
+          </div>
+          <div class="modal-detail-item" *ngIf="selectedEventForModal.trailerType">
+              <span class="modal-label">Tipo Rimorchio:</span>
+              <span class="modal-value">{{ selectedEventForModal.trailerType }}</span>
+          </div>
+          <div class="modal-detail-item" *ngIf="selectedEventForModal.cargo">
+              <span class="modal-label">Carico:</span>
+              <span class="modal-value">{{ selectedEventForModal.cargo }}</span>
+          </div>
+
+          <div class="modal-detail-item full-width" *ngIf="selectedEventForModal.dlcs && hasSelectedDlcsForModal(selectedEventForModal.dlcs)">
+              <span class="modal-label">DLC Richiesti:</span>
+              <ul class="modal-dlc-list">
+                  <ng-container *ngFor="let dlc of dlcOptions">
+                      <li *ngIf="selectedEventForModal.dlcs![dlc.name]">{{ dlc.label }}</li>
+                  </ng-container>
+              </ul>
+          </div>
+
+          <div class="modal-image-section full-width" *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
+              <span class="modal-label">Area Foto:</span>
+              <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento" class="modal-event-image">
+          </div>
+          <div class="modal-image-section full-width" *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
+              <span class="modal-label">Immagine Percorso:</span>
+              <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento" class="modal-event-image">
+          </div>
+      </div>
+    </div>
+    <div class="modal-registration-panel" [class.open]="isRegistrationPanelOpen" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Registrati all'Evento</h3>
+        </div>
+        <div class="registration-panel-content">
+            <p>Informazioni e form per la registrazione all'evento verranno qui.</p>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay video-modal-overlay" *ngIf="isVideoModalOpen" (click)="closeVideoModal()">
+  <div class="video-modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close-button video-modal-close-button" (click)="closeVideoModal()" aria-label="Chiudi video">×</button>
+    <div class="video-wrapper">
+      <iframe width="560" height="315" [src]="videoUrl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>

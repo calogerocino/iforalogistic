@@ -1,0 +1,126 @@
+:host {
+  display: block;
+  width: 260px;
+  background-color: #1e222d;
+  color: #aeb2b7;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  transition: width 0.3s ease;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 20px; // Leggermente ridotto per fare spazio al testo
+  height: 64px;
+  border-bottom: 1px solid #2a2e39;
+
+  img {
+    height: 30px; // Leggermente ridotto
+    margin-right: 10px;
+  }
+
+  .logo-text-container {
+    display: flex;
+    flex-direction: column; // Mette "by" sopra "PixElSmart"
+    line-height: 1.1; // Riduce l'interlinea
+  }
+
+  .logo-prefix {
+    font-size: 10px; // Più piccolo
+    font-weight: 300;
+    color: #868c96; // Grigio più chiaro
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .logo-main-name {
+    font-size: 17px; // Leggermente più piccolo dell'originale "PixelSmart"
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+  }
+}
+
+.sidebar-nav {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-top: 15px;
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    &.menu-header {
+      padding: 15px 24px 8px 24px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #676c77;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 10px;
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      padding: 12px 24px;
+      color: #c8cdd3;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      border-left: 3px solid transparent;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        margin-right: 16px;
+        fill: currentColor;
+        flex-shrink: 0;
+        opacity: 0.8;
+      }
+
+      span {
+        flex-grow: 1;
+      }
+
+      &:hover {
+        background-color: #252935;
+        color: #ffffff;
+        svg {
+          opacity: 1;
+        }
+      }
+
+      &.active-link {
+        background-color: #2a2e39;
+        color: #ffffff;
+        font-weight: 600;
+        border-left-color: #4a90e2;
+
+        svg {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: #424858;
+  border-radius: 10px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background-color: transparent;
+}

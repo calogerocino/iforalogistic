@@ -1,0 +1,75 @@
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.public-navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 25px;
+  height: 60px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.navbar-logo-area {
+  a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .navbar-logo {
+    height: 40px;
+  }
+
+  .app-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-left: 10px;
+  }
+}
+
+.navbar-menu-area {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover:not(.btn-login) {
+      background-color: #f0f0f0;
+    }
+
+    &.btn-login {
+      background-color: #3498db;
+      color: white;
+      padding: 8px 18px;
+      display: flex; // Per allineare icona e testo
+      align-items: center; // Allinea verticalmente icona e testo
+      gap: 8px; // Spazio tra icona e testo
+
+      .login-icon {
+        // Non sono necessari stili specifici se width/height/fill sono sull'SVG
+      }
+
+      &:hover {
+        background-color: #2980b9;
+      }
+    }
+  }
+}

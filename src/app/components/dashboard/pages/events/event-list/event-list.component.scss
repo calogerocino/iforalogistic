@@ -1,0 +1,268 @@
+:host {
+  display: block;
+  padding: 20px;
+  position: relative;
+}
+
+.event-list-page {
+  h1 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 0;
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.actions-container {
+  position: relative;
+}
+
+.create-event-dropdown-wrapper {
+  position: relative;
+  .btn-primary {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover:not(:disabled) { background-color: #2980b9; }
+    &:disabled { background-color: #a0b3c1; cursor: not-allowed; }
+
+    .dropdown-arrow {
+      transition: transform 0.2s ease-in-out;
+      &.open {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
+.create-event-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  z-index: 100;
+  width: 200px;
+  overflow: hidden;
+  animation: fadeInDropdown 0.15s ease-out;
+
+  ul {
+    list-style: none;
+    padding: 5px 0;
+    margin: 0;
+    li button {
+      display: block;
+      width: 100%;
+      padding: 10px 15px;
+      text-align: left;
+      background: none;
+      border: none;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      &:hover {
+        background-color: #f0f4f8;
+      }
+    }
+  }
+}
+
+.feature-disabled-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffc107;
+  color: #333;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  z-index: 2000;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeInToast 0.3s ease-out, fadeOutToast 0.3s ease-in 2.7s forwards;
+}
+
+.global-message { // Stile per messaggi di successo/errore globali alla lista
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.success-message.global-message { // Specifica per messaggi di successo globali
+  background-color: #eaf7eb;
+  color: #27ae60;
+  border: 1px solid #2ecc71;
+}
+
+.error-message.global-message { // Specifica per messaggi di errore globali
+  background-color: #fbeaea;
+  color: #c0392b;
+  border: 1px solid #e74c3c;
+}
+
+
+@keyframes fadeInDropdown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInToast {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes fadeOutToast {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+}
+
+
+.loading-indicator,
+.no-events-message { // Rimosso .error-message da qui perché ora è .global-message
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2em;
+  color: #7f8c8d;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.event-card {
+  .event-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+
+    h3 {
+      font-size: 1.4em;
+      color: #34495e;
+      margin: 0;
+      word-break: break-word;
+    }
+
+    .event-state {
+      font-size: 0.8em;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: white;
+      white-space: nowrap;
+      margin-left: 10px;
+
+      &.event-state-nuovo { background-color: #3498db; }
+      &.event-state-programmato { background-color: #f39c12; }
+      &.event-state-adesso { background-color: #e74c3c; }
+      &.event-state-concluso { background-color: #2ecc71; }
+      &:not(.event-state-nuovo):not(.event-state-programmato):not(.event-state-adesso):not(.event-state-concluso) {
+        background-color: #95a5a6;
+      }
+    }
+  }
+
+  .event-card-body {
+    font-size: 0.95em;
+    color: #555;
+    flex-grow: 1;
+    margin-bottom: 15px;
+
+    p {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .event-dates {
+      font-size: 0.9em;
+      color: #7f8c8d;
+      strong {
+        color: #555;
+      }
+    }
+  }
+
+  .event-card-actions {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #ecf0f1;
+    text-align: right;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 0.85em;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .btn-outline-primary {
+      background-color: transparent;
+      color: #3498db;
+      border: 1px solid #3498db;
+      &:hover {
+        background-color: #3498db;
+        color: white;
+      }
+    }
+     .btn-outline-secondary {
+        background-color: transparent;
+        color: #7f8c8d;
+        border: 1px solid #bdc3c7;
+        &:hover {
+            background-color: #7f8c8d;
+            color: white;
+            border-color: #7f8c8d;
+        }
+    }
+    .btn-danger { // Stile per il pulsante elimina
+        background-color: #e74c3c;
+        color: white;
+        border: 1px solid #e74c3c;
+         &:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+    }
+  }
+}

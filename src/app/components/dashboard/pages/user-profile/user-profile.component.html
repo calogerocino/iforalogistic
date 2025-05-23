@@ -1,0 +1,116 @@
+<div class="profile-page-container">
+  <h1>Il Mio Profilo</h1>
+
+  <div class="profile-grid-container">
+    <div class="profile-column profile-picture-column card">
+      <h2>Immagine Profilo</h2>
+      <div class="profile-image-preview-wrapper">
+        <img [src]="currentUser?.photoURL || defaultPhotoURL" alt="Foto Profilo" class="profile-image-preview">
+        <div class="edit-photo-button-wrapper">
+          <button type="button" class="btn-edit-photo-fab" (click)="togglePhotoDropdown()" aria-label="Modifica foto profilo">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>
+          </button>
+          <div class="photo-dropdown-menu" *ngIf="isPhotoDropdownOpen" (clickOutside)="closePhotoDropdown()">
+             <ul>
+              <li>
+                <button (click)="triggerFileInput()">
+                  {{ (currentUser?.photoURL && currentUser?.photoURL !== defaultPhotoURL) ? 'Modifica Immagine' : 'Inserisci Immagine' }}
+                </button>
+              </li>
+              <li>
+                <button (click)="deleteProfilePicture()" [disabled]="!currentUser?.photoURL || currentUser?.photoURL === defaultPhotoURL">
+                  Elimina Immagine
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif">
+
+      <div *ngIf="isUploadingPhoto && uploadProgress !== undefined" class="upload-progress-bar">
+        <div class="progress" [style.width.%]="uploadProgress"></div>
+        <span>Caricamento: {{ uploadProgress | number:'1.0-0' }}%</span>
+      </div>
+      <div *ngIf="photoUpdateMessage" [ngClass]="{'success-message': !photoUpdateMessage?.includes('Errore'), 'error-message-form': photoUpdateMessage?.includes('Errore')}">
+        {{ photoUpdateMessage }}
+      </div>
+    </div>
+
+    <div class="profile-column profile-info-column card">
+      <h2>Informazioni Personali</h2>
+      <p>Modifica le tue informazioni personali. L'indirizzo email non può essere modificato qui.</p>
+      <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" *ngIf="currentUser">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" [value]="currentUser.email" readonly disabled>
+        </div>
+        <div class="form-group">
+          <label for="firstName">Nome</label>
+          <input id="firstName" type="text" formControlName="firstName">
+          <div *ngIf="profileForm.get('firstName')?.invalid && (profileForm.get('firstName')?.dirty || profileForm.get('firstName')?.touched)" class="error-messages">
+            <small *ngIf="profileForm.get('firstName')?.errors?.['required']">Il nome è obbligatorio.</small>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Cognome</label>
+          <input id="lastName" type="text" formControlName="lastName">
+          <div *ngIf="profileForm.get('lastName')?.invalid && (profileForm.get('lastName')?.dirty || profileForm.get('lastName')?.touched)" class="error-messages">
+            <small *ngIf="profileForm.get('lastName')?.errors?.['required']">Il cognome è obbligatorio.</small>
+          </div>
+        </div>
+        <div *ngIf="profileUpdateSuccess" class="success-message">
+          {{ profileUpdateSuccess }}
+        </div>
+        <div *ngIf="profileUpdateError" class="error-message-form">
+          {{ profileUpdateError }}
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="profileForm.invalid || isLoadingProfile">
+          <span *ngIf="!isLoadingProfile">Salva Modifiche Profilo</span>
+          <span *ngIf="isLoadingProfile">Salvataggio...</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="profile-column password-column card">
+      <h2>Aggiorna Password</h2>
+      <form [formGroup]="passwordForm" (ngSubmit)="onPasswordSubmit()">
+        <div class="form-group">
+          <label for="oldPassword">Vecchia Password</label>
+          <input id="oldPassword" type="password" formControlName="oldPassword">
+          <div *ngIf="passwordForm.get('oldPassword')?.invalid && (passwordForm.get('oldPassword')?.dirty || passwordForm.get('oldPassword')?.touched)" class="error-messages">
+            <small *ngIf="passwordForm.get('oldPassword')?.errors?.['required']">La vecchia password è obbligatoria.</small>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Nuova Password</label>
+          <input id="newPassword" type="password" formControlName="newPassword">
+          <div *ngIf="passwordForm.get('newPassword')?.invalid && (passwordForm.get('newPassword')?.dirty || passwordForm.get('newPassword')?.touched)" class="error-messages">
+            <small *ngIf="passwordForm.get('newPassword')?.errors?.['required']">La nuova password è obbligatoria.</small>
+            <small *ngIf="passwordForm.get('newPassword')?.errors?.['minlength']">La password deve essere di almeno 6 caratteri.</small>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Conferma Nuova Password</label>
+          <input id="confirmPassword" type="password" formControlName="confirmPassword">
+          <div *ngIf="passwordForm.get('confirmPassword')?.invalid && (passwordForm.get('confirmPassword')?.dirty || passwordForm.get('confirmPassword')?.touched)" class="error-messages">
+            <small *ngIf="passwordForm.get('confirmPassword')?.errors?.['required']">La conferma password è obbligatoria.</small>
+          </div>
+          <div *ngIf="passwordForm.errors?.['mismatch'] && (passwordForm.get('confirmPassword')?.dirty || passwordForm.get('confirmPassword')?.touched)" class="error-messages">
+              <small>Le password non coincidono.</small>
+          </div>
+        </div>
+        <div *ngIf="passwordUpdateSuccess" class="success-message">
+          {{ passwordUpdateSuccess }}
+        </div>
+        <div *ngIf="passwordUpdateError" class="error-message-form">
+          {{ passwordUpdateError }}
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="passwordForm.invalid || isLoadingPassword">
+          <span *ngIf="!isLoadingPassword">Aggiorna Password</span>
+          <span *ngIf="isLoadingPassword">Aggiornamento...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

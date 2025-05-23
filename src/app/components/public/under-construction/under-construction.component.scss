@@ -1,0 +1,70 @@
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f4f7f6; // Sfondo simile al dashboard
+  text-align: center;
+  font-family: 'Inter', sans-serif; // Assicurati che il font sia disponibile
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.construction-wrapper {
+  max-width: 600px;
+  width: 100%;
+}
+
+.construction-content {
+  background-color: #ffffff;
+  padding: 40px 50px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+  .logo {
+    max-width: 150px;
+    margin-bottom: 25px;
+  }
+
+  h1 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+
+    &:last-of-type {
+      margin-bottom: 30px;
+    }
+  }
+}
+
+.progress-bar-container {
+  width: 100%;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  width: 60%; // Esempio di progresso
+  height: 100%;
+  background-color: #3498db; // Blu primario
+  border-radius: 5px;
+  animation: loadingProgress 2s ease-in-out infinite alternate;
+}
+
+@keyframes loadingProgress {
+  from {
+    width: 30%;
+  }
+  to {
+    width: 80%;
+  }
+}

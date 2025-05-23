@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  height: 100vh; // Assicura che il layout occupi l'intera altezza della viewport
+}
+
+.dashboard-layout {
+  display: flex;
+  height: 100%; // Modificato da 100vh a 100% per ereditare da :host
+  width: 100%;
+  overflow: hidden;
+  background-color: #f4f7f6; // Sfondo generale leggermente grigio
+}
+
+.dashboard-sidebar {
+  flex-shrink: 0; // Impedisce alla sidebar di restringersi
+  // La larghezza e altri stili specifici saranno in sidebar.component.scss
+}
+
+.dashboard-main-content {
+  flex-grow: 1; // Occupa lo spazio rimanente
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Per gestire lo scroll del contenuto internamente
+}
+
+.dashboard-navbar {
+  flex-shrink: 0; // Impedisce alla navbar di restringersi
+  // Altezza e stili specifici saranno in navbar.component.scss
+}
+
+.dashboard-page-content {
+  flex-grow: 1;
+  padding: 24px; // Padding per il contenuto della pagina
+  overflow-y: auto; // Abilita lo scroll verticale se il contenuto è troppo lungo
+}

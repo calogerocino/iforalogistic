@@ -1,0 +1,594 @@
+:host {
+  display: block;
+  font-family: 'Inter', sans-serif;
+}
+
+.homepage-content-wrapper {
+  // Nessun margin-top specifico qui, la navbar sticky lo gestisce
+}
+
+.hero-section {
+  background-image: url('/assets/img/hero-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  color: #ffffff;
+  padding: 100px 25px;
+  text-align: center;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  h1, p, .play-video-button {
+    position: relative;
+    z-index: 2;
+  }
+
+  h1 {
+    font-size: 3.8em;
+    margin-bottom: 15px;
+    font-weight: 700;
+    .highlight-skin {
+      color: #54e0c7;
+    }
+  }
+
+  .subtitle {
+    font-size: 1.4em;
+    margin-bottom: 40px;
+    max-width: 700px;
+    line-height: 1.7;
+  }
+
+  .play-video-button {
+    background-color: #ffffff;
+    color: #3498db;
+    border: none;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: pulseAnimation 2s infinite;
+
+    .play-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes pulseAnimation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7), 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0), 0 5px 20px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0), 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.upcoming-events-section {
+  padding: 60px 25px;
+  background-color: #ffffff;
+
+  h2 {
+    font-size: 2.2em;
+    color: #2c3e50;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .loading-events, .no-events-info {
+    text-align: center;
+    font-size: 1.1em;
+    color: #7f8c8d;
+    padding: 20px;
+  }
+
+  .events-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .event-showcase-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .event-image-placeholder, .event-image {
+      width: 100%;
+      height: 180px;
+      background-color: #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        width: 60px;
+        height: 60px;
+        fill: #bdc3c7;
+      }
+    }
+    .event-image {
+        object-fit: cover;
+    }
+
+    .event-showcase-content {
+      padding: 20px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+
+      .event-showcase-state {
+        font-size: 0.75em;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: white;
+        align-self: flex-start;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+
+        &.event-state-nuovo { background-color: #3498db; }
+        &.event-state-programmato { background-color: #f39c12; }
+        &.event-state-adesso { background-color: #e74c3c; }
+        &.event-state-concluso { background-color: #2ecc71; }
+        &.event-state-default { background-color: #95a5a6; }
+      }
+
+      h3 {
+        font-size: 1.3em;
+        color: #34495e;
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .event-showcase-date, .event-showcase-server {
+        font-size: 0.9em;
+        color: #555;
+        margin-bottom: 5px;
+        .label {
+          font-weight: 600;
+          color: #34495e;
+        }
+      }
+
+      .details-link-button {
+        margin-top: auto;
+        padding: 8px 0;
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9em;
+        align-self: flex-end;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s ease;
+
+        &:hover {
+          text-decoration: underline;
+          color: #2980b9;
+        }
+      }
+    }
+  }
+}
+
+/* Sezione VTC Partner */
+.vtc-partners-section {
+  padding: 60px 25px;
+  background-color: #f0f4f8; // Sfondo leggermente diverso
+  text-align: center;
+
+  h2 {
+    font-size: 2.2em;
+    color: #2c3e50;
+    margin-bottom: 15px;
+  }
+
+  .section-subtitle {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .partners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .partner-logo-placeholder {
+    background-color: #dfe4ea; // Grigio chiaro per il placeholder
+    border-radius: 8px;
+    height: 120px; // Altezza del placeholder
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7f8c8d;
+    font-style: italic;
+    font-size: 0.9em;
+    border: 2px dashed #ced4da;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+  }
+}
+
+
+/* Sezione Team (stili già presenti da public_homepage_component_scss_v6) */
+.team-section {
+  padding: 60px 25px;
+  background-color: #ffffff;
+  text-align: center;
+
+  h2 {
+    font-size: 2.2em;
+    color: #2c3e50;
+    margin-bottom: 40px;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .team-member-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .team-member-image-wrapper {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+      // Classi per sfondi placeholder colorati
+      &.placeholder-bg-1 { background-color: #a2d2ff; } // Blu chiaro
+      &.placeholder-bg-2 { background-color: #ffc09f; } // Arancione chiaro
+      &.placeholder-bg-3 { background-color: #caffbf; } // Verde chiaro
+      &.placeholder-bg-4 { background-color: #fdffb6; } // Giallo chiaro
+
+      .team-member-image { // Da usare quando hai le immagini reali
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .team-member-name {
+      font-size: 1.4em;
+      color: #34495e;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .team-member-role {
+      font-size: 1em;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+  }
+}
+
+
+.public-footer {
+  text-align: center;
+  padding: 25px;
+  background-color: #343a40;
+  color: #f8f9fa;
+  font-size: 0.9em;
+  margin-top: 0;
+}
+
+/* Stili per il Modale Evento */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.modal-content-wrapper {
+  display: flex;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  transition: max-width 0.4s ease-in-out;
+
+  &.registration-open {
+    max-width: 1000px;
+  }
+}
+.modal-content { // Riferito al pannello dei dettagli evento
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding: 25px 30px;
+  overflow-y: auto;
+  transition: max-width 0.4s ease-in-out, flex-basis 0.4s ease-in-out;
+
+  .modal-content-wrapper.registration-open & {
+    flex-basis: calc(100% - 320px);
+    max-width: calc(100% - 320px);
+  }
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ecf0f1;
+
+  h2 {
+    font-size: 1.8em;
+    color: #2c3e50;
+    margin: 0;
+    flex-grow: 1;
+  }
+
+  .modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .btn-register-event {
+    background-color: #2ecc71;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: #27ae60;
+    }
+  }
+}
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 2em;
+  line-height: 0.5;
+  color: #777;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #333;
+  }
+}
+.modal-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px 25px;
+
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.modal-detail-item {
+  margin-bottom: 5px;
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+  .modal-label {
+    display: block;
+    font-weight: 600;
+    color: #34495e;
+    font-size: 0.9em;
+    margin-bottom: 4px;
+  }
+  .modal-value {
+    font-size: 1em;
+    color: #555;
+    word-break: break-word;
+    &.description {
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+  }
+  .event-showcase-state {
+      font-size: 0.85em;
+      font-weight: bold;
+      padding: 3px 7px;
+      border-radius: 4px;
+      color: white;
+      display: inline-block;
+  }
+}
+.modal-dlc-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 5px 0 0 0;
+  font-size: 0.95em;
+  color: #555;
+  li {
+    margin-bottom: 3px;
+  }
+}
+.modal-image-section {
+    margin-top: 10px;
+    .modal-label {
+        margin-bottom: 8px;
+    }
+}
+.modal-event-image {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  display: block;
+  margin-top: 5px;
+}
+.modal-registration-panel {
+  flex: 0 0 300px;
+  background-color: #f8f9fa;
+  padding: 25px 30px;
+  border-left: 1px solid #e0e0e0;
+  transform: translateX(100%);
+  transition: transform 0.4s ease-in-out;
+  overflow-y: auto;
+
+  &.open {
+    transform: translateX(0%);
+  }
+
+  .modal-header h3 {
+    font-size: 1.5em;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .registration-panel-content {
+    margin-top: 20px;
+    .form-group { margin-bottom: 15px; }
+    .btn-primary { width: 100%; }
+  }
+}
+
+
+/* Stili per il Modale Video */
+.video-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2050;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.video-modal-content {
+  background-color: #000;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  position: relative;
+  width: 90vw;
+  max-width: 900px;
+  aspect-ratio: 16 / 9;
+}
+.video-modal-close-button {
+  position: absolute;
+  top: -35px;
+  right: -5px;
+  background: none;
+  border: none;
+  font-size: 2.5em;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
