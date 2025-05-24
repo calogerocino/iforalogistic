@@ -1,16 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, User, updateProfile, updatePassword as firebaseUpdatePassword, onAuthStateChanged, authState, EmailAuthProvider, reauthenticateWithCredential } from '@angular/fire/auth';
 import { Firestore, doc, setDoc, getDoc, docData, updateDoc } from '@angular/fire/firestore';
-import { Storage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from '@angular/fire/storage'; // Nuove importazioni per Storage
+import { Storage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, UploadTaskSnapshot } from '@angular/fire/storage';
 import { Observable, from, of, throwError } from 'rxjs';
 import { switchMap, catchError, finalize } from 'rxjs/operators';
 
 export interface AppUser {
   uid: string;
   email: string | null;
-  firstName?: string;
-  lastName?: string;
-  photoURL?: string | null; // Può essere null
+  firstName?: string; // Solo nome
+  photoURL?: string | null;
 }
 
 @Injectable({
@@ -19,7 +18,7 @@ export interface AppUser {
 export class AuthService {
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
-  private storage: Storage = inject(Storage); // Inietta Storage
+  private storage: Storage = inject(Storage);
 
   readonly defaultPhotoURL = 'assets/img/default-profile.jpeg';
 
@@ -33,17 +32,16 @@ export class AuthService {
     })
   );
 
-  async register(email: string, password: string, firstName: string, lastName: string): Promise<User | null> {
+  async register(email: string, password: string, firstName: string): Promise<User | null> { // Solo firstName
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       const user = userCredential.user;
       if (user) {
-        await updateProfile(user, { displayName: `${firstName} ${lastName}`, photoURL: this.defaultPhotoURL });
+        await updateProfile(user, { displayName: firstName, photoURL: this.defaultPhotoURL }); // Usa solo firstName per displayName
         await setDoc(doc(this.firestore, `users/${user.uid}`), {
           uid: user.uid,
           email: user.email,
           firstName: firstName,
-          lastName: lastName,
           photoURL: this.defaultPhotoURL
         });
         return user;
@@ -86,24 +84,21 @@ export class AuthService {
   async updateUserProfileData(uid: string, data: Partial<AppUser>): Promise<void> {
     const userDocRef = doc(this.firestore, `users/${uid}`);
     try {
-      await updateDoc(userDocRef, data);
+      // Prepara i dati per Firestore (rimuovendo lastName se presente per errore)
+      const firestoreData: Partial<AppUser> = { ...data };
+      delete (firestoreData as any).lastName; // Assicura che lastName non venga inviato
+
+      await updateDoc(userDocRef, firestoreData);
+
       const firebaseUser = this.auth.currentUser;
       if (firebaseUser) {
         const profileUpdate: { displayName?: string, photoURL?: string | null } = {};
-        if (data.firstName && data.lastName) {
-          profileUpdate.displayName = `${data.firstName} ${data.lastName}`;
-        } else if (data.firstName && firebaseUser.displayName) {
-           const currentLastName = firebaseUser.displayName.split(' ').slice(1).join(' ');
-           profileUpdate.displayName = `${data.firstName} ${currentLastName}`;
-        } else if (data.lastName && firebaseUser.displayName) {
-           const currentFirstName = firebaseUser.displayName.split(' ')[0];
-           profileUpdate.displayName = `${currentFirstName} ${data.lastName}`;
+        if (data.firstName) { // Aggiorna displayName solo con firstName
+          profileUpdate.displayName = data.firstName;
         }
-
-        if (data.hasOwnProperty('photoURL')) { // Controlla se photoURL è esplicitamente nel payload
+        if (data.hasOwnProperty('photoURL')) {
           profileUpdate.photoURL = data.photoURL;
         }
-
         if (Object.keys(profileUpdate).length > 0) {
           await updateProfile(firebaseUser, profileUpdate);
         }
@@ -132,7 +127,7 @@ export class AuthService {
     }
   }
 
-  uploadProfileImage(userId: string, file: File): { uploadProgress$: Observable<number | undefined>, downloadUrl$: Promise<string> } {
+    uploadProfileImage(userId: string, file: File): { uploadProgress$: Observable<number | undefined>, downloadUrl$: Promise<string> } {
     const filePath = `profile_pictures/${userId}/${file.name}`;
     const fileRef = storageRef(this.storage, filePath);
     const uploadTask = uploadBytesResumable(fileRef, file);
@@ -177,7 +172,6 @@ export class AuthService {
       await this.updateUserProfileData(userId, { photoURL: this.defaultPhotoURL });
     }
   }
-
 
   isLoggedIn(): Observable<boolean> {
     return authState(this.auth).pipe(

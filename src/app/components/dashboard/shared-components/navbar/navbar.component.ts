@@ -17,7 +17,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private userSubscription: Subscription | undefined;
   showLanguageWarning = false; // Nuova proprietà per l'avviso
 
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   private router = inject(Router);
 
   ngOnInit(): void {

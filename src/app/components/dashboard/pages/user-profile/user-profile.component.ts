@@ -57,7 +57,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.currentUser = user;
         this.profileForm.patchValue({
           firstName: user.firstName || '',
-          lastName: user.lastName || '',
         });
       }
     });
@@ -82,7 +81,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     }
 
     const { firstName, lastName } = this.profileForm.value;
-    const profileData: Partial<AppUser> = { firstName, lastName };
+    const profileData: Partial<AppUser> = { firstName };
 
     try {
       await this.authService.updateUserProfileData(this.currentUser.uid, profileData);

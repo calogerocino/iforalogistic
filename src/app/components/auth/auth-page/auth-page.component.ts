@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService, AppUser } from '../../../services/auth.service'; // AppUser ora ha solo firstName
 
 @Component({
   selector: 'app-auth-page',
@@ -14,10 +14,11 @@ import { AuthService } from '../../../services/auth.service';
 export class AuthPageComponent implements OnInit {
   isLoginMode: boolean = true;
   loginForm: FormGroup;
-  registerForm: FormGroup; // Lo manteniamo per coerenza, anche se non verrà usato per input
+  registerForm: FormGroup;
   errorMessage: string | null = null;
-  infoMessage: string | null = null; // Per il messaggio di registrazioni disabilitate
+  infoMessage: string | null = null;
   pageTitle: string = 'Accedi';
+  allowRegistration = false;
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
@@ -30,83 +31,145 @@ export class AuthPageComponent implements OnInit {
       password: ['', [Validators.required]]
     });
 
-    this.registerForm = this.fb.group({ // Definiamo comunque il form
-      firstName: [''],
-      lastName: [''],
-      email: [''],
-      password: [''],
-      confirmPassword: ['']
-    });
+    this.registerForm = this.fb.group({
+      firstName: ['', Validators.required], // Solo firstName
+      // lastName: [''], // Rimosso
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required]
+    }, { validator: this.passwordMatchValidator });
   }
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(data => {
-      const requestedModeIsLogin = data['isLoginMode'] !== undefined ? data['isLoginMode'] : true;
+      const routeIsForLogin = data['isLoginMode'] !== undefined ? data['isLoginMode'] : true;
+      const adminQueryParam = this.activatedRoute.snapshot.queryParamMap.get('admin');
 
-      if (!requestedModeIsLogin) { // Se si tenta di accedere alla registrazione
-        this.isLoginMode = true; // Mostra comunque l'interfaccia di login (o nulla se preferisci)
-        this.pageTitle = 'Accesso'; // O un titolo generico
-        this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login a breve.';
-        // Nascondi il form di login mentre mostri il messaggio, poi reindirizza
-        this.loginForm.disable();
+      this.infoMessage = null;
+      this.errorMessage = null;
 
-        setTimeout(() => {
-          this.infoMessage = null; // Pulisci il messaggio
-          this.router.navigate(['/auth/login'], { replaceUrl: true });
-           // Riabilita il form di login se l'utente è stato reindirizzato qui
-           // Questo timeout assicura che il form sia riabilitato dopo la navigazione
-           setTimeout(() => this.loginForm.enable(), 0);
-        }, 4000); // Reindirizza dopo 4 secondi
+      if (!routeIsForLogin) {
+        if (adminQueryParam !== null) {
+          this.allowRegistration = true;
+          this.isLoginMode = false;
+          this.pageTitle = data['title'] || 'Registrati';
+          this.registerForm.enable();
+          this.registerForm.reset();
+        } else {
+          this.allowRegistration = false;
+          this.isLoginMode = true;
+          this.pageTitle = 'Accesso';
+          this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
+          this.loginForm.disable();
+
+          setTimeout(() => {
+            this.infoMessage = null;
+            if (!this.router.url.endsWith('/auth/login')) {
+                this.router.navigate(['/auth/login'], { replaceUrl: true });
+            }
+             setTimeout(() => {
+                this.isLoginMode = true;
+                this.pageTitle = 'Accedi';
+                this.loginForm.enable();
+                this.loginForm.reset();
+            }, 0);
+          }, 4000);
+        }
       } else {
+        this.allowRegistration = false;
         this.isLoginMode = true;
         this.pageTitle = data['title'] || 'Accedi';
-        this.loginForm.enable(); // Assicura che il form di login sia abilitato
-      }
-      this.errorMessage = null;
-      if (this.isLoginMode) {
+        this.loginForm.enable();
         this.loginForm.reset();
-      } else {
-        // Non serve resettare registerForm se non viene mai mostrato/usato
       }
     });
   }
 
-  // Il validatore passwordMatch non è più strettamente necessario se il form di registrazione non viene usato
-  // passwordMatchValidator(form: FormGroup) { ... }
+  passwordMatchValidator(form: FormGroup) {
+    const password = form.get('password');
+    const confirmPassword = form.get('confirmPassword');
+    return password && confirmPassword && password.value === confirmPassword.value ? null : { mismatch: true };
+  }
 
   async onSubmit(): Promise<void> {
-    // Questa logica ora gestisce solo il login
-    if (!this.isLoginMode || this.loginForm.invalid) {
-      if(this.loginForm.invalid) this.markFormGroupTouched(this.loginForm);
-      return;
-    }
-
     this.errorMessage = null;
-    const { email, password } = this.loginForm.value;
-    try {
-      await this.authService.login(email, password);
-      this.router.navigate(['/dashboard']);
-    } catch (error: any) {
-      this.handleAuthError(error, 'login');
+    this.infoMessage = null;
+
+    if (this.isLoginMode) {
+      if (this.loginForm.invalid) {
+        this.markFormGroupTouched(this.loginForm);
+        return;
+      }
+      const { email, password } = this.loginForm.value;
+      try {
+        await this.authService.login(email, password);
+        this.router.navigate(['/dashboard']);
+      } catch (error: any) {
+        this.handleAuthError(error, 'login');
+      }
+    } else if (this.allowRegistration) {
+      if (this.registerForm.invalid) {
+        this.markFormGroupTouched(this.registerForm);
+        return;
+      }
+      const { firstName, email, password } = this.registerForm.value; // Solo firstName
+      try {
+        await this.authService.register(email, password, firstName); // Solo firstName
+        this.infoMessage = 'Registrazione completata con successo! Sarai reindirizzato al login.';
+        setTimeout(() => {
+            this.infoMessage = null;
+            this.router.navigate(['/auth/login']);
+        }, 3000);
+      } catch (error: any) {
+        this.handleAuthError(error, 'register');
+      }
     }
   }
 
-  private handleAuthError(error: any, mode: 'login' /*| 'register'*/): void { // Rimosso 'register'
+  private handleAuthError(error: any, mode: 'login' | 'register'): void {
     if (mode === 'login') {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         this.errorMessage = 'Email o password non validi.';
       } else {
         this.errorMessage = 'Errore durante il login. Riprova.';
       }
-    // La logica per l'errore di registrazione non è più necessaria qui
-    // } else {
-    //   if (error.code === 'auth/email-already-in-use') {
-    //     this.errorMessage = 'Questa email è già in uso.';
-    //   } else {
-    //     this.errorMessage = 'Errore durante la registrazione. Riprova.';
-    //   }
+    } else {
+      if (error.code === 'auth/email-already-in-use') {
+        this.errorMessage = 'Questa email è già in uso.';
+      } else {
+        this.errorMessage = 'Errore durante la registrazione. Riprova.';
+      }
     }
     console.error(error);
+  }
+
+  showRegistrationDisabledMessage(): void {
+    if (!this.allowRegistration) {
+      this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
+      this.isLoginMode = true;
+      this.pageTitle = 'Accesso';
+      this.loginForm.disable();
+
+      setTimeout(() => {
+        this.infoMessage = null;
+        if (!this.router.url.endsWith('/auth/login')) {
+            this.router.navigate(['/auth/login'], { replaceUrl: true });
+        }
+         setTimeout(() => {
+            this.isLoginMode = true;
+            this.pageTitle = 'Accedi';
+            this.loginForm.enable();
+            this.loginForm.reset();
+        }, 0);
+      }, 4000);
+    } else {
+        // Se allowRegistration è true, significa che siamo già su /auth/registrazione?admin
+        // Quindi impostiamo la modalità registrazione
+        this.isLoginMode = false;
+        this.pageTitle = 'Registrati';
+        this.registerForm.enable();
+        this.registerForm.reset();
+    }
   }
 
   private markFormGroupTouched(formGroup: FormGroup) {
