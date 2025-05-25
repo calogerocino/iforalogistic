@@ -4,7 +4,6 @@
 }
 
 .homepage-content-wrapper {
-  // Nessun margin-top specifico qui, la navbar sticky lo gestisce
 }
 
 .hero-section {
@@ -215,10 +214,9 @@
   }
 }
 
-/* Sezione VTC Partner */
 .vtc-partners-section {
   padding: 60px 25px;
-  background-color: #f0f4f8; // Sfondo leggermente diverso
+  background-color: #f0f4f8;
   text-align: center;
 
   h2 {
@@ -245,9 +243,9 @@
   }
 
   .partner-logo-placeholder {
-    background-color: #dfe4ea; // Grigio chiaro per il placeholder
+    background-color: #dfe4ea;
     border-radius: 8px;
-    height: 120px; // Altezza del placeholder
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -264,8 +262,6 @@
   }
 }
 
-
-/* Sezione Team (stili già presenti da public_homepage_component_scss_v6) */
 .team-section {
   padding: 60px 25px;
   background-color: #ffffff;
@@ -309,13 +305,12 @@
       border: 3px solid #fff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 
-      // Classi per sfondi placeholder colorati
-      &.placeholder-bg-1 { background-color: #a2d2ff; } // Blu chiaro
-      &.placeholder-bg-2 { background-color: #ffc09f; } // Arancione chiaro
-      &.placeholder-bg-3 { background-color: #caffbf; } // Verde chiaro
-      &.placeholder-bg-4 { background-color: #fdffb6; } // Giallo chiaro
+      &.placeholder-bg-1 { background-color: #a2d2ff; }
+      &.placeholder-bg-2 { background-color: #ffc09f; }
+      &.placeholder-bg-3 { background-color: #caffbf; }
+      &.placeholder-bg-4 { background-color: #fdffb6; }
 
-      .team-member-image { // Da usare quando hai le immagini reali
+      .team-member-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -337,7 +332,6 @@
   }
 }
 
-
 .public-footer {
   text-align: center;
   padding: 25px;
@@ -347,7 +341,6 @@
   margin-top: 0;
 }
 
-/* Stili per il Modale Evento */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -378,7 +371,7 @@
     max-width: 1000px;
   }
 }
-.modal-content { // Riferito al pannello dei dettagli evento
+.modal-content {
   flex: 0 0 100%;
   max-width: 100%;
   padding: 25px 30px;
@@ -507,7 +500,7 @@
   margin-top: 5px;
 }
 .modal-registration-panel {
-  flex: 0 0 300px;
+  flex: 0 0 320px;
   background-color: #f8f9fa;
   padding: 25px 30px;
   border-left: 1px solid #e0e0e0;
@@ -527,13 +520,73 @@
 
   .registration-panel-content {
     margin-top: 20px;
-    .form-group { margin-bottom: 15px; }
-    .btn-primary { width: 100%; }
+    .form-group { margin-bottom: 18px; }
+    label {
+        display: block;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 0.95em;
+        color: #495057;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        &:focus {
+          outline: none;
+          border-color: #3498db;
+          box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+    }
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23343a40'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 1em;
+        padding-right: 30px;
+    }
+    .error-messages.modal-error small {
+        font-size: 0.8em;
+        color: #dc3545;
+    }
+    .no-slots-info {
+        font-size: 0.9em;
+        color: #6c757d;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        text-align: center;
+    }
+    .modal-feedback {
+        padding: 10px;
+        margin-top: 15px;
+        border-radius: 5px;
+        font-size: 0.9em;
+        text-align: center;
+        &.success-message {
+            background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+        }
+        &.error-message-form {
+             background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+        }
+    }
+    .btn-primary {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+    }
   }
 }
 
-
-/* Stili per il Modale Video */
 .video-modal-overlay {
   position: fixed;
   top: 0;

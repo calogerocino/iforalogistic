@@ -1,11 +1,12 @@
 import { Component, OnInit, inject, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray, AbstractControl } from '@angular/forms';
 import { Observable, of, Subscription } from 'rxjs';
 import { switchMap, map, tap } from 'rxjs/operators';
-import { EventService, AppEvent, EventState, ServerType, TrailerType, EventDLCs } from '../../../../../services/event.service';
+import { EventService, AppEvent, EventState, ServerType, TrailerType, EventDLCs, EventSlot } from '../../../../../services/event.service';
 import { AuthService } from '../../../../../services/auth.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-event-manage',
@@ -32,16 +33,12 @@ export class EventManageComponent implements OnInit, OnDestroy {
   availableEventStates: EventState[] = [];
   private allEventStates: EventState[] = ['nuovo', 'programmato', 'adesso', 'concluso'];
 
-  serverOptions: ServerType[] = ['Simulation 1', 'Simulation 2', 'Promods','SCS Convoy'];
+  serverOptions: ServerType[] = ['Simulation 1', 'Simulation 2', 'SCS Convoy', 'Promods'];
   dlcOptions: { name: keyof EventDLCs, label: string }[] = [
-    { name: 'goingEast', label: 'Going East!' },
-    { name: 'scandinavia', label: 'Scandinavia' },
-    { name: 'viveLaFrance', label: 'Vive la France!' },
-    { name: 'italia', label: 'Italia' },
-    { name: 'beyondTheBalticSea', label: 'Beyond the Baltic Sea' },
-    { name: 'roadToTheBlackSea', label: 'Road to the Black Sea' },
-    { name: 'iberia', label: 'Iberia' },
-    { name: 'westBalkans', label: 'West Balkans' },
+    { name: 'goingEast', label: 'Going East!' }, { name: 'scandinavia', label: 'Scandinavia' },
+    { name: 'viveLaFrance', label: 'Vive la France!' }, { name: 'italia', label: 'Italia' },
+    { name: 'beyondTheBalticSea', label: 'Beyond the Baltic Sea' }, { name: 'roadToTheBlackSea', label: 'Road to the Black Sea' },
+    { name: 'iberia', label: 'Iberia' }, { name: 'westBalkans', label: 'West Balkans' },
     { name: 'greece', label: 'Greece' }
   ];
   trailerTypeOptions: TrailerType[] = ['Standard', 'Pianale', 'Bestiame'];
@@ -52,6 +49,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
   isUploadingRouteImage = false;
   photoAreaUploadProgress: number | undefined = 0;
   routeImageUploadProgress: number | undefined = 0;
+  slotImageUploadProgress: { [slotId: string]: number | undefined } = {};
+  isUploadingSlotImage: { [slotId: string]: boolean } = {};
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -75,7 +74,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
       photoAreaImageUrl: [null as string | null],
       trailerType: [null as TrailerType | null],
       cargo: [''],
-      routeImageUrl: [null as string | null]
+      routeImageUrl: [null as string | null],
+      slots: this.fb.array([])
     });
   }
 
@@ -101,6 +101,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
           this.photoAreaPreview = this.eventService.defaultEventPhotoAreaUrl;
           this.routeImagePreview = this.eventService.defaultEventRouteUrl;
           this.eventForm.get('state')?.setValue('nuovo');
+          this.slotsFormArray.clear();
           return of(null);
         }
         return this.eventId ? this.eventService.getEventById(this.eventId) : of(null);
@@ -162,16 +163,67 @@ export class EventManageComponent implements OnInit, OnDestroy {
     });
     this.photoAreaPreview = eventData.photoAreaImageUrl || this.eventService.defaultEventPhotoAreaUrl;
     this.routeImagePreview = eventData.routeImageUrl || this.eventService.defaultEventRouteUrl;
+    this.populateSlotsFormArray(eventData.slots || []);
   }
 
   get dlcsFormGroup(): FormGroup {
     return this.eventForm.get('dlcs') as FormGroup;
   }
 
+  get slotsFormArray(): FormArray {
+    return this.eventForm.get('slots') as FormArray;
+  }
+
+  private createSlotFormGroup(slot?: EventSlot): FormGroup {
+    const booked = slot?.bookings?.reduce((sum, b) => sum + b.participantsCount, 0) || 0;
+    return this.fb.group({
+      id: [slot?.id || uuidv4()],
+      name: [slot?.name || '', Validators.required],
+      imageUrl: [slot?.imageUrl || null],
+      capacity: [slot?.capacity || 1, [Validators.required, Validators.min(1)]],
+      bookedPlaces: [{ value: booked, disabled: true }]
+    });
+  }
+
+  addSlot(): void {
+    if (this.mode === 'view') return;
+    this.slotsFormArray.push(this.createSlotFormGroup());
+  }
+
+  removeSlot(index: number): void {
+    if (this.mode === 'view') return;
+    this.slotsFormArray.removeAt(index);
+  }
+
+  private populateSlotsFormArray(slots: EventSlot[]): void {
+    this.slotsFormArray.clear();
+    slots.forEach(slot => {
+      this.slotsFormArray.push(this.createSlotFormGroup(slot));
+    });
+  }
+
+  getBookedPlacesForSlotControl(slotControl: AbstractControl): number {
+    return slotControl.get('bookedPlaces')?.value || 0;
+  }
+
+  getAvailablePlacesForSlotControl(slotControl: AbstractControl): number {
+    const capacity = slotControl.get('capacity')?.value || 0;
+    const booked = this.getBookedPlacesForSlotControl(slotControl);
+    return capacity - booked;
+  }
+
+  getBookedPlacesForView(slot: EventSlot): number {
+    return slot.bookings?.reduce((sum, b) => sum + b.participantsCount, 0) || 0;
+  }
+
+  getAvailablePlacesForView(slot: EventSlot): number {
+    const capacity = slot.capacity || 0;
+    const booked = this.getBookedPlacesForView(slot);
+    return capacity - booked;
+  }
+
   hasSelectedDlcs(dlcs: EventDLCs | undefined | null): boolean {
-    if (!dlcs) {
-      return false;
-    }
+    if (!dlcs) return false;
     return Object.values(dlcs).some(isSelected => isSelected === true);
   }
 
@@ -224,6 +276,16 @@ export class EventManageComponent implements OnInit, OnDestroy {
       cargo: formValues.cargo,
       photoAreaImageUrl: this.eventForm.get('photoAreaImageUrl')?.value,
       routeImageUrl: this.eventForm.get('routeImageUrl')?.value,
+      slots: formValues.slots.map((slotFromForm: any) => {
+        const existingSlotData = this.currentEvent?.slots?.find(s => s.id === slotFromForm.id);
+        return {
+          id: slotFromForm.id,
+          name: slotFromForm.name,
+          imageUrl: slotFromForm.imageUrl,
+          capacity: slotFromForm.capacity,
+          bookings: existingSlotData?.bookings || []
+        };
+      })
     };
 
     try {
@@ -252,63 +314,66 @@ export class EventManageComponent implements OnInit, OnDestroy {
     }
   }
 
-  triggerImageInput(type: 'photoArea' | 'routePath'): void {
+  triggerImageInput(type: 'photoArea' | 'routePath' | 'slotImage', slotIndex?: number): void {
     if (type === 'photoArea') {
       this.photoAreaInput.nativeElement.click();
-    } else {
+    } else if (type === 'routePath') {
       this.routeImageInput.nativeElement.click();
+    } else if (type === 'slotImage' && slotIndex !== undefined) {
+        const slotImageInput = document.getElementById(`slotImageInput-${slotIndex}`) as HTMLInputElement;
+        if (slotImageInput) slotImageInput.click();
     }
   }
 
-  async onImageSelected(event: Event, imageType: 'photoArea' | 'routePath'): Promise<void> {
+  async onImageSelected(event: Event, imageType: 'photoArea' | 'routePath' | 'slotImage', slotIndexOrId?: number | string): Promise<void> {
     const input = event.target as HTMLInputElement;
-    if (!input.files?.length) {
-      return;
-    }
+    if (!input.files?.length) return;
     const file = input.files[0];
-    const currentImageId = this.eventId;
     let oldImageUrl: string | null | undefined = null;
+    const isSlotImg = imageType === 'slotImage';
+    let imageIdForPath: string;
 
-    if (currentImageId) {
-        if (imageType === 'photoArea') {
-            oldImageUrl = this.eventForm.get('photoAreaImageUrl')?.value;
-        } else {
-            oldImageUrl = this.eventForm.get('routeImageUrl')?.value;
+    if (isSlotImg && slotIndexOrId !== undefined) {
+        const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
+        imageIdForPath = `${this.eventId || 'newEvent'}/slot_${slotId}`;
+        if (this.eventId && typeof slotIndexOrId === 'number') {
+            oldImageUrl = this.slotsFormArray.at(slotIndexOrId).get('imageUrl')?.value;
         }
-        const defaultUrl = imageType === 'photoArea' ? this.eventService.defaultEventPhotoAreaUrl : this.eventService.defaultEventRouteUrl;
-        if (oldImageUrl === defaultUrl) {
-            oldImageUrl = null;
-        }
-    }
-
-    if (imageType === 'photoArea') {
-      this.isUploadingPhotoArea = true;
-      this.photoAreaUploadProgress = 0;
     } else {
-      this.isUploadingRouteImage = true;
-      this.routeImageUploadProgress = 0;
+        imageIdForPath = this.eventId || `temp_${Date.now()}`;
+        if (this.eventId) {
+            oldImageUrl = imageType === 'photoArea' ? this.eventForm.get('photoAreaImageUrl')?.value : this.eventForm.get('routeImageUrl')?.value;
+        }
     }
-    this.successMessage = null;
-    this.errorMessage = null;
+    const defaultUrl = isSlotImg ? this.eventService.defaultSlotImageUrl : (imageType === 'photoArea' ? this.eventService.defaultEventPhotoAreaUrl : this.eventService.defaultEventRouteUrl);
+    if (oldImageUrl === defaultUrl) oldImageUrl = null;
+
+    if (imageType === 'photoArea') { this.isUploadingPhotoArea = true; this.photoAreaUploadProgress = 0; }
+    else if (imageType === 'routePath') { this.isUploadingRouteImage = true; this.routeImageUploadProgress = 0; }
+    else if (isSlotImg && slotIndexOrId !== undefined) {
+        const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
+        this.isUploadingSlotImage[slotId] = true; this.slotImageUploadProgress[slotId] = 0;
+    }
+    this.successMessage = null; this.errorMessage = null;
 
     try {
-      if (currentImageId && oldImageUrl) {
-        await this.eventService.deleteEventImage(currentImageId, oldImageUrl, imageType, false);
+      if (oldImageUrl) {
+        await this.eventService.deleteEventImage(oldImageUrl);
       }
 
-      const uploadEventId = this.eventId || `temp_${Date.now()}`;
-      const { uploadProgress$, downloadUrlPromise } = this.eventService.uploadEventImage(uploadEventId, file, imageType);
+      const { uploadProgress$, downloadUrlPromise } = this.eventService.uploadEventImage(imageIdForPath, file, imageType);
 
       uploadProgress$.subscribe(
         progress => {
           if (imageType === 'photoArea') this.photoAreaUploadProgress = progress;
-          else this.routeImageUploadProgress = progress;
+          else if (imageType === 'routePath') this.routeImageUploadProgress = progress;
+          else if (isSlotImg && slotIndexOrId !== undefined) {
+            const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
+            this.slotImageUploadProgress[slotId] = progress;
+          }
         },
         error => {
-          this.errorMessage = `Errore durante il caricamento dell'immagine ${imageType === 'photoArea' ? 'Area Foto' : 'Percorso'}. Dettagli: ${error.message || error}`;
-          if (imageType === 'photoArea') this.isUploadingPhotoArea = false; else this.isUploadingRouteImage = false;
-          this.photoAreaUploadProgress = undefined;
-          this.routeImageUploadProgress = undefined;
+          this.errorMessage = `Errore upload. Dettagli: ${error.message || error}`;
         }
       );
 
@@ -317,60 +382,85 @@ export class EventManageComponent implements OnInit, OnDestroy {
       if (imageType === 'photoArea') {
         this.eventForm.get('photoAreaImageUrl')?.setValue(newImageUrl);
         this.photoAreaPreview = newImageUrl;
-      } else {
+      } else if (imageType === 'routePath') {
         this.eventForm.get('routeImageUrl')?.setValue(newImageUrl);
         this.routeImagePreview = newImageUrl;
+      } else if (isSlotImg && typeof slotIndexOrId === 'number') {
+        this.slotsFormArray.at(slotIndexOrId).get('imageUrl')?.setValue(newImageUrl);
       }
-      this.successMessage = `Immagine ${imageType === 'photoArea' ? 'Area Foto' : 'Percorso'} caricata. Salva l'evento per applicare la modifica.`;
+      this.successMessage = `Immagine caricata. Salva l'evento per applicare.`;
 
     } catch (error: any) {
-      this.errorMessage = `Errore durante la gestione dell'immagine ${imageType === 'photoArea' ? 'Area Foto' : 'Percorso'}. Dettagli: ${error.message || error}`;
+      this.errorMessage = `Errore gestione immagine. Dettagli: ${error.message || error}`;
     } finally {
-      if (imageType === 'photoArea') this.isUploadingPhotoArea = false; else this.isUploadingRouteImage = false;
-      this.photoAreaUploadProgress = undefined;
-      this.routeImageUploadProgress = undefined;
+      if (imageType === 'photoArea') this.isUploadingPhotoArea = false;
+      else if (imageType === 'routePath') this.isUploadingRouteImage = false;
+      else if (isSlotImg && slotIndexOrId !== undefined) {
+        const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
+        this.isUploadingSlotImage[slotId] = false;
+      }
+
+      if (imageType === 'photoArea') this.photoAreaUploadProgress = undefined;
+      else if (imageType === 'routePath') this.routeImageUploadProgress = undefined;
+      else if (isSlotImg && slotIndexOrId !== undefined) {
+         const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
+         this.slotImageUploadProgress[slotId] = undefined;
+      }
       if (input) input.value = '';
     }
   }
 
-  async deleteEventImage(imageType: 'photoArea' | 'routePath'): Promise<void> {
-    if (!this.eventId) {
-        this.errorMessage = "Salva prima l'evento per poter eliminare le immagini.";
+  async deleteEventImage(imageType: 'photoArea' | 'routePath' | 'slotImage', slotIndex?: number): Promise<void> {
+    const isSlotImg = imageType === 'slotImage';
+    let currentImageUrl: string | null | undefined;
+    let defaultUrl: string;
+
+    if (isSlotImg && slotIndex !== undefined) {
+        currentImageUrl = this.slotsFormArray.at(slotIndex).get('imageUrl')?.value;
+        defaultUrl = this.eventService.defaultSlotImageUrl;
+    } else if (imageType === 'photoArea') {
+        currentImageUrl = this.eventForm.get('photoAreaImageUrl')?.value;
+        defaultUrl = this.eventService.defaultEventPhotoAreaUrl;
+    } else {
+        currentImageUrl = this.eventForm.get('routeImageUrl')?.value;
+        defaultUrl = this.eventService.defaultEventRouteUrl;
+    }
+
+    if (!this.eventId && !isSlotImg) {
+        this.errorMessage = "Salva prima l'evento per poter eliminare le immagini principali.";
         if (imageType === 'photoArea') {
-            this.eventForm.get('photoAreaImageUrl')?.setValue(this.eventService.defaultEventPhotoAreaUrl);
-            this.photoAreaPreview = this.eventService.defaultEventPhotoAreaUrl;
-        } else {
-            this.eventForm.get('routeImageUrl')?.setValue(this.eventService.defaultEventRouteUrl);
-            this.routeImagePreview = this.eventService.defaultEventRouteUrl;
+            this.eventForm.get('photoAreaImageUrl')?.setValue(defaultUrl); this.photoAreaPreview = defaultUrl;
+        } else if (imageType === 'routePath') {
+            this.eventForm.get('routeImageUrl')?.setValue(defaultUrl); this.routeImagePreview = defaultUrl;
         }
         this.successMessage = "Selezione immagine annullata.";
         return;
     }
+     if (isSlotImg && slotIndex !== undefined && this.slotsFormArray.at(slotIndex).get('id')?.value?.startsWith('temp_')) {
+        this.slotsFormArray.at(slotIndex!).get('imageUrl')?.setValue(defaultUrl);
+        this.successMessage = "Selezione immagine slot annullata.";
+        return;
+    }
 
-    const currentImageUrl = imageType === 'photoArea' ? this.eventForm.get('photoAreaImageUrl')?.value : this.eventForm.get('routeImageUrl')?.value;
-    const defaultUrl = imageType === 'photoArea' ? this.eventService.defaultEventPhotoAreaUrl : this.eventService.defaultEventRouteUrl;
-
-    if (currentImageUrl === defaultUrl) {
+    if (currentImageUrl === defaultUrl || !currentImageUrl) {
         this.successMessage = "Nessuna immagine personalizzata da eliminare.";
         return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = null;
-    this.successMessage = null;
+    this.isLoading = true; this.errorMessage = null; this.successMessage = null;
     try {
-      await this.eventService.deleteEventImage(this.eventId, currentImageUrl, imageType, true);
-      if (imageType === 'photoArea') {
-          this.eventForm.get('photoAreaImageUrl')?.setValue(defaultUrl);
-          this.photoAreaPreview = defaultUrl;
+      await this.eventService.deleteEventImage(currentImageUrl);
+
+      if (isSlotImg && slotIndex !== undefined) {
+          this.slotsFormArray.at(slotIndex).get('imageUrl')?.setValue(defaultUrl);
+      } else if (imageType === 'photoArea') {
+          this.eventForm.get('photoAreaImageUrl')?.setValue(defaultUrl); this.photoAreaPreview = defaultUrl;
       } else {
-          this.eventForm.get('routeImageUrl')?.setValue(defaultUrl);
-          this.routeImagePreview = defaultUrl;
+          this.eventForm.get('routeImageUrl')?.setValue(defaultUrl); this.routeImagePreview = defaultUrl;
       }
-      this.successMessage = `Immagine ${imageType === 'photoArea' ? 'Area Foto' : 'Percorso'} eliminata. Salva l'evento per confermare (se non già fatto dal servizio).`;
+      this.successMessage = `Immagine eliminata. Salva l'evento per confermare la modifica.`;
     } catch (error: any) {
-        this.errorMessage = `Errore durante l'eliminazione dell'immagine: ${error.message || 'Riprova.'}`;
-        console.error("Errore in deleteEventImage:", error);
+        this.errorMessage = `Errore eliminazione immagine: ${error.message || 'Riprova.'}`;
     } finally {
         this.isLoading = false;
     }
@@ -394,4 +484,5 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.routeSubscription.unsubscribe();
     }
   }
+  objectValues = Object.values;
 }

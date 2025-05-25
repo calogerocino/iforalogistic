@@ -3,13 +3,14 @@ import { PublicNavbarComponent } from '../public-navbar/public-navbar.component'
 import { RouterModule } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Observable } from 'rxjs';
-import { EventService, AppEvent, EventDLCs } from '../../../services/event.service';
+import { EventService, AppEvent, EventDLCs, EventSlot, SlotParticipantInfo } from '../../../services/event.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-public-homepage',
   standalone: true,
-  imports: [PublicNavbarComponent, RouterModule, CommonModule, DatePipe],
+  imports: [PublicNavbarComponent, RouterModule, CommonModule, DatePipe, ReactiveFormsModule],
   templateUrl: './public-homepage.component.html',
   styleUrls: ['./public-homepage.component.scss']
 })
@@ -20,34 +21,43 @@ export class PublicHomepageComponent implements OnInit {
   selectedEventForModal: AppEvent | null = null;
   isEventModalOpen = false;
   isRegistrationPanelOpen = false;
-
   isVideoModalOpen = false;
   videoUrl: SafeResourceUrl | null = null;
-  private rawVideoUrl = 'https://www.youtube.com/watch?v=amoh-Rlc6MU'; // Sostituisci con il tuo ID video VALIDO
+  private youtubeVideoId = 'YOUR_YOUTUBE_VIDEO_ID';
+
+  vtcRegistrationForm: FormGroup;
+  availableSlotsForBooking: EventSlot[] = [];
+  isLoadingRegistration = false;
+  registrationMessage: { type: 'success' | 'error', text: string } | null = null;
 
   dlcOptions: { name: keyof EventDLCs, label: string }[] = [
-    { name: 'goingEast', label: 'Going East!' },
-    { name: 'scandinavia', label: 'Scandinavia' },
-    { name: 'viveLaFrance', label: 'Vive la France!' },
-    { name: 'italia', label: 'Italia' },
-    { name: 'beyondTheBalticSea', label: 'Beyond the Baltic Sea' },
-    { name: 'roadToTheBlackSea', label: 'Road to the Black Sea' },
-    { name: 'iberia', label: 'Iberia' },
-    { name: 'westBalkans', label: 'West Balkans' },
-    { name: 'greece', label: 'Greece' }
+    { name: 'goingEast', label: 'Going East!' }, { name: 'scandinavia', label: 'Scandinavia' },
+    { name: 'viveLaFrance', label: 'Vive la France!' }, { name: 'italia', label: 'Italia' },
+    { name: 'beyondTheBalticSea', label: 'Beyond the Baltic Sea' }, { name: 'roadToTheBlackSea', label: 'Road to the Black Sea' },
+    { name: 'iberia', label: 'Iberia' }, { name: 'westBalkans', label: 'West Balkans' },
+    { name: 'greece', label: 'Greece'}
   ];
 
   public eventService = inject(EventService);
   private sanitizer = inject(DomSanitizer);
+  private fb = inject(FormBuilder);
 
   constructor() {
     this.currentYear = new Date().getFullYear();
     this.upcomingEvents$ = this.eventService.getUpcomingInternalEvents();
-    if (this.rawVideoUrl.includes('youtube.com/embed/')) { // Controlla se è già un URL di embed
-        this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.rawVideoUrl);
-    } else { // Altrimenti, costruisci l'URL di embed (esempio per ID video)
-        this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(`https://m.youtube.com/watch?v=bviMJKuMKNM`);
+    if (this.youtubeVideoId && this.youtubeVideoId !== 'YOUR_YOUTUBE_VIDEO_ID') {
+      this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/VIDEO_ID5`);
+    } else {
+      console.warn("ID Video YouTube non impostato in PublicHomepageComponent.");
     }
+
+    this.vtcRegistrationForm = this.fb.group({
+      companyName: ['', Validators.required],
+      contactName: ['', Validators.required],
+      contactEmail: ['', [Validators.required, Validators.email]],
+      participantsCount: [1, [Validators.required, Validators.min(1)]],
+      selectedSlotId: [null, Validators.required]
+    });
   }
 
   ngOnInit(): void {
@@ -58,6 +68,10 @@ export class PublicHomepageComponent implements OnInit {
         this.isLoadingEvents = false;
       }
     });
+
+    this.vtcRegistrationForm.get('participantsCount')?.valueChanges.subscribe(count => {
+        this.updateAvailableSlots(count);
+    });
   }
 
   getEventStateClass(state: string | undefined): string {
@@ -66,11 +80,12 @@ export class PublicHomepageComponent implements OnInit {
   }
 
   openEventModal(event: AppEvent): void {
-    console.log('Evento selezionato per il modale:', event); // LOG DI DEBUG
     this.selectedEventForModal = event;
-    console.log('selectedEventForModal dopo assegnazione:', this.selectedEventForModal); // LOG DI DEBUG
     this.isEventModalOpen = true;
     this.isRegistrationPanelOpen = false;
+    this.registrationMessage = null;
+    this.vtcRegistrationForm.reset({ participantsCount: 1, selectedSlotId: null });
+    this.updateAvailableSlots(1);
     document.body.style.overflow = 'hidden';
   }
 
@@ -83,11 +98,74 @@ export class PublicHomepageComponent implements OnInit {
 
   toggleRegistrationPanel(): void {
     this.isRegistrationPanelOpen = !this.isRegistrationPanelOpen;
+    if (this.isRegistrationPanelOpen) {
+        this.updateAvailableSlots(this.vtcRegistrationForm.get('participantsCount')?.value || 1);
+    }
+  }
+
+  updateAvailableSlots(participantsNeeded: number | null): void {
+    if (!this.selectedEventForModal || !this.selectedEventForModal.slots || participantsNeeded === null || participantsNeeded < 1) {
+      this.availableSlotsForBooking = [];
+      return;
+    }
+    this.availableSlotsForBooking = this.selectedEventForModal.slots.filter(slot => {
+      const bookedPlaces = slot.bookings?.reduce((sum, b) => sum + b.participantsCount, 0) || 0;
+      return (slot.capacity - bookedPlaces) >= participantsNeeded;
+    });
+    const selectedSlotIdControl = this.vtcRegistrationForm.get('selectedSlotId');
+    if (selectedSlotIdControl?.value && !this.availableSlotsForBooking.find(s => s.id === selectedSlotIdControl.value)) {
+        selectedSlotIdControl.setValue(null);
+    }
+  }
+
+  calculateAvailablePlaces(slot: EventSlot): number {
+    const booked = slot.bookings?.reduce((sum, b) => sum + b.participantsCount, 0) || 0;
+    return slot.capacity - booked;
+  }
+
+  async onVtcRegisterSubmit(): Promise<void> {
+    if (this.vtcRegistrationForm.invalid || !this.selectedEventForModal?.id) {
+      this.registrationMessage = { type: 'error', text: 'Per favore, compila tutti i campi e seleziona uno slot.' };
+      Object.values(this.vtcRegistrationForm.controls).forEach(control => control.markAsTouched());
+      return;
+    }
+
+    this.isLoadingRegistration = true;
+    this.registrationMessage = null;
+
+    const formValues = this.vtcRegistrationForm.value;
+    const bookingInfo: Omit<SlotParticipantInfo, 'bookingId' | 'bookedAt'> = {
+      companyName: formValues.companyName,
+      contactName: formValues.contactName,
+      contactEmail: formValues.contactEmail,
+      participantsCount: formValues.participantsCount
+    };
+
+    try {
+      await this.eventService.registerVtcToSlot(this.selectedEventForModal.id, formValues.selectedSlotId, bookingInfo);
+      this.registrationMessage = { type: 'success', text: 'Registrazione all\'evento completata con successo!' };
+      this.vtcRegistrationForm.reset({ participantsCount: 1, selectedSlotId: null });
+      if (this.selectedEventForModal && this.selectedEventForModal.id) {
+        this.eventService.getEventById(this.selectedEventForModal.id).subscribe(updatedEvent => {
+            this.selectedEventForModal = updatedEvent;
+            this.updateAvailableSlots(this.vtcRegistrationForm.get('participantsCount')?.value || 1);
+        });
+      }
+    } catch (error: any) {
+      this.registrationMessage = { type: 'error', text: `Errore durante la registrazione: ${error.message || 'Riprova.'}` };
+      console.error("Errore registrazione VTC:", error);
+    } finally {
+      this.isLoadingRegistration = false;
+    }
   }
 
   openVideoModal(): void {
-    this.isVideoModalOpen = true;
-    document.body.style.overflow = 'hidden';
+    if (this.videoUrl) {
+        this.isVideoModalOpen = true;
+        document.body.style.overflow = 'hidden';
+    } else {
+        console.error("Impossibile aprire il modale video: URL non valido o ID non impostato.");
+    }
   }
 
   closeVideoModal(): void {
@@ -101,4 +179,6 @@ export class PublicHomepageComponent implements OnInit {
     }
     return Object.values(dlcs).some(isSelected => isSelected === true);
   }
+
+  objectValues = Object.values;
 }
