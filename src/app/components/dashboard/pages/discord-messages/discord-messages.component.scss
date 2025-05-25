@@ -1,0 +1,25 @@
+.avatar {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.author-tag {
+  font-weight: 500;
+}
+
+.message-content {
+  white-space: pre-wrap; // Per mantenere gli a capo e gli spazi del messaggio
+  margin-top: 5px;
+}
+
+.list-group-item {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(0,0,0,.125);
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.timestamp {
+  font-size: 0.85em;
+}

@@ -1,0 +1,38 @@
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Log Messaggi Discord</h3>
+        </div>
+        <div class="card-body">
+          <div *ngIf="discordMessages$ | async as messages; else loading" class="message-list">
+            <div *ngIf="messages.length === 0" class="alert alert-info">
+              Nessun messaggio da visualizzare. In attesa di messaggi da Discord...
+            </div>
+
+            <ul class="list-group list-group-flush">
+              <li *ngFor="let msg of messages" class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                  <div>
+                    <img *ngIf="msg.authorAvatar" [src]="msg.authorAvatar" alt="Avatar" class="avatar rounded-circle mr-2" width="30" height="30">
+                    <strong class="author-tag">{{ msg.authorTag }}</strong>
+                    <small class="text-muted d-block d-md-inline ml-md-2"> (Canale: {{ msg.channelName }})</small>
+                  </div>
+                  <small class="text-muted timestamp">{{ msg.discordTimestamp | date:'dd/MM/yyyy HH:mm:ss' }}</small>
+                </div>
+                <p class="mb-1 mt-2 message-content">{{ msg.content }}</p>
+                <small class="text-muted">ID Messaggio: {{ msg.messageId }}</small>
+              </li>
+            </ul>
+          </div>
+          <ng-template #loading>
+            <p class="text-center">
+              <i class="fas fa-spinner fa-spin"></i> Caricamento messaggi da Firebase...
+            </p>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

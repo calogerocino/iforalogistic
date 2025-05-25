@@ -10,11 +10,19 @@
       "url": "http://localhost:4200/"
     },
     {
-      "name": "ng test",
-      "type": "chrome",
+      "name": "ng build",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
-    }
+    },
+    {
+      "name": "firebase deploy --only hosting",
+      "type": "node",
+      "request": "launch",
+    },
+    {
+      "name": "firebase deploy --only functions",
+      "type": "node",
+      "request": "launch",
+    },
   ]
 }

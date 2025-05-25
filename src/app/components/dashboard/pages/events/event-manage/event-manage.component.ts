@@ -32,7 +32,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
   availableEventStates: EventState[] = [];
   private allEventStates: EventState[] = ['nuovo', 'programmato', 'adesso', 'concluso'];
 
-  serverOptions: ServerType[] = ['Simulation 1', 'Simulation 2', 'Server privato'];
+  serverOptions: ServerType[] = ['Simulation 1', 'Simulation 2', 'Promods','SCS Convoy'];
   dlcOptions: { name: keyof EventDLCs, label: string }[] = [
     { name: 'goingEast', label: 'Going East!' },
     { name: 'scandinavia', label: 'Scandinavia' },
@@ -41,7 +41,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
     { name: 'beyondTheBalticSea', label: 'Beyond the Baltic Sea' },
     { name: 'roadToTheBlackSea', label: 'Road to the Black Sea' },
     { name: 'iberia', label: 'Iberia' },
-    { name: 'westBalkans', label: 'West Balkans' }
+    { name: 'westBalkans', label: 'West Balkans' },
+    { name: 'greece', label: 'Greece' }
   ];
   trailerTypeOptions: TrailerType[] = ['Standard', 'Pianale', 'Bestiame'];
 

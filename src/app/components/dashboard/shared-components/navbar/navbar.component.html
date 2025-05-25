@@ -1,6 +1,5 @@
 <nav class="navbar-container">
   <div class="navbar-left">
-    <img src="assets/img/logo.png" alt="IFL Logo" class="navbar-logo">
     <input type="text" placeholder="Esegui ricerca..." class="search-input">
   </div>
   <div class="navbar-right">
@@ -21,7 +20,7 @@
 
       <div class="profile-dropdown" *ngIf="isProfileDropdownOpen" (clickOutside)="closeProfileDropdown()">
         <div class="dropdown-header" *ngIf="currentUser">
-          <img [src]="currentUser?.photoURL || authService.defaultPhotoURL" alt="Foto Profilo" class="dropdown-profile-pic">
+          <img [src]="currentUser.photoURL || authService.defaultPhotoURL" alt="Foto Profilo" class="dropdown-profile-pic">
           <div class="dropdown-user-info">
             <span class="dropdown-user-name">{{ currentUser.firstName }}</span> <span class="dropdown-user-email">{{ currentUser.email }}</span>
           </div>

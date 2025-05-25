@@ -32,7 +32,7 @@
         <div class="progress" [style.width.%]="uploadProgress"></div>
         <span>Caricamento: {{ uploadProgress | number:'1.0-0' }}%</span>
       </div>
-      <div *ngIf="photoUpdateMessage" [ngClass]="{'success-message': !photoUpdateMessage?.includes('Errore'), 'error-message-form': photoUpdateMessage?.includes('Errore')}">
+      <div *ngIf="photoUpdateMessage" [ngClass]="{'success-message': !photoUpdateMessage.includes('Errore'), 'error-message-form': photoUpdateMessage.includes('Errore')}">
         {{ photoUpdateMessage }}
       </div>
     </div>

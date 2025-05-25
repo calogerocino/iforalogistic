@@ -33,7 +33,8 @@ export class PublicHomepageComponent implements OnInit {
     { name: 'beyondTheBalticSea', label: 'Beyond the Baltic Sea' },
     { name: 'roadToTheBlackSea', label: 'Road to the Black Sea' },
     { name: 'iberia', label: 'Iberia' },
-    { name: 'westBalkans', label: 'West Balkans' }
+    { name: 'westBalkans', label: 'West Balkans' },
+    { name: 'greece', label: 'Greece' }
   ];
 
   public eventService = inject(EventService);

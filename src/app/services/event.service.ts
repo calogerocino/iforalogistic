@@ -28,7 +28,7 @@ import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export type EventState = 'nuovo' | 'programmato' | 'adesso' | 'concluso';
-export type ServerType = 'Simulation 1' | 'Simulation 2' | 'Server privato';
+export type ServerType = 'Simulation 1' | 'Simulation 2' | 'Promods' | 'SCS Convoy';
 export type TrailerType = 'Standard' | 'Pianale' | 'Bestiame';
 
 export interface EventDLCs {
@@ -40,6 +40,7 @@ export interface EventDLCs {
   roadToTheBlackSea: boolean;
   iberia: boolean;
   westBalkans: boolean;
+  greece: boolean;
 }
 
 export interface AppEvent {

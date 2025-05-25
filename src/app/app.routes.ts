@@ -63,6 +63,14 @@ export const routes: Routes = [
           ).then((m) => m.UserProfileComponent),
         title: 'Il Mio Profilo',
       },
+       {
+        path: 'discord',
+        loadComponent: () =>
+          import(
+            './components/dashboard/pages/discord-messages/discord-messages.component'
+          ).then((m) => m.DiscordMessagesComponent),
+        title: 'Messaggi Discord',
+      },
           {
         path: 'eventi',
         children: [
