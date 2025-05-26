@@ -45,28 +45,38 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 25px 30px;
+  margin-bottom: 30px; // Spazio tra le card
+  &:last-of-type { // Rimuove il margine inferiore dall'ultima card nel flusso diretto del form-container
+    margin-bottom: 0;
+  }
 }
 
-.form-columns-wrapper {
+.form-container {
+  // Questo contenitore ora avvolge il form.
+  // Le card al suo interno avranno il loro margin-bottom.
+}
+
+.form-columns-wrapper { // Questa è la prima card che contiene le prime 3 colonne
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 30px;
+  // margin-bottom: 0; // Non serve se .card ha margin-bottom
+}
+
+.form-column {
+  // Non sono necessari stili specifici qui se il contenuto è ben strutturato
 }
 
 .form-section {
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #ecf0f1;
-
-  &:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
+  // Rimosse le bordature e padding inferiori se ogni sezione è ora una card o dentro una card
+  // margin-bottom: 0;
+  // padding-bottom: 0;
+  // border-bottom: none;
 
   h3 {
     font-size: 1.3em;
     color: #34495e;
+    margin-top: 0;
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid #f0f0f0;
@@ -233,11 +243,26 @@
     }
 }
 
+.slot-management-card {
+  // La classe .card già applica margin-bottom: 30px;
+  // che creerà lo spazio desiderato dalla card .form-columns-wrapper
+  .form-section { // Se la sezione slot ha un suo h3
+    h3 {
+        margin-top: 0; // Assicura che il titolo sia all'inizio della card
+    }
+  }
+}
+
+.slots-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
 .slot-item-form {
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   padding: 15px;
-  margin-bottom: 20px;
   background-color: #f9f9f9;
 
   h4 {
@@ -256,27 +281,38 @@
   }
   .remove-slot-btn {
     margin-top: 10px;
-    display: block;
+    display: block; // Per occupare la larghezza e permettere margin auto o text-align sul genitore
+    // float: right; // Se si vuole allineare a destra dentro lo slot item
     padding: 5px 10px;
     font-size: 0.8em;
+  }
+  .booked-places-input, .available-places-input {
+    background-color: #e9ecef !important;
+    color: #495057 !important;
+    cursor: default !important;
   }
 }
 
 .add-slot-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
+  justify-content: center; // Centra il contenuto del pulsante (icona + testo)
+  width: auto; // Larghezza basata sul contenuto
+  margin-top: 20px;
+  padding: 10px 15px;
+  // Per allinearlo a destra all'interno della card degli slot:
+  margin-left: auto;
+  display: table; // Per far funzionare margin-left: auto su un elemento non blocco pieno
 }
 
 .form-actions {
-  margin-top: 30px;
+  margin-top: 30px; // Spazio sopra i pulsanti di azione finali
+  padding-top: 20px; // Spazio interno sopra i pulsanti
+  border-top: 1px solid #ecf0f1; // Linea separatrice
   display: flex;
   gap: 15px;
-  justify-content: flex-end;
-  grid-column: 1 / -1;
+  justify-content: flex-end; // Mantiene i pulsanti a destra
+  // clear: both; // Non più necessario se .add-slot-btn non è float
 }
 
 .btn-primary, .btn-secondary, .btn-outline-secondary {
@@ -310,8 +346,16 @@
 .view-details {
     .view-columns-wrapper {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+    .view-column h3 {
+        font-size: 1.4em;
+        color: #34495e;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f0f0f0;
     }
     .view-column p {
         font-size: 1em;
@@ -355,32 +399,67 @@
         margin-bottom: 15px;
         object-fit: contain;
     }
+
     .slots-view-section {
+        grid-column: 1 / -1;
         margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #ecf0f1;
-        h4 {
-            font-size: 1.2em;
-            color: #34495e;
-            margin-bottom: 15px;
+        padding-top: 0;
+        border-top: none;
+
+        h3 {
+            font-size: 1.6em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: left;
         }
+    }
+    .slots-view-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
     }
     .slot-view-item {
         border: 1px solid #f0f0f0;
         border-radius: 6px;
         padding: 15px;
-        margin-bottom: 15px;
         background-color: #fdfdfd;
-        h5 {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        h4 {
             margin-top: 0;
             margin-bottom: 10px;
-            font-size: 1.1em;
+            font-size: 1.2em;
+            color: #34495e;
         }
         p { margin-bottom: 8px; font-size: 0.95em;}
         .slot-image-view {
-            max-width: 150px;
+            max-width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
             margin-bottom: 10px;
         }
+        .btn-small {
+            margin-top: 10px;
+            font-size: 0.8em;
+            padding: 5px 10px;
+        }
+    }
+    .slot-bookings-details {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #ddd;
+        font-size: 0.9em;
+        ul {
+            list-style: none;
+            padding-left: 0;
+            li {
+                padding: 5px;
+                border-bottom: 1px solid #f5f5f5;
+                &:last-child { border-bottom: none;}
+                small { font-size: 0.8em; color: #777; display: block; margin-top: 3px;}
+            }
+        }
+        p { font-style: italic; color: #666;}
     }
 }
 

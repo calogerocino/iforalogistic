@@ -51,6 +51,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
   routeImageUploadProgress: number | undefined = 0;
   slotImageUploadProgress: { [slotId: string]: number | undefined } = {};
   isUploadingSlotImage: { [slotId: string]: boolean } = {};
+  visibleBookingsForSlotId: string | null = null;
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -222,6 +223,14 @@ export class EventManageComponent implements OnInit, OnDestroy {
     return capacity - booked;
   }
 
+  toggleSlotBookingsVisibility(slotId: string): void {
+    if (this.visibleBookingsForSlotId === slotId) {
+      this.visibleBookingsForSlotId = null;
+    } else {
+      this.visibleBookingsForSlotId = slotId;
+    }
+  }
+
   hasSelectedDlcs(dlcs: EventDLCs | undefined | null): boolean {
     if (!dlcs) return false;
     return Object.values(dlcs).some(isSelected => isSelected === true);
@@ -315,6 +324,11 @@ export class EventManageComponent implements OnInit, OnDestroy {
   }
 
   triggerImageInput(type: 'photoArea' | 'routePath' | 'slotImage', slotIndex?: number): void {
+    if (!this.eventId && this.mode === 'create') {
+        this.errorMessage = "Salva prima l'evento per aggiungere immagini.";
+        setTimeout(() => this.errorMessage = null, 3000);
+        return;
+    }
     if (type === 'photoArea') {
       this.photoAreaInput.nativeElement.click();
     } else if (type === 'routePath') {
@@ -329,30 +343,33 @@ export class EventManageComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
+
+    if (!this.eventId) {
+        console.error("Impossibile caricare l'immagine: eventId non è definito. Salva prima l'evento.");
+        this.errorMessage = "Devi prima salvare l'evento per poter caricare immagini.";
+        if (input) input.value = '';
+        return;
+    }
+
     let oldImageUrl: string | null | undefined = null;
     const isSlotImg = imageType === 'slotImage';
-    let imageIdForPath: string;
+    let slotIdForPath: string | undefined;
 
     if (isSlotImg && slotIndexOrId !== undefined) {
-        const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
-        imageIdForPath = `${this.eventId || 'newEvent'}/slot_${slotId}`;
-        if (this.eventId && typeof slotIndexOrId === 'number') {
+        slotIdForPath = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
+        if (typeof slotIndexOrId === 'number') {
             oldImageUrl = this.slotsFormArray.at(slotIndexOrId).get('imageUrl')?.value;
         }
     } else {
-        imageIdForPath = this.eventId || `temp_${Date.now()}`;
-        if (this.eventId) {
-            oldImageUrl = imageType === 'photoArea' ? this.eventForm.get('photoAreaImageUrl')?.value : this.eventForm.get('routeImageUrl')?.value;
-        }
+        oldImageUrl = imageType === 'photoArea' ? this.eventForm.get('photoAreaImageUrl')?.value : this.eventForm.get('routeImageUrl')?.value;
     }
     const defaultUrl = isSlotImg ? this.eventService.defaultSlotImageUrl : (imageType === 'photoArea' ? this.eventService.defaultEventPhotoAreaUrl : this.eventService.defaultEventRouteUrl);
     if (oldImageUrl === defaultUrl) oldImageUrl = null;
 
     if (imageType === 'photoArea') { this.isUploadingPhotoArea = true; this.photoAreaUploadProgress = 0; }
     else if (imageType === 'routePath') { this.isUploadingRouteImage = true; this.routeImageUploadProgress = 0; }
-    else if (isSlotImg && slotIndexOrId !== undefined) {
-        const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
-        this.isUploadingSlotImage[slotId] = true; this.slotImageUploadProgress[slotId] = 0;
+    else if (isSlotImg && slotIdForPath) {
+        this.isUploadingSlotImage[slotIdForPath] = true; this.slotImageUploadProgress[slotIdForPath] = 0;
     }
     this.successMessage = null; this.errorMessage = null;
 
@@ -361,16 +378,13 @@ export class EventManageComponent implements OnInit, OnDestroy {
         await this.eventService.deleteEventImage(oldImageUrl);
       }
 
-      const { uploadProgress$, downloadUrlPromise } = this.eventService.uploadEventImage(imageIdForPath, file, imageType);
+      const { uploadProgress$, downloadUrlPromise } = this.eventService.uploadEventImage(this.eventId, file, imageType, slotIdForPath);
 
       uploadProgress$.subscribe(
         progress => {
           if (imageType === 'photoArea') this.photoAreaUploadProgress = progress;
           else if (imageType === 'routePath') this.routeImageUploadProgress = progress;
-          else if (isSlotImg && slotIndexOrId !== undefined) {
-            const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
-            this.slotImageUploadProgress[slotId] = progress;
-          }
+          else if (isSlotImg && slotIdForPath) this.slotImageUploadProgress[slotIdForPath] = progress;
         },
         error => {
           this.errorMessage = `Errore upload. Dettagli: ${error.message || error}`;
@@ -395,17 +409,12 @@ export class EventManageComponent implements OnInit, OnDestroy {
     } finally {
       if (imageType === 'photoArea') this.isUploadingPhotoArea = false;
       else if (imageType === 'routePath') this.isUploadingRouteImage = false;
-      else if (isSlotImg && slotIndexOrId !== undefined) {
-        const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
-        this.isUploadingSlotImage[slotId] = false;
-      }
+      else if (isSlotImg && slotIdForPath) this.isUploadingSlotImage[slotIdForPath] = false;
 
       if (imageType === 'photoArea') this.photoAreaUploadProgress = undefined;
       else if (imageType === 'routePath') this.routeImageUploadProgress = undefined;
-      else if (isSlotImg && slotIndexOrId !== undefined) {
-         const slotId = typeof slotIndexOrId === 'number' ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value : slotIndexOrId;
-         this.slotImageUploadProgress[slotId] = undefined;
-      }
+      else if (isSlotImg && slotIdForPath) this.slotImageUploadProgress[slotIdForPath] = undefined;
+
       if (input) input.value = '';
     }
   }

@@ -129,9 +129,13 @@ export class EventService {
       ...eventData,
       startDate: eventData.startDate instanceof Date ? Timestamp.fromDate(eventData.startDate) : eventData.startDate,
       endDate: eventData.endDate instanceof Date ? Timestamp.fromDate(eventData.endDate) : eventData.endDate,
-      photoAreaImageUrl: eventData.photoAreaImageUrl || null,
-      routeImageUrl: eventData.routeImageUrl || null,
-      slots: eventData.slots?.map(slot => ({ ...slot, bookings: slot.bookings || [] })) || [],
+      photoAreaImageUrl: eventData.photoAreaImageUrl || this.defaultEventPhotoAreaUrl,
+      routeImageUrl: eventData.routeImageUrl || this.defaultEventRouteUrl,
+      slots: eventData.slots?.map(slot => ({
+        ...slot,
+        imageUrl: slot.imageUrl || this.defaultSlotImageUrl,
+        bookings: slot.bookings || []
+      })) || [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -153,13 +157,17 @@ export class EventService {
         dataToUpdate.endDate = null;
     }
     if (eventData.hasOwnProperty('photoAreaImageUrl')) {
-        dataToUpdate.photoAreaImageUrl = eventData.photoAreaImageUrl;
+        dataToUpdate.photoAreaImageUrl = eventData.photoAreaImageUrl === '' ? this.defaultEventPhotoAreaUrl : eventData.photoAreaImageUrl;
     }
     if (eventData.hasOwnProperty('routeImageUrl')) {
-        dataToUpdate.routeImageUrl = eventData.routeImageUrl;
+        dataToUpdate.routeImageUrl = eventData.routeImageUrl === '' ? this.defaultEventRouteUrl : eventData.routeImageUrl;
     }
     if (eventData.hasOwnProperty('slots')) {
-        dataToUpdate.slots = eventData.slots?.map(slot => ({ ...slot, bookings: slot.bookings || [] })) || [];
+        dataToUpdate.slots = eventData.slots?.map(slot => ({
+            ...slot,
+            imageUrl: slot.imageUrl === '' ? this.defaultSlotImageUrl : slot.imageUrl,
+            bookings: slot.bookings || []
+        })) || [];
     }
     return updateDoc(eventDocRef, dataToUpdate);
   }
@@ -170,11 +178,18 @@ export class EventService {
   }
 
   uploadEventImage(
-    eventIdOrPathPrefix: string,
+    eventId: string,
     file: File,
-    imageType: 'photoArea' | 'routePath' | 'slotImage'
+    imageType: 'photoArea' | 'routePath' | 'slotImage',
+    slotId?: string
   ): { uploadProgress$: Observable<number | undefined>; downloadUrlPromise: Promise<string> } {
-    const filePath = `event_images/${eventIdOrPathPrefix}/${imageType}/${Date.now()}_${file.name}`;
+    let filePath = `event_images/${eventId}/`;
+    if (imageType === 'slotImage' && slotId) {
+      filePath += `slots/${slotId}/${Date.now()}_${file.name}`;
+    } else {
+      filePath += `${imageType}/${Date.now()}_${file.name}`;
+    }
+
     const fileRef = storageRef(this.storage, filePath);
     const uploadTask = uploadBytesResumable(fileRef, file);
 
