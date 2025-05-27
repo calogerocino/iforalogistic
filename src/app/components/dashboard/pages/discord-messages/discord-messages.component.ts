@@ -2,19 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DiscordMessageService } from '../../../../services/discord-message.service';
 import { DiscordMessage } from '../../../../models/discord-message.model';
-import { CommonModule } from '@angular/common'; // Importa CommonModule
+import { CommonModule } from '@angular/common';
+import { FileSizePipe } from '../../../../pipe/file-size.pipe';
 
 @Component({
   selector: 'app-discord-messages',
-  standalone: true, // Assumendo che sia standalone
+  standalone: true,
   imports: [
-    CommonModule // Aggiungi CommonModule per DatePipe, NgIf, NgFor, AsyncPipe
+    CommonModule,
+    FileSizePipe,
   ],
   templateUrl: './discord-messages.component.html',
   styleUrls: ['./discord-messages.component.scss']
 })
 export class DiscordMessagesComponent implements OnInit {
-  discordMessages$!: Observable<DiscordMessage[]>; // Aggiungi '!' per l'asserzione di non null
+  discordMessages$!: Observable<DiscordMessage[]>;
 
   constructor(private discordMessageService: DiscordMessageService) { }
 

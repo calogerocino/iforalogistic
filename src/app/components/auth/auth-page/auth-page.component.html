@@ -37,6 +37,12 @@
         <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" class="error-messages">
           <small *ngIf="loginForm.get('password')?.errors?.['required']">La password è obbligatoria.</small>
         </div>
+
+        <div class="form-group-inline">
+            <input type="checkbox" id="rememberMe" formControlName="rememberMe">
+            <label for="rememberMe" class="remember-me-label">Ricordami</label>
+        </div>
+
         <button type="submit" class="btn-continue" [disabled]="loginForm.invalid">Accedi</button>
       </form>
 
@@ -77,7 +83,14 @@
         <p>{{ errorMessage }}</p>
       </div>
 
-      </div>
+      <p *ngIf="isLoginMode && !infoMessage && !allowRegistration" class="auth-switch-link">
+        Non hai un account? <a routerLink="/auth/registrazione" (click)="showRegistrationDisabledMessage()">Registrati</a>
+      </p>
+       <p *ngIf="!isLoginMode && allowRegistration && !infoMessage" class="auth-switch-link">
+        Hai già un account? <a routerLink="/auth/login">Accedi</a>
+      </p>
+
+    </div>
     <div class="auth-image-panel">
       <img src="assets/img/3d-safe.png" alt="IFL Visual">
     </div>

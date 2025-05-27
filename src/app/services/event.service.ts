@@ -27,6 +27,7 @@ import {
 } from '@angular/fire/storage';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { NotificationService } from './notification.service';
 
 export type EventState = 'nuovo' | 'programmato' | 'adesso' | 'concluso';
 export type ServerType = 'Simulation 1' | 'Simulation 2' | 'SCS Convoy' | 'Promods';
@@ -88,6 +89,7 @@ export interface AppEvent {
 export class EventService {
   private firestore: Firestore = inject(Firestore);
   private storage: Storage = inject(Storage);
+  private notificationService = inject(NotificationService);
   private eventsCollectionPath = 'events';
   private eventsCollection = collection(this.firestore, this.eventsCollectionPath);
   readonly defaultEventPhotoAreaUrl = 'assets/img/default-placeholder.png';
@@ -157,15 +159,15 @@ export class EventService {
         dataToUpdate.endDate = null;
     }
     if (eventData.hasOwnProperty('photoAreaImageUrl')) {
-        dataToUpdate.photoAreaImageUrl = eventData.photoAreaImageUrl === '' ? this.defaultEventPhotoAreaUrl : eventData.photoAreaImageUrl;
+        dataToUpdate.photoAreaImageUrl = eventData.photoAreaImageUrl === '' || eventData.photoAreaImageUrl === null ? this.defaultEventPhotoAreaUrl : eventData.photoAreaImageUrl;
     }
     if (eventData.hasOwnProperty('routeImageUrl')) {
-        dataToUpdate.routeImageUrl = eventData.routeImageUrl === '' ? this.defaultEventRouteUrl : eventData.routeImageUrl;
+        dataToUpdate.routeImageUrl = eventData.routeImageUrl === '' || eventData.routeImageUrl === null ? this.defaultEventRouteUrl : eventData.routeImageUrl;
     }
     if (eventData.hasOwnProperty('slots')) {
         dataToUpdate.slots = eventData.slots?.map(slot => ({
             ...slot,
-            imageUrl: slot.imageUrl === '' ? this.defaultSlotImageUrl : slot.imageUrl,
+            imageUrl: slot.imageUrl === '' || slot.imageUrl === null ? this.defaultSlotImageUrl : slot.imageUrl,
             bookings: slot.bookings || []
         })) || [];
     }
@@ -257,6 +259,12 @@ export class EventService {
       targetSlot.bookings.push(newBooking);
       slots[slotIndex] = targetSlot;
       transaction.update(eventDocRef, { slots: slots, updatedAt: serverTimestamp() });
+
+      await this.notificationService.createSlotBookingNotification(
+        { id: eventId, name: eventData.name },
+        { id: targetSlot.id, name: targetSlot.name },
+        { companyName: newBooking.companyName, participantsCount: newBooking.participantsCount }
+      );
     });
   }
 }

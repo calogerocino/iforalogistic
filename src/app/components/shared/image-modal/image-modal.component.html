@@ -1,0 +1,6 @@
+<div class="image-modal-overlay" *ngIf="isOpen$ | async" (click)="close()">
+  <div class="image-modal-content" *ngIf="imageUrl$ | async as currentImageUrl" (click)="$event.stopPropagation()">
+    <button class="image-modal-close-button" (click)="close()" aria-label="Chiudi immagine ingrandita">&times;</button>
+    <img [src]="currentImageUrl" alt="Immagine Ingrandita" class="enlarged-image">
+  </div>
+</div>

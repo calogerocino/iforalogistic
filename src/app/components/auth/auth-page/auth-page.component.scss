@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :host {
   display: block;
   font-family: 'Inter', sans-serif;
@@ -72,6 +73,20 @@
   font-size: 15px;
   color: #6c757d;
   margin-bottom: 30px;
+}
+
+.info-message-box {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
+  p {
+    margin: 0;
+    font-size: 15px;
+  }
 }
 
 .auth-tabs {
@@ -172,6 +187,25 @@
   }
 }
 
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+
+  input[type="checkbox"] {
+    margin-right: 8px;
+    width: auto;
+    height: auto;
+    accent-color: #3B82F6;
+  }
+
+  .remember-me-label {
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+  }
+}
+
 .error-messages {
   margin-top: -15px;
   margin-bottom: 15px;
@@ -212,6 +246,21 @@
     color: #dc3545;
     font-size: 14px;
     text-align: center;
+  }
+}
+
+.auth-switch-link {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  a {
+    color: #3B82F6;
+    font-weight: 500;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
 

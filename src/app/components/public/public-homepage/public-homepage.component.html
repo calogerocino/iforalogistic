@@ -23,7 +23,7 @@
           <div class="event-image-placeholder" *ngIf="!event.photoAreaImageUrl || event.photoAreaImageUrl === eventService.defaultEventPhotoAreaUrl">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.5l-2.14 2.58h10.3z"></path></svg>
           </div>
-          <img *ngIf="event.photoAreaImageUrl && event.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl" [src]="event.photoAreaImageUrl" alt="Area Foto Evento {{event.name}}" class="event-image">
+          <img *ngIf="event.photoAreaImageUrl && event.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl" [src]="event.photoAreaImageUrl" alt="Area Foto Evento {{event.name}}" (click)="openImageInModal(event.photoAreaImageUrl)" class="event-image clickable-image">
 
           <div class="event-showcase-content">
             <span class="event-showcase-state" [ngClass]="getEventStateClass(event.state)">
@@ -160,11 +160,11 @@
           </div>
           <div class="modal-image-section full-width" *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
               <span class="modal-label">Area Foto:</span>
-              <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento" class="modal-event-image">
+              <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento" (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)" class="modal-event-image clickable-image">
           </div>
           <div class="modal-image-section full-width" *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
               <span class="modal-label">Immagine Percorso:</span>
-              <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento" class="modal-event-image">
+              <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento" (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
           </div>
       </div>
     </div>

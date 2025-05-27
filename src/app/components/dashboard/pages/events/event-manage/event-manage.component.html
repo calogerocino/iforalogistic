@@ -108,7 +108,7 @@
                 <div class="form-group image-upload-group">
                     <label>Area Foto</label>
                     <div class="image-preview-box">
-                        <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" alt="Anteprima Area Foto" class="image-preview">
+                        <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(eventService.defaultEventPhotoAreaUrl)" alt="Anteprima Area Foto" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('photoArea')" [disabled]="isUploadingPhotoArea">
@@ -127,7 +127,7 @@
                 <div class="form-group image-upload-group">
                     <label>Percorso (Immagine)</label>
                      <div class="image-preview-box">
-                        <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" alt="Anteprima Percorso" class="image-preview">
+                        <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" (click)="openImageInModal(eventService.defaultEventRouteUrl)" alt="Anteprima Percorso" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('routePath')" [disabled]="isUploadingRouteImage">
@@ -164,7 +164,7 @@
                         <div class="form-group image-upload-group">
                             <label [for]="'slotImageInput-' + i">Immagine Slot</label>
                             <div class="image-preview-box slot-image-preview-box">
-                                <img [src]="slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl" alt="Anteprima Slot {{ i + 1 }}" class="image-preview">
+                                <img [src]="slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl" alt="Anteprima Slot {{ i + 1 }}" (click)="openImageInModal(eventService.defaultSlotImageUrl)" class="image-preview clickable-image">
                             </div>
                              <div class="image-actions">
                                 <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('slotImage', i)" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
@@ -238,9 +238,9 @@
                <div class="view-column">
                   <h3>Immagini</h3>
                   <p><strong>Area Foto:</strong></p>
-                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" class="image-preview-view">
+                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl)" class="image-preview-view clickable-image">
                   <p><strong>Percorso:</strong></p>
-                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" class="image-preview-view">
+                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl)" class="image-preview-view clickable-image">
               </div>
           </div>
           <div *ngIf="currentEvent.slots && currentEvent.slots.length > 0" class="slots-view-section card">
@@ -248,7 +248,7 @@
             <div class="slots-view-grid">
                 <div *ngFor="let slot of currentEvent.slots" class="slot-view-item">
                     <h4>{{ slot.name }}</h4>
-                    <img [src]="slot.imageUrl || eventService.defaultSlotImageUrl" alt="Immagine Slot {{slot.name}}" class="image-preview-view slot-image-view">
+                    <img [src]="slot.imageUrl || eventService.defaultSlotImageUrl" alt="Immagine Slot {{slot.name}}" (click)="openImageInModal(eventService.defaultSlotImageUrl)" class="image-preview-view slot-image-view clickable-image">
                     <p><strong>Capacità:</strong> {{ slot.capacity }}</p>
                     <p><strong>Posti Prenotati:</strong> {{ getBookedPlacesForView(slot) }}</p>
                     <p><strong>Posti Disponibili:</strong> {{ getAvailablePlacesForView(slot) }}</p>

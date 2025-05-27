@@ -3,8 +3,10 @@
   width: 100%;
   background-color: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  position: relative; // Aggiunto per posizionare il toast rispetto alla navbar
+  z-index: 1020; // Aumentato per essere sopra la sidebar in caso di sovrapposizioni e sopra il contenuto scrollabile
+  position: sticky; // Per renderla sticky
+  top: 0;
+  left: 0;
 }
 
 .navbar-container {
@@ -16,6 +18,12 @@
 }
 
 .navbar-left {
+  display: flex;
+  align-items: center;
+  .navbar-logo {
+    height: 32px;
+    margin-right: 20px;
+  }
   .search-input {
     padding: 10px 15px;
     border-radius: 6px;
@@ -35,7 +43,7 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
 
   .language-button {
     background: none;
@@ -60,6 +68,7 @@
     align-items: center;
     justify-content: center;
     color: #5f6368;
+    position: relative;
 
     svg {
       width: 22px;
@@ -69,6 +78,129 @@
     &:hover {
       background-color: #f0f2f5;
     }
+  }
+
+  .notification-wrapper {
+    position: relative;
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 1px solid white;
+
+    &.flashing {
+      animation: pulseBadge 1.5s infinite;
+    }
+  }
+
+  .notification-dropdown {
+    position: absolute;
+    top: calc(100% + 12px); // Leggermente più staccato dalla navbar
+    right: 0;
+    width: 360px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    z-index: 1010; // Sotto il toast lingua, ma sopra il contenuto della pagina
+    overflow: hidden;
+    animation: fadeInDropdown 0.2s ease-out;
+
+    .notifications-header {
+      padding: 12px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e8eaed;
+      span {
+        font-weight: 600;
+        color: #3c4043;
+        font-size: 15px;
+      }
+      .mark-all-read-btn {
+        font-size: 0.8em;
+        color: #3498db;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        &:hover { text-decoration: underline; }
+      }
+    }
+
+    .notification-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 320px;
+      overflow-y: auto;
+
+      li {
+        display: flex;
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f2f5;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        &:last-child { border-bottom: none; }
+        &:hover { background-color: #f8f9fa; }
+        &.unread {
+          background-color: #e9f5ff;
+          .notification-message {
+            font-weight: 500; // Leggermente bold per non lette
+          }
+        }
+
+        .notification-icon-placeholder {
+          margin-right: 12px;
+          flex-shrink: 0;
+          color: #7f8c8d;
+          svg { width: 20px; height: 20px;}
+        }
+        .notification-content {
+          flex-grow: 1;
+          .notification-message {
+            font-size: 0.9em;
+            color: #3c4043;
+            margin: 0 0 4px 0;
+            line-height: 1.4;
+          }
+          .notification-timestamp {
+            font-size: 0.75em;
+            color: #7f8c8d;
+          }
+        }
+      }
+      .no-notifications-item {
+        padding: 20px;
+        text-align: center;
+        color: #7f8c8d;
+        font-style: italic;
+      }
+    }
+     .notifications-footer {
+        padding: 10px 15px;
+        text-align: center;
+        border-top: 1px solid #e8eaed;
+        a {
+            font-size: 0.9em;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            &:hover { text-decoration: underline; }
+        }
+     }
   }
 
   .profile-section-wrapper {
@@ -188,18 +320,18 @@
 }
 
 .language-warning-toast {
-  position: fixed; // O absolute se vuoi che sia relativo solo alla navbar
+  position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #323232; // Sfondo scuro per il toast
+  background-color: #323232;
   color: white;
   padding: 12px 20px;
   border-radius: 6px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  z-index: 2000; // Sopra tutto
+  z-index: 2000;
   font-size: 14px;
-  animation: fadeInToast 0.3s ease-out, fadeOutToast 0.3s ease-in 2.7s forwards; // 2.7s delay per fadeOut
+  animation: fadeInToast 0.3s ease-out, fadeOutToast 0.3s ease-in 2.7s forwards;
 }
 
 
@@ -233,5 +365,20 @@
   to {
     opacity: 0;
     transform: translateX(-50%) translateY(20px);
+  }
+}
+
+@keyframes pulseBadge {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
   }
 }

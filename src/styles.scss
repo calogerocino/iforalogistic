@@ -11,3 +11,12 @@ html, body {
 *, *::before, *::after {
   box-sizing: border-box;
 }
+
+
+.clickable-image {
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+  &:hover {
+    opacity: 0.8;
+  }
+}

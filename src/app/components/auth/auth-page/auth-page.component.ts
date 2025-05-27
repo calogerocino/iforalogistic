@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService, AppUser } from '../../../services/auth.service'; // AppUser ora ha solo firstName
+import { AuthService, AppUser } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-auth-page',
@@ -28,12 +28,12 @@ export class AuthPageComponent implements OnInit {
   constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]]
+      password: ['', [Validators.required]],
+      rememberMe: [false]
     });
 
     this.registerForm = this.fb.group({
-      firstName: ['', Validators.required], // Solo firstName
-      // lastName: [''], // Rimosso
+      firstName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
@@ -44,7 +44,6 @@ export class AuthPageComponent implements OnInit {
     this.activatedRoute.data.subscribe(data => {
       const routeIsForLogin = data['isLoginMode'] !== undefined ? data['isLoginMode'] : true;
       const adminQueryParam = this.activatedRoute.snapshot.queryParamMap.get('admin');
-
       this.infoMessage = null;
       this.errorMessage = null;
 
@@ -61,7 +60,6 @@ export class AuthPageComponent implements OnInit {
           this.pageTitle = 'Accesso';
           this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
           this.loginForm.disable();
-
           setTimeout(() => {
             this.infoMessage = null;
             if (!this.router.url.endsWith('/auth/login')) {
@@ -71,7 +69,7 @@ export class AuthPageComponent implements OnInit {
                 this.isLoginMode = true;
                 this.pageTitle = 'Accedi';
                 this.loginForm.enable();
-                this.loginForm.reset();
+                this.loginForm.reset({ rememberMe: false });
             }, 0);
           }, 4000);
         }
@@ -80,7 +78,7 @@ export class AuthPageComponent implements OnInit {
         this.isLoginMode = true;
         this.pageTitle = data['title'] || 'Accedi';
         this.loginForm.enable();
-        this.loginForm.reset();
+        this.loginForm.reset({ rememberMe: false });
       }
     });
   }
@@ -100,9 +98,9 @@ export class AuthPageComponent implements OnInit {
         this.markFormGroupTouched(this.loginForm);
         return;
       }
-      const { email, password } = this.loginForm.value;
+      const { email, password, rememberMe } = this.loginForm.value;
       try {
-        await this.authService.login(email, password);
+        await this.authService.login(email, password, rememberMe);
         this.router.navigate(['/dashboard']);
       } catch (error: any) {
         this.handleAuthError(error, 'login');
@@ -112,9 +110,9 @@ export class AuthPageComponent implements OnInit {
         this.markFormGroupTouched(this.registerForm);
         return;
       }
-      const { firstName, email, password } = this.registerForm.value; // Solo firstName
+      const { firstName, email, password } = this.registerForm.value;
       try {
-        await this.authService.register(email, password, firstName); // Solo firstName
+        await this.authService.register(email, password, firstName);
         this.infoMessage = 'Registrazione completata con successo! Sarai reindirizzato al login.';
         setTimeout(() => {
             this.infoMessage = null;
@@ -149,7 +147,6 @@ export class AuthPageComponent implements OnInit {
       this.isLoginMode = true;
       this.pageTitle = 'Accesso';
       this.loginForm.disable();
-
       setTimeout(() => {
         this.infoMessage = null;
         if (!this.router.url.endsWith('/auth/login')) {
@@ -159,12 +156,10 @@ export class AuthPageComponent implements OnInit {
             this.isLoginMode = true;
             this.pageTitle = 'Accedi';
             this.loginForm.enable();
-            this.loginForm.reset();
+            this.loginForm.reset({ rememberMe: false });
         }, 0);
       }, 4000);
     } else {
-        // Se allowRegistration è true, significa che siamo già su /auth/registrazione?admin
-        // Quindi impostiamo la modalità registrazione
         this.isLoginMode = false;
         this.pageTitle = 'Registrati';
         this.registerForm.enable();

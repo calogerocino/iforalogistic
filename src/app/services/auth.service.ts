@@ -1,14 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, User, updateProfile, updatePassword as firebaseUpdatePassword, onAuthStateChanged, authState, EmailAuthProvider, reauthenticateWithCredential } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, User, updateProfile, updatePassword as firebaseUpdatePassword, onAuthStateChanged, authState, EmailAuthProvider, reauthenticateWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from '@angular/fire/auth';
 import { Firestore, doc, setDoc, getDoc, docData, updateDoc } from '@angular/fire/firestore';
 import { Storage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, UploadTaskSnapshot } from '@angular/fire/storage';
 import { Observable, from, of, throwError } from 'rxjs';
 import { switchMap, catchError, finalize } from 'rxjs/operators';
+import { UpdateData } from 'firebase/firestore';
+
 
 export interface AppUser {
   uid: string;
   email: string | null;
-  firstName?: string; // Solo nome
+  firstName?: string;
   photoURL?: string | null;
 }
 
@@ -32,12 +34,12 @@ export class AuthService {
     })
   );
 
-  async register(email: string, password: string, firstName: string): Promise<User | null> { // Solo firstName
+  async register(email: string, password: string, firstName: string): Promise<User | null> {
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       const user = userCredential.user;
       if (user) {
-        await updateProfile(user, { displayName: firstName, photoURL: this.defaultPhotoURL }); // Usa solo firstName per displayName
+        await updateProfile(user, { displayName: firstName, photoURL: this.defaultPhotoURL });
         await setDoc(doc(this.firestore, `users/${user.uid}`), {
           uid: user.uid,
           email: user.email,
@@ -53,8 +55,9 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string): Promise<User | null> {
+  async login(email: string, password: string, rememberMe: boolean): Promise<User | null> {
     try {
+      await setPersistence(this.auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       return userCredential.user;
     } catch (error) {
@@ -84,23 +87,22 @@ export class AuthService {
   async updateUserProfileData(uid: string, data: Partial<AppUser>): Promise<void> {
     const userDocRef = doc(this.firestore, `users/${uid}`);
     try {
-      // Prepara i dati per Firestore (rimuovendo lastName se presente per errore)
-      const firestoreData: Partial<AppUser> = { ...data };
-      delete (firestoreData as any).lastName; // Assicura che lastName non venga inviato
+      const firestoreData: UpdateData<AppUser> = { ...data };
+      delete (firestoreData as any).lastName;
 
       await updateDoc(userDocRef, firestoreData);
 
       const firebaseUser = this.auth.currentUser;
       if (firebaseUser) {
-        const profileUpdate: { displayName?: string, photoURL?: string | null } = {};
-        if (data.firstName) { // Aggiorna displayName solo con firstName
-          profileUpdate.displayName = data.firstName;
+        const profileUpdateForAuth: { displayName?: string, photoURL?: string | null } = {};
+        if (data.firstName) {
+          profileUpdateForAuth.displayName = data.firstName;
         }
         if (data.hasOwnProperty('photoURL')) {
-          profileUpdate.photoURL = data.photoURL;
+          profileUpdateForAuth.photoURL = data.photoURL;
         }
-        if (Object.keys(profileUpdate).length > 0) {
-          await updateProfile(firebaseUser, profileUpdate);
+        if (Object.keys(profileUpdateForAuth).length > 0) {
+          await updateProfile(firebaseUser, profileUpdateForAuth);
         }
       }
     } catch (error) {
@@ -152,7 +154,7 @@ export class AuthService {
     return { uploadProgress$, downloadUrl$ };
   }
 
-  async deleteProfileImage(userId: string, photoURL: string | null | undefined): Promise<void> {
+ async deleteProfileImage(userId: string, photoURL: string | null | undefined): Promise<void> {
     if (!photoURL || photoURL === this.defaultPhotoURL) {
       console.log('No custom image to delete or it is the default image.');
       // Se l'immagine corrente è quella di default, aggiorniamo solo Firestore/Auth a null o default
@@ -172,6 +174,7 @@ export class AuthService {
       await this.updateUserProfileData(userId, { photoURL: this.defaultPhotoURL });
     }
   }
+
 
   isLoggedIn(): Observable<boolean> {
     return authState(this.auth).pipe(

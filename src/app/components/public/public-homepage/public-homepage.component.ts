@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { EventService, AppEvent, EventDLCs, EventSlot, SlotParticipantInfo } from '../../../services/event.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ImageModalService } from '../../../services/image-modal.service';
 
 @Component({
   selector: 'app-public-homepage',
@@ -41,6 +42,8 @@ export class PublicHomepageComponent implements OnInit {
   public eventService = inject(EventService);
   private sanitizer = inject(DomSanitizer);
   private fb = inject(FormBuilder);
+
+private imageModalService = inject(ImageModalService);
 
   constructor() {
     this.currentYear = new Date().getFullYear();
@@ -178,6 +181,13 @@ export class PublicHomepageComponent implements OnInit {
       return false;
     }
     return Object.values(dlcs).some(isSelected => isSelected === true);
+  }
+
+
+   openImageInModal(imageUrl: string | null | undefined): void {
+    if (imageUrl) {
+      this.imageModalService.openModal(imageUrl);
+    }
   }
 
   objectValues = Object.values;

@@ -1,40 +1,39 @@
-// src/app/services/discord-message.service.ts (REFACTORIZZATO PER API MODULARE)
-import { Injectable, inject } from '@angular/core'; // inject per la DI
-import { Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { map, Observable, tap } from 'rxjs';
 import { DiscordMessage } from '../models/discord-message.model';
-
-// Importazioni specifiche dall'SDK modulare di Firestore
 import {
-  Firestore, // Il servizio Firestore
-  collection, // Funzione per ottenere un riferimento a una collezione
-  query,      // Funzione per creare una query
-  orderBy,    // Funzione per ordinare i risultati
-  collectionData // Funzione per ottenere i dati della collezione come Observable
+  Firestore,
+  collection,
+  query,
+  orderBy,
+  collectionData,
+  where,
 } from '@angular/fire/firestore';
+import { PlayerStat } from '../models/player-stat.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DiscordMessageService {
-  // Inietta il servizio Firestore modulare
   private firestore: Firestore = inject(Firestore);
-
   private readonly collectionName = 'discordChannelMessages';
   messages$: Observable<DiscordMessage[]>;
 
   constructor() {
-    // Ottieni un riferimento alla collezione
-    const messagesCollectionRef = collection(this.firestore, this.collectionName);
-
-    // Crea una query per ordinare i messaggi
-    const q = query(messagesCollectionRef, orderBy('discordTimestamp', 'desc'));
-
-    // Ottieni i dati della collezione come Observable.
-    // collectionData mappa automaticamente l'ID del documento al campo 'id' se specificato.
-    this.messages$ = collectionData(q, { idField: 'id' }) as Observable<DiscordMessage[]>;
+    const messagesCollectionRef = collection(
+      this.firestore,
+      this.collectionName
+    );
+    const q = query(messagesCollectionRef, orderBy('timestamp', 'desc'));
+    this.messages$ = collectionData(q, { idField: 'id' }) as Observable<
+      DiscordMessage[]
+    >;
   }
 
   getMessages(): Observable<DiscordMessage[]> {
-    return this.messages$;
+    const messagesCollection = collection(this.firestore, this.collectionName);
+    return collectionData(messagesCollection, { idField: 'id' }) as Observable<
+      DiscordMessage[]
+    >;
   }
 }

@@ -7,22 +7,81 @@
         </div>
         <div class="card-body">
           <div *ngIf="discordMessages$ | async as messages; else loading" class="message-list">
-            <div *ngIf="messages.length === 0" class="alert alert-info">
-              Nessun messaggio da visualizzare. In attesa di messaggi da Discord...
+            <div *ngIf="!messages || messages.length === 0" class="alert alert-info">
+              Nessun messaggio da visualizzare.
             </div>
 
             <ul class="list-group list-group-flush">
-              <li *ngFor="let msg of messages" class="list-group-item">
-                <div class="d-flex w-100 justify-content-between">
+              <li *ngFor="let msg of messages" class="list-group-item discord-message-item">
+                <div class="message-header d-flex w-100 justify-content-between align-items-center">
                   <div>
-                    <img *ngIf="msg.authorAvatar" [src]="msg.authorAvatar" alt="Avatar" class="avatar rounded-circle mr-2" width="30" height="30">
-                    <strong class="author-tag">{{ msg.authorTag }}</strong>
-                    <small class="text-muted d-block d-md-inline ml-md-2"> (Canale: {{ msg.channelName }})</small>
+                    <img *ngIf="msg.authorAvatar" [src]="msg.authorAvatar" alt="Avatar" class="avatar rounded-circle mr-2">
+                    <strong class="author-tag">{{ msg.authorTag || 'Utente Sconosciuto' }}</strong>
+                    <small class="text-muted d-block d-md-inline ml-md-2">
+                      (Canale: {{ msg.channelName || msg.channelId || 'Sconosciuto' }})
+                    </small>
                   </div>
-                  <small class="text-muted timestamp">{{ msg.discordTimestamp | date:'dd/MM/yyyy HH:mm:ss' }}</small>
+                  <small class="text-muted timestamp" [title]="'Timestamp messaggio Discord: ' + (msg.timestamp | date:'medium')">
+                    {{ msg.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+                    <span *ngIf="msg.processedAt" class="processed-at" [title]="'Salvato su Firebase: ' + (msg.processedAt?.toDate() | date:'medium')">
+                      (FB: {{ msg.processedAt?.toDate() | date:'HH:mm:ss' }})
+                    </span>
+                  </small>
                 </div>
-                <p class="mb-1 mt-2 message-content">{{ msg.content }}</p>
-                <small class="text-muted">ID Messaggio: {{ msg.messageId }}</small>
+
+                <p *ngIf="msg.content" class="mb-1 mt-2 message-content">{{ msg.content }}</p>
+
+                <div *ngIf="msg.embeds && msg.embeds.length > 0" class="original-embeds mt-2">
+                  <div *ngFor="let embed of msg.embeds" class="discord-embed card mb-2">
+                    <div class="card-body">
+                      <h5 *ngIf="embed.title" class="card-title embed-title">
+                        <a *ngIf="embed.url" [href]="embed.url" target="_blank" rel="noopener noreferrer">{{ embed.title }}</a>
+                        <span *ngIf="!embed.url">{{ embed.title }}</span>
+                      </h5>
+                      <div *ngIf="embed.author?.name || embed.author?.iconURL" class="embed-author mb-1">
+                     <img *ngIf="embed.author?.iconURL" [src]="embed.author?.url" alt="Author Icon" class="embed-author-icon">
+                        <a *ngIf="embed.author?.url" [href]="embed.author?.iconURL" target="_blank" rel="noopener noreferrer" class="embed-author-name">{{ embed.author?.name }}</a>
+                        <span *ngIf="embed.author?.name && !embed.author?.url" class="embed-author-name">{{ embed.author?.name }}</span>
+                      </div>
+                      <p *ngIf="embed.description" class="card-text embed-description">{{ embed.description }}</p>
+
+                      <div *ngIf="embed.fields && embed.fields.length > 0" class="embed-fields row">
+                        <div *ngFor="let field of embed.fields" [ngClass]="{'col-md-4': field.inline, 'col-12': !field.inline}" class="embed-field mb-2">
+                          <strong *ngIf="field.name">{{ field.name }}</strong>
+                          <div *ngIf="field.value">{{ field.value }}</div>
+                        </div>
+                      </div>
+
+                      <img *ngIf="embed.image?.url" [src]="embed.image?.url" class="img-fluid embed-image mt-2" alt="Immagine embed">
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <img *ngIf="embed.thumbnail?.url" [src]="embed.thumbnail?.url" class="embed-thumbnail" alt="Thumbnail embed">
+                        <small *ngIf="embed.footer?.text" class="text-muted embed-footer">
+                          <img *ngIf="embed.footer?.iconURL" [src]="embed.footer?.iconURL" alt="Footer Icon" class="embed-footer-icon">
+                          {{ embed.footer?.text }}
+                          <span *ngIf="embed.timestamp"> - {{ embed.timestamp | date:'shortTime' }}</span>
+                        </small>
+                      </div>
+                    </div>
+                    <div *ngIf="embed.color" class="embed-color-indicator" [style.background-color]="'#' + embed.color.toString(16).padStart(6, '0')"></div>
+                  </div>
+                </div>
+
+                <div *ngIf="msg.attachments && msg.attachments.length > 0" class="attachments mt-2">
+                  <strong>Allegati:</strong>
+                  <ul class="list-unstyled">
+                    <li *ngFor="let att of msg.attachments">
+                      <a *ngIf="att.url && att.filename" [href]="att.url" target="_blank" download rel="noopener noreferrer">
+                        <i class="fas fa-paperclip"></i> {{ att.filename }}
+                      </a>
+                      <small *ngIf="att.size" class="text-muted"> ({{ att.size | fileSize }})</small>
+                      <div *ngIf="att.contentType && att.contentType.startsWith('image/') && att.url">
+                        <img [src]="att.url" [alt]="att.filename || 'Allegato immagine'" class="img-thumbnail mt-1 attachment-image">
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <small class="text-muted d-block mt-1">ID Messaggio: {{ msg.id }}</small>
               </li>
             </ul>
           </div>

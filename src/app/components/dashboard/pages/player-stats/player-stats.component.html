@@ -1,0 +1,81 @@
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-6 col-7">
+          <h6 class="h2 text-white d-inline-block mb-0">Statistiche Giocatori</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+              <li class="breadcrumb-item"><a routerLink="/dashboard/home"><i class="fas fa-home"></i></a></li>
+              <li class="breadcrumb-item active" aria-current="page">Statistiche Giocatori</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col">
+      <div class="card shadow">
+        <div class="card-header bg-transparent border-0">
+          <h3 class="mb-0">Classifica Km Reali Percorsi 🚚</h3>
+        </div>
+        <div class="table-responsive">
+          <div *ngIf="isLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+              <span class="visually-hidden">Caricamento...</span>
+            </div>
+            <p class="mt-2">Caricamento statistiche in corso...</p>
+          </div>
+
+          <div *ngIf="!isLoading && errorMessage" class="alert alert-danger m-4 text-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i> {{ errorMessage }}
+          </div>
+
+          <div *ngIf="!isLoading && !errorMessage && playerStats.length === 0" class="text-center py-5">
+            <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+            <p>Nessuna statistica trovata o nessun viaggio registrato con Km "Reali|Reali".</p>
+          </div>
+
+          <table *ngIf="!isLoading && !errorMessage && playerStats.length > 0" class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col" style="width: 50px;">#</th>
+                <th scope="col">Nome Giocatore</th>
+                <th scope="col" class="text-right">Km Reali Totali</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let stat of playerStats; let i = index">
+                <td>
+                  <span class="badge badge-pill
+                    {{ i === 0 ? 'badge-success' : (i === 1 ? 'badge-info' : (i === 2 ? 'badge-warning' : 'badge-light')) }}">
+                    {{ i + 1 }}
+                  </span>
+                </td>
+                <th scope="row">
+                  <div class="media align-items-center">
+                    <div class="media-body">
+                      <span class="name mb-0 text-sm font-weight-bold">{{ stat.name }}</span>
+                    </div>
+                  </div>
+                </th>
+                <td class="text-right">
+                  <span class="font-weight-bold">{{ stat.km | number:'1.0-2' }}</span> Km
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer py-4" *ngIf="!isLoading && !errorMessage && playerStats.length > 0">
+          <p class="text-sm text-muted mb-0">
+            <i class="fas fa-info-circle mr-1"></i> Le statistiche sono aggregate da tutti i messaggi che contengono "Reali|Reali" nella descrizione dell'embed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

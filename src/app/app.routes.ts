@@ -71,6 +71,15 @@ export const routes: Routes = [
           ).then((m) => m.DiscordMessagesComponent),
         title: 'Messaggi Discord',
       },
+      {
+
+          path: 'player-stats',
+        loadComponent: () =>
+          import(
+            './components/dashboard/pages/player-stats/player-stats.component'
+          ).then((m) => m.PlayerStatsComponent),
+        title: 'Statistiche Giocatori',
+      },
           {
         path: 'eventi',
         children: [
