@@ -214,13 +214,14 @@
   }
 }
 
+/* Sezione VTC Partner */
 .vtc-partners-section {
-  padding: 60px 25px;
-  background-color: #f0f4f8;
+  padding: 60px 0;
+  background-color: #f8f9fa;
   text-align: center;
 
   h2 {
-    font-size: 2.2em;
+     font-size: 2.2em;
     color: #2c3e50;
     margin-bottom: 15px;
   }
@@ -236,41 +237,53 @@
 
   .partners-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); // Adattato per loghi più piccoli
-    gap: 25px; // Leggermente ridotto
-    max-width: 1000px; // O 1200px se vuoi più spazio
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
     margin: 0 auto;
-    align-items: center; // Allinea verticalmente i loghi se hanno altezze diverse
   }
 
-  .partner-logo-item {
-    // background-color: #dfe4ea; // Rimosso se usiamo img direttamente
-    // border-radius: 8px; // Rimosso
-    // height: 120px; // L'altezza sarà definita dall'immagine
+  .partner-item-container {
     display: flex;
+  }
+
+  .partner-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+  }
+
+  .partner-logo-placeholder {
+    background-color: #dfe4ea;
+    border: 2px dashed #6c757d;
+    border-radius: 8px;
+    height: 120px;
+    padding: 25px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    // color: #7f8c8d; // Rimosso
-    // font-style: italic; // Rimosso
-    // font-size: 0.9em; // Rimosso
-    // border: 2px dashed #ced4da; // Rimosso
-    transition: transform 0.2s ease; // Mantenuto per effetto hover
-
-    img {
-      max-width: 100%; // L'immagine si adatta al contenitore della griglia
-      max-height: 80px; // Altezza massima per i loghi, puoi regolarla
-      object-fit: contain; // Mantiene le proporzioni
-      filter: grayscale(50%); // Opzionale: loghi in scala di grigi
-      opacity: 0.8; // Opzionale: leggera trasparenza
-      transition: filter 0.3s ease, opacity 0.3s ease;
-    }
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out;
 
     &:hover {
-        transform: scale(1.05);
-        img {
-            filter: grayscale(0%);
-            opacity: 1;
-        }
+      transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .partner-logo-img {
+      max-width: 80%;
+      max-height: 60px;
+      object-fit: contain;
+      margin-bottom: 15px;
+    }
+
+    .partner-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: auto;
+      color: #2c3e50;
     }
   }
 }
