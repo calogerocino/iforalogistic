@@ -31,7 +31,7 @@ import { NotificationService } from './notification.service';
 
 export type EventState = 'nuovo' | 'programmato' | 'adesso' | 'concluso';
 export type ServerType = 'Simulation 1' | 'Simulation 2' | 'SCS Convoy' | 'Promods';
-export type TrailerType = 'Standard' | 'Pianale' | 'Bestiame';
+export type TrailerType = 'Standard' | 'Pianale' | 'Bestiame' | 'Refrigerato';
 
 export interface EventDLCs {
   goingEast: boolean;

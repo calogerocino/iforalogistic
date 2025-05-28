@@ -78,7 +78,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     { name: 'westBalkans', label: 'West Balkans' },
     { name: 'greece', label: 'Greece' },
   ];
-  trailerTypeOptions: TrailerType[] = ['Standard', 'Pianale', 'Bestiame'];
+  trailerTypeOptions: TrailerType[] = ['Standard', 'Pianale', 'Bestiame', 'Refrigerato'];
 
   photoAreaPreview: string | null = null;
   routeImagePreview: string | null = null;
