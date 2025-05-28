@@ -367,15 +367,7 @@
   margin-top: 0;
 }
 
-.public-footer {
-  text-align: center;
-  padding: 25px;
-  background-color: #343a40;
-  color: #f8f9fa;
-  font-size: 0.9em;
-  margin-top: 0;
-}
-
+// MODAL STYLES (Event Details & Registration)
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -478,6 +470,30 @@
   @media (min-width: 600px) {
     grid-template-columns: 1fr 1fr;
   }
+
+  .modal-image-row {
+    display: flex;
+    align-items: flex-start; 
+    gap: 20px; 
+    grid-column: 1 / -1;
+
+    .modal-image-section {
+      flex: 1; 
+
+      .modal-label {
+        display: block; 
+        margin-bottom: 8px;
+      }
+      .modal-event-image {
+        width: 100%;
+        height: auto; 
+        max-height: 200px; 
+        object-fit: cover; 
+        border-radius: 4px;
+        display: block; 
+      }
+    }
+  }
 }
 .modal-detail-item {
   margin-bottom: 5px;
@@ -521,13 +537,14 @@
 }
 .modal-image-section {
     margin-top: 10px;
+    &:not(.modal-image-row .modal-image-section) {}
     .modal-label {
         margin-bottom: 8px;
     }
 }
 .modal-event-image {
   width: 100%;
-  max-width: 300px;
+  max-width: 300px; 
   height: auto;
   border-radius: 6px;
   border: 1px solid #eee;
@@ -622,6 +639,7 @@
   }
 }
 
+// VIDEO MODAL STYLES
 .video-modal-overlay {
   position: fixed;
   top: 0;
@@ -680,3 +698,60 @@
     border: 0;
   }
 }
+
+// Floating Discord Button Styles
+.discord-fab {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background-color: #5865F2; 
+  color: white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  text-decoration: none;
+  z-index: 1050; 
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  // overflow: hidden; // Not needed if robot is removed or icon handles its bounds
+
+  .discord-fab-icon {
+    width: 30px;
+    height: 30px;
+    opacity: 1; 
+  }
+  
+  .discord-fab-text {
+    position: absolute;
+    right: 100%; 
+    top: 50%;
+    transform: translateY(-50%) translateX(-15px); 
+    background-color: #5865F2;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  }
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+
+    .discord-fab-text {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(-10px); 
+    }
+    // No need to hide .discord-fab-icon on hover anymore
+  }
+}
+
+// Removed .discord-fab-robot styles and @keyframes robotPeek

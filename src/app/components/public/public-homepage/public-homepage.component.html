@@ -22,16 +22,16 @@
       <div *ngIf="events && events.length > 0; else noUpcomingEvents" class="events-showcase-grid">
         <div *ngFor="let event of events" class="event-showcase-card">
           <div class="event-image-placeholder"
-            *ngIf="!event.photoAreaImageUrl || event.photoAreaImageUrl === eventService.defaultEventPhotoAreaUrl">
+            *ngIf="!event.routeImageUrl || event.routeImageUrl === eventService.defaultEventRouteUrl">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path
                 d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.5l-2.14 2.58h10.3z">
               </path>
             </svg>
           </div>
-          <img *ngIf="event.photoAreaImageUrl && event.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl"
-            [src]="event.photoAreaImageUrl" alt="Area Foto Evento {{event.name}}"
-            (click)="openImageInModal(event.photoAreaImageUrl)" class="event-image clickable-image">
+          <img *ngIf="event.routeImageUrl && event.routeImageUrl !== eventService.defaultEventRouteUrl"
+            [src]="event.routeImageUrl" alt="Area Foto Evento {{event.name}}"
+            (click)="openImageInModal(event.routeImageUrl)" class="event-image clickable-image">
 
           <div class="event-showcase-content">
             <span class="event-showcase-state" [ngClass]="getEventStateClass(event.state)">
@@ -106,8 +106,16 @@
 </main>
 
 <footer class="public-footer">
-  <p>© {{ currentYear }} IFL byPixElSmart. Tutti i diritti riservati.</p>
+  <p>© {{ currentYear }} IFL by PixelSmart. Tutti i diritti riservati.</p>
 </footer>
+
+<!-- Floating Discord Button -->
+<a href="https://discord.gg/ukta28MMw8" target="_blank" rel="noopener noreferrer" class="discord-fab" aria-label="Unisciti al nostro server Discord">
+  <span class="discord-fab-text">Discord</span>
+  <svg class="discord-fab-icon" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.297 0H3.703A2.967 2.967 0 0 0 .736 2.966V17.03c0 1.639 1.33 2.965 2.967 2.965h12.11l4.028 3.856V2.965A2.967 2.967 0 0 0 20.297 0zM8.02 14.087c-.985 0-1.782-.797-1.782-1.781s.797-1.782 1.782-1.782c.984 0 1.781.798 1.781 1.782s-.797 1.781-1.781 1.781zm3.963 0c-.985 0-1.782-.797-1.782-1.781s.797-1.782 1.782-1.782c.984 0 1.781.798 1.781 1.782s-.797 1.781-1.781 1.781zm3.962 0c-.985 0-1.782-.797-1.782-1.781s.797-1.782 1.782-1.782c.984 0 1.781.798 1.781 1.782.001 1.006-.796 1.781-1.781 1.781z"/>
+  </svg>
+</a>
 
 <div class="modal-overlay" *ngIf="isEventModalOpen" (click)="closeEventModal()">
   <div class="modal-content-wrapper" [class.registration-open]="isRegistrationPanelOpen">
@@ -171,19 +179,23 @@
             </ng-container>
           </ul>
         </div>
-        <div class="modal-image-section full-width"
-          *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
-          <span class="modal-label">Area Foto:</span>
-          <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
-            (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
-            class="modal-event-image clickable-image">
+        
+        <div class="modal-image-row full-width">
+          <div class="modal-image-section" 
+            *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
+            <span class="modal-label">Area Foto:</span>
+            <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
+              (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
+              class="modal-event-image clickable-image">
+          </div>
+          <div class="modal-image-section" 
+            *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
+            <span class="modal-label">Immagine Percorso:</span>
+            <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
+              (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
+          </div>
         </div>
-        <div class="modal-image-section full-width"
-          *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
-          <span class="modal-label">Immagine Percorso:</span>
-          <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
-            (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
-        </div>
+
       </div>
     </div>
 
