@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, addDoc, serverTimestamp, Timestamp, doc, updateDoc, query, where, orderBy, limit } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, addDoc, serverTimestamp, Timestamp, doc, updateDoc, query, where, orderBy, limit, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { AppEvent, EventSlot, SlotParticipantInfo } from './event.service'; // Importa interfacce necessarie
 
@@ -14,7 +14,8 @@ export interface AppNotification {
   message: string;
   timestamp: Timestamp;
   isRead: boolean;
-  navigateTo?: string; // Percorso per la navigazione al click
+  interacted?: boolean; 
+  navigateTo?: string; 
 }
 
 @Injectable({
@@ -29,9 +30,9 @@ export class NotificationService {
 
   // Crea una notifica per una nuova prenotazione di slot
   async createSlotBookingNotification(
-    event: Pick<AppEvent, 'id' | 'name'>, // Solo i campi necessari dell'evento
-    slot: Pick<EventSlot, 'id' | 'name'>, // Solo i campi necessari dello slot
-    booking: Pick<SlotParticipantInfo, 'companyName' | 'participantsCount'> // Solo i campi necessari della prenotazione
+    event: Pick<AppEvent, 'id' | 'name'>,
+    slot: Pick<EventSlot, 'id' | 'name'>,
+    booking: Pick<SlotParticipantInfo, 'companyName' | 'participantsCount'>
   ): Promise<void> {
     if (!event.id || !slot.id) {
       console.error('Event ID or Slot ID is missing for notification creation');
@@ -46,9 +47,10 @@ export class NotificationService {
       companyName: booking.companyName,
       participantsCount: booking.participantsCount,
       message: message,
-      timestamp: Timestamp.now(), // Usa Timestamp.now() per il momento della creazione
+      timestamp: Timestamp.now(),
       isRead: false,
-      navigateTo: `/dashboard/eventi/${event.id}` // Esempio di percorso
+      interacted: false, // Initialize as not interacted
+      navigateTo: `/dashboard/eventi/${event.id}`
     };
     try {
       await addDoc(this.notificationsCollection, newNotification);
@@ -79,31 +81,39 @@ export class NotificationService {
   }
 
 
-  // Segna una notifica come letta
+  // Segna una notifica come letta e come interagita
   async markAsRead(notificationId: string): Promise<void> {
     const notificationDocRef = doc(this.firestore, this.notificationsCollectionPath, notificationId);
     try {
-      await updateDoc(notificationDocRef, { isRead: true });
+      await updateDoc(notificationDocRef, { isRead: true, interacted: true });
     } catch (error) {
       console.error("Errore durante l'aggiornamento della notifica come letta:", error);
     }
   }
 
-  // Segna tutte le notifiche (visibili) come lette - implementazione più complessa, per ora segna quelle passate
+  // Segna tutte le notifiche (visibili) come lette e interagite
   async markMultipleAsRead(notifications: AppNotification[]): Promise<void> {
-    const batch = []; // Firestore batch write (più efficiente per multiple scritture)
+    const batch = [];
     for (const notification of notifications) {
       if (notification.id && !notification.isRead) {
         const notificationDocRef = doc(this.firestore, this.notificationsCollectionPath, notification.id);
-        // Per un batch write vero e proprio, useresti writeBatch di Firestore.
-        // Per semplicità qui facciamo update individuali, ma considera il batch per performance.
-        batch.push(updateDoc(notificationDocRef, { isRead: true }));
+        batch.push(updateDoc(notificationDocRef, { isRead: true, interacted: true }));
       }
     }
     try {
         await Promise.all(batch);
     } catch (error) {
         console.error("Errore durante l'aggiornamento di multiple notifiche come lette:", error);
+    }
+  }
+
+  // Elimina una notifica
+  async deleteNotification(notificationId: string): Promise<void> {
+    const notificationDocRef = doc(this.firestore, this.notificationsCollectionPath, notificationId);
+    try {
+      await deleteDoc(notificationDocRef);
+    } catch (error) {
+      console.error("Errore durante l'eliminazione della notifica:", error);
     }
   }
 }
