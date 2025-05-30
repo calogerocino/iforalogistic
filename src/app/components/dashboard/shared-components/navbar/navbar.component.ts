@@ -27,12 +27,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
-  private cdr = inject(ChangeDetectorRef); // Inject ChangeDetectorRef
+  private cdr = inject(ChangeDetectorRef);
 
   constructor() {
     this.unreadNotifications$ = this.notificationService.getUnreadNotifications(5);
-    // It's important that Firestore updates trigger a new emission of this observable
-    // or that the objects within the array are updated in a way Angular detects.
     this.allNotifications$ = this.notificationService.getAllNotifications(20);
   }
 
@@ -96,23 +94,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   async handleNotificationMainAction(notification: AppNotification): Promise<void> {
     if (notification.id && !notification.isRead) {
-      // Optimistically update local state for immediate UI feedback
       notification.isRead = true;
-      notification.interacted = true; 
+      notification.interacted = true;
       await this.notificationService.markAsRead(notification.id);
-      // this.cdr.detectChanges(); // Optional: force change detection if needed
     }
-    // If already read but not interacted (edge case, service handles setting interacted on markAsRead)
     else if (notification.id && !notification.interacted) {
         notification.interacted = true;
-        await this.notificationService.markAsRead(notification.id); // ensure backend is also updated
-        // this.cdr.detectChanges(); // Optional
+        await this.notificationService.markAsRead(notification.id);
     }
 
     if (notification.navigateTo) {
       this.router.navigate([notification.navigateTo], {
         queryParams: {
-          scrollToSlot: notification.slotId,
+          scrollToSlot: notification.subSlotId,
           highlightBookingId: (notification as any).bookingId || notification.companyName
         }
       });
@@ -121,41 +115,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   async setNotificationInteracted(notification: AppNotification, event: MouseEvent): Promise<void> {
-    event.stopPropagation(); 
+    event.stopPropagation();
     if (notification.id && !notification.interacted) {
-      // Optimistically update local state for immediate UI feedback
       notification.interacted = true;
-      // Also mark as read if it wasn't already, as interaction implies it's been seen
       if (!notification.isRead) {
           notification.isRead = true;
       }
-      await this.notificationService.markAsRead(notification.id); // This call sets both isRead and interacted in Firestore
-      // this.cdr.detectChanges(); // Optional: force change detection if ngFor isn't picking up the change on the object property
-    } 
-    // If it was already interacted, this click does nothing extra unless you want to toggle or something.
-    // The main click action is on the content div for navigation.
+      await this.notificationService.markAsRead(notification.id);
+    }
   }
 
   async deleteNotification(notification: AppNotification, event: MouseEvent): Promise<void> {
     event.stopPropagation();
     if (notification.id) {
       await this.notificationService.deleteNotification(notification.id);
-      // Firestore observable should update the list automatically.
-      // If not, manual filtering of the local array might be needed, but that's less ideal with observables.
-    } 
+    }
   }
 
   async markAllNotificationsAsRead(notifications: AppNotification[] | null): Promise<void> {
     if (notifications && notifications.length > 0) {
         const unreadNotifications = notifications.filter(n => !n.isRead);
         if (unreadNotifications.length > 0) {
-            // Optimistically update local state
-            unreadNotifications.forEach(n => { 
-                n.isRead = true; 
-                n.interacted = true; 
+            unreadNotifications.forEach(n => {
+                n.isRead = true;
+                n.interacted = true;
             });
             await this.notificationService.markMultipleAsRead(unreadNotifications);
-            // this.cdr.detectChanges(); // Optional
         }
     }
   }

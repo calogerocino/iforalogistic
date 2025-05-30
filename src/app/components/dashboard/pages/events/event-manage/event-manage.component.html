@@ -108,14 +108,14 @@
                 <div class="form-group image-upload-group">
                     <label>Area Foto</label>
                     <div class="image-preview-box">
-                        <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(eventService.defaultEventPhotoAreaUrl)" alt="Anteprima Area Foto" class="image-preview clickable-image">
+                        <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(photoAreaPreview || eventService.defaultEventPhotoAreaUrl)" alt="Anteprima Area Foto" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('photoArea')" [disabled]="isUploadingPhotoArea">
                             <span *ngIf="!isUploadingPhotoArea">{{ eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl ? 'Modifica' : 'Carica' }} Immagine</span>
                             <span *ngIf="isUploadingPhotoArea">Caricamento...</span>
                         </button>
-                        <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('photoArea')" *ngIf="eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl && eventId" [disabled]="isUploadingPhotoArea">
+                        <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('photoArea')" *ngIf="eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl" [disabled]="isUploadingPhotoArea">
                             Elimina
                         </button>
                     </div>
@@ -127,14 +127,14 @@
                 <div class="form-group image-upload-group">
                     <label>Percorso (Immagine)</label>
                      <div class="image-preview-box">
-                        <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" (click)="openImageInModal(eventService.defaultEventRouteUrl)" alt="Anteprima Percorso" class="image-preview clickable-image">
+                        <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" (click)="openImageInModal(routeImagePreview || eventService.defaultEventRouteUrl)" alt="Anteprima Percorso" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('routePath')" [disabled]="isUploadingRouteImage">
                              <span *ngIf="!isUploadingRouteImage">{{ eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl ? 'Modifica' : 'Carica' }} Immagine</span>
                             <span *ngIf="isUploadingRouteImage">Caricamento...</span>
                         </button>
-                         <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('routePath')" *ngIf="eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl && eventId" [disabled]="isUploadingRouteImage">
+                         <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('routePath')" *ngIf="eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl" [disabled]="isUploadingRouteImage">
                             Elimina
                         </button>
                     </div>
@@ -149,29 +149,37 @@
 
         <div class="card slot-management-card">
             <div class="form-section">
-                <h3>Gestione Slot</h3>
+                <h3>Gestione Zone/Slot Principali</h3>
                 <div formArrayName="slots" class="slots-form-grid">
                     <div *ngFor="let slotCtrl of slotsFormArray.controls; let i = index" [formGroupName]="i" class="slot-item-form">
-                        <h4>Slot {{ i + 1 }}</h4>
+                        <h4>Zona {{ i + 1 }}</h4>
                         <div class="form-group">
-                            <label [for]="'slotName-' + i">Nome Slot</label>
-                            <input [id]="'slotName-' + i" type="text" formControlName="name">
+                            <label [for]="'mainSlotName-' + i">Nome Zona</label>
+                            <input [id]="'mainSlotName-' + i" type="text" formControlName="name">
+                             <div *ngIf="slotCtrl.get('name')?.invalid && slotCtrl.get('name')?.touched" class="error-messages">
+                                <small *ngIf="slotCtrl.get('name')?.errors?.['required']">Nome zona obbligatorio.</small>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label [for]="'slotCapacity-' + i">Capacità (Posti)</label>
-                            <input [id]="'slotCapacity-' + i" type="number" formControlName="capacity" min="1">
+                            <label [for]="'numberOfSubSlots-' + i">Numero Postazioni (Sub-Slots)</label>
+                            <input [id]="'numberOfSubSlots-' + i" type="number" formControlName="numberOfSubSlots" min="1">
+                            <div *ngIf="slotCtrl.get('numberOfSubSlots')?.invalid && slotCtrl.get('numberOfSubSlots')?.touched" class="error-messages">
+                                <small *ngIf="slotCtrl.get('numberOfSubSlots')?.errors?.['required']">Numero postazioni obbligatorio.</small>
+                                <small *ngIf="slotCtrl.get('numberOfSubSlots')?.errors?.['min']">Almeno 1 postazione.</small>
+                            </div>
                         </div>
+
                         <div class="form-group image-upload-group">
-                            <label [for]="'slotImageInput-' + i">Immagine Slot</label>
+                            <label [for]="'slotImageInput-' + i">Immagine Zona</label>
                             <div class="image-preview-box slot-image-preview-box">
-                                <img [src]="slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl" alt="Anteprima Slot {{ i + 1 }}" (click)="openImageInModal(eventService.defaultSlotImageUrl)" class="image-preview clickable-image">
+                                <img [src]="slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl" [alt]="'Anteprima Zona ' + (i + 1)" (click)="openImageInModal(slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl)" class="image-preview clickable-image">
                             </div>
                              <div class="image-actions">
                                 <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('slotImage', i)" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
                                     <span *ngIf="!isUploadingSlotImage[slotCtrl.get('id')!.value]">{{ slotCtrl.get('imageUrl')?.value && slotCtrl.get('imageUrl')?.value !== eventService.defaultSlotImageUrl ? 'Modifica' : 'Carica' }}</span>
                                     <span *ngIf="isUploadingSlotImage[slotCtrl.get('id')!.value]">Caricamento...</span>
                                 </button>
-                                <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('slotImage', i)" *ngIf="slotCtrl.get('imageUrl')?.value && slotCtrl.get('imageUrl')?.value !== eventService.defaultSlotImageUrl && eventId" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
+                                <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('slotImage', i)" *ngIf="slotCtrl.get('imageUrl')?.value && slotCtrl.get('imageUrl')?.value !== eventService.defaultSlotImageUrl" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
                                     Elimina
                                 </button>
                             </div>
@@ -180,20 +188,12 @@
                                 <div class="progress" [style.width.%]="slotImageUploadProgress[slotCtrl.get('id')!.value]"></div>
                             </div>
                         </div>
-                         <div class="form-group">
-                            <label>Posti Prenotati</label>
-                            <input type="number" [value]="getBookedPlacesForSlotControl(slotCtrl)" readonly disabled class="booked-places-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Posti Disponibili</label>
-                            <input type="number" [value]="getAvailablePlacesForSlotControl(slotCtrl)" readonly disabled class="available-places-input">
-                        </div>
-                        <button type="button" class="btn-danger btn-small remove-slot-btn" (click)="removeSlot(i)">Rimuovi Slot</button>
+                        <button type="button" class="btn-danger btn-small remove-slot-btn" (click)="removeSlot(i)">Rimuovi Zona</button>
                     </div>
                 </div>
                 <button type="button" class="btn-secondary add-slot-btn" (click)="addSlot()">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right: 8px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
-                    Aggiungi Slot
+                    Aggiungi Zona
                 </button>
             </div>
         </div>
@@ -212,12 +212,12 @@
 
     <ng-template #viewModeContent>
        <div *ngIf="currentEvent" class="view-details">
-          <div class="view-columns-wrapper">
+          <div class="view-columns-wrapper card">
               <div class="view-column">
                   <h3>Dettagli Principali</h3>
                   <p><strong>Descrizione:</strong> {{ currentEvent.description || 'N/D' }}</p>
-                  <p><strong>Ora di Ritrovo:</strong> {{ currentEvent.startDate?.seconds ? (currentEvent.startDate.seconds * 1000 | date:'full') : 'N/D' }}</p>
-                  <p><strong>Ora di Inizio:</strong> {{ currentEvent.endDate?.seconds ? (currentEvent.endDate.seconds * 1000 | date:'full') : 'N/D' }}</p>
+                  <p><strong>Ora di Ritrovo:</strong> {{ currentEvent.startDate?.seconds ? (currentEvent.startDate.seconds * 1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</p>
+                  <p><strong>Ora di Inizio:</strong> {{ currentEvent.endDate?.seconds ? (currentEvent.endDate.seconds * 1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</p>
                   <p><strong>Stato:</strong> <span class="event-state-view" [ngClass]="'event-state-' + currentEvent.state">{{ currentEvent.state | titlecase }}</span></p>
               </div>
               <div class="view-column">
@@ -229,7 +229,7 @@
                           <li *ngIf="currentEvent.dlcs![dlc.name]">{{ dlc.label }}</li>
                       </ng-container>
                   </ul>
-                  <p *ngIf="!hasSelectedDlcs(currentEvent.dlcs!)">Nessun DLC specifico richiesto.</p>
+                  <p *ngIf="!currentEvent.dlcs || !hasSelectedDlcs(currentEvent.dlcs!)">Nessun DLC specifico richiesto.</p>
                    <p><strong>Partenza:</strong> {{ currentEvent.departure || 'N/D' }}</p>
                   <p><strong>Destinazione:</strong> {{ currentEvent.destination || 'N/D' }}</p>
                   <p><strong>Tipo Rimorchio:</strong> {{ currentEvent.trailerType || 'N/D' }}</p>
@@ -238,37 +238,45 @@
                <div class="view-column">
                   <h3>Immagini</h3>
                   <p><strong>Area Foto:</strong></p>
-                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl)" class="image-preview-view clickable-image">
+                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl)" class="image-preview-view clickable-image">
                   <p><strong>Percorso:</strong></p>
-                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl)" class="image-preview-view clickable-image">
+                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl || eventService.defaultEventRouteUrl)" class="image-preview-view clickable-image">
               </div>
           </div>
           <div *ngIf="currentEvent.slots && currentEvent.slots.length > 0" class="slots-view-section card">
-            <h3>Slot e Prenotazioni</h3>
+            <h3>Zone e Postazioni</h3>
             <div class="slots-view-grid">
-                <div *ngFor="let slot of currentEvent.slots" class="slot-view-item">
-                    <h4>{{ slot.name }}</h4>
-                    <img [src]="slot.imageUrl || eventService.defaultSlotImageUrl" alt="Immagine Slot {{slot.name}}" (click)="openImageInModal(eventService.defaultSlotImageUrl)" class="image-preview-view slot-image-view clickable-image">
-                    <p><strong>Capacità:</strong> {{ slot.capacity }}</p>
-                    <p><strong>Posti Prenotati:</strong> {{ getBookedPlacesForView(slot) }}</p>
-                    <p><strong>Posti Disponibili:</strong> {{ getAvailablePlacesForView(slot) }}</p>
-                    <button type="button" class="btn-outline-secondary btn-small" (click)="toggleSlotBookingsVisibility(slot.id)">
-                        {{ visibleBookingsForSlotId === slot.id ? 'Nascondi' : 'Mostra' }} Prenotazioni ({{slot.bookings?.length || 0}})
+                <div *ngFor="let mainSlot of currentEvent.slots" class="slot-view-item main-slot-view-item">
+                    <h4>{{ mainSlot.name }}</h4>
+                    <img [src]="mainSlot.imageUrl || eventService.defaultSlotImageUrl" [alt]="'Immagine Zona ' + mainSlot.name" (click)="openImageInModal(mainSlot.imageUrl || eventService.defaultSlotImageUrl)" class="image-preview-view slot-image-view clickable-image">
+                    <p><strong>Numero Postazioni Totali:</strong> {{ mainSlot.numberOfSubSlots }}</p>
+                    <p><strong>Postazioni Prenotate:</strong> {{ getTotalBookedInMainSlot(mainSlot) }}</p>
+                    <p><strong>Postazioni Disponibili:</strong> {{ getTotalAvailableInMainSlot(mainSlot) }}</p>
+
+                    <button type="button" class="btn-outline-secondary btn-small" (click)="toggleSubSlotsVisibility(mainSlot.id)">
+                        {{ visibleSubSlotsForMainSlotId === mainSlot.id ? 'Nascondi' : 'Mostra' }} Dettaglio Postazioni ({{mainSlot.subSlots?.length || 0}})
                     </button>
-                    <div *ngIf="visibleBookingsForSlotId === slot.id" class="slot-bookings-details">
-                        <ul *ngIf="slot.bookings && slot.bookings.length > 0; else noBookingsForSlot">
-                            <li *ngFor="let booking of slot.bookings">
-                                <strong>{{ booking.companyName }}</strong> ({{booking.participantsCount}} part.)
-                                <br>Ref: {{booking.contactName}} - {{booking.contactEmail}}
-                                <br><small>Prenotato il: {{ booking.bookedAt?.seconds ? (booking.bookedAt.seconds*1000 | date:'short') : 'N/D' }}</small>
-                            </li>
-                        </ul>
-                        <ng-template #noBookingsForSlot><p>Nessuna prenotazione per questo slot.</p></ng-template>
+
+                    <div *ngIf="visibleSubSlotsForMainSlotId === mainSlot.id && mainSlot.subSlots && mainSlot.subSlots.length > 0" class="sub-slots-details-grid">
+                        <div *ngFor="let subSlot of mainSlot.subSlots" class="sub-slot-view-item">
+                            <h5>{{ subSlot.name }}</h5>
+                            <p [ngClass]="{'booked-status': subSlot.isBooked, 'available-status': !subSlot.isBooked}">
+                                {{ subSlot.isBooked ? 'Prenotata' : 'Disponibile' }}
+                            </p>
+                            <div *ngIf="subSlot.isBooked && subSlot.bookingInfo" class="booking-info-details">
+                                <p><strong>VTC:</strong> {{ subSlot.bookingInfo.companyName }}</p>
+                                <p><strong>Ref:</strong> {{ subSlot.bookingInfo.contactName }} ({{ subSlot.bookingInfo.contactEmail }})</p>
+                                <p><small>Prenotato il: {{ subSlot.bookingInfo.bookedAt?.seconds ? (subSlot.bookingInfo.bookedAt.seconds*1000 | date:'short') : 'N/D' }}</small></p>
+                            </div>
+                        </div>
                     </div>
+                     <p *ngIf="visibleSubSlotsForMainSlotId === mainSlot.id && (!mainSlot.subSlots || mainSlot.subSlots.length === 0)" class="no-subslots-info">
+                        Nessuna postazione definita per questa zona.
+                    </p>
                 </div>
             </div>
           </div>
-          <p *ngIf="!currentEvent.slots || currentEvent.slots.length === 0">Nessuno slot definito per questo evento.</p>
+          <p *ngIf="!currentEvent.slots || currentEvent.slots.length === 0" class="card no-slots-info">Nessuna zona definita per questo evento.</p>
       </div>
     </ng-template>
   </div>

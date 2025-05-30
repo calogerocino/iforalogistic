@@ -45,34 +45,25 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 25px 30px;
-  margin-bottom: 30px; // Spazio tra le card
-  &:last-of-type { // Rimuove il margine inferiore dall'ultima card nel flusso diretto del form-container
+  margin-bottom: 30px;
+  &:last-of-type {
     margin-bottom: 0;
   }
 }
 
 .form-container {
-  // Questo contenitore ora avvolge il form.
-  // Le card al suo interno avranno il loro margin-bottom.
 }
 
-.form-columns-wrapper { // Questa è la prima card che contiene le prime 3 colonne
+.form-columns-wrapper {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 30px;
-  // margin-bottom: 0; // Non serve se .card ha margin-bottom
 }
 
 .form-column {
-  // Non sono necessari stili specifici qui se il contenuto è ben strutturato
 }
 
 .form-section {
-  // Rimosse le bordature e padding inferiori se ogni sezione è ora una card o dentro una card
-  // margin-bottom: 0;
-  // padding-bottom: 0;
-  // border-bottom: none;
-
   h3 {
     font-size: 1.3em;
     color: #34495e;
@@ -95,6 +86,7 @@
   }
 
   input[type="text"],
+  input[type="number"],
   input[type="datetime-local"],
   textarea,
   select {
@@ -244,11 +236,9 @@
 }
 
 .slot-management-card {
-  // La classe .card già applica margin-bottom: 30px;
-  // che creerà lo spazio desiderato dalla card .form-columns-wrapper
-  .form-section { // Se la sezione slot ha un suo h3
+  .form-section {
     h3 {
-        margin-top: 0; // Assicura che il titolo sia all'inizio della card
+        margin-top: 0;
     }
   }
 }
@@ -281,41 +271,33 @@
   }
   .remove-slot-btn {
     margin-top: 10px;
-    display: block; // Per occupare la larghezza e permettere margin auto o text-align sul genitore
-    // float: right; // Se si vuole allineare a destra dentro lo slot item
+    display: block;
     padding: 5px 10px;
     font-size: 0.8em;
-  }
-  .booked-places-input, .available-places-input {
-    background-color: #e9ecef !important;
-    color: #495057 !important;
-    cursor: default !important;
   }
 }
 
 .add-slot-btn {
   display: flex;
   align-items: center;
-  justify-content: center; // Centra il contenuto del pulsante (icona + testo)
-  width: auto; // Larghezza basata sul contenuto
+  justify-content: center;
+  width: auto;
   margin-top: 20px;
   padding: 10px 15px;
-  // Per allinearlo a destra all'interno della card degli slot:
   margin-left: auto;
-  display: table; // Per far funzionare margin-left: auto su un elemento non blocco pieno
+  display: table;
 }
 
 .form-actions {
-  margin-top: 30px; // Spazio sopra i pulsanti di azione finali
-  padding-top: 20px; // Spazio interno sopra i pulsanti
-  border-top: 1px solid #ecf0f1; // Linea separatrice
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ecf0f1;
   display: flex;
   gap: 15px;
-  justify-content: flex-end; // Mantiene i pulsanti a destra
-  // clear: both; // Non più necessario se .add-slot-btn non è float
+  justify-content: flex-end;
 }
 
-.btn-primary, .btn-secondary, .btn-outline-secondary {
+.btn-primary, .btn-secondary, .btn-outline-secondary, .btn-danger {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -398,68 +380,90 @@
         border: 1px solid #eee;
         margin-bottom: 15px;
         object-fit: contain;
+         &.clickable-image {
+            cursor: pointer;
+        }
     }
 
     .slots-view-section {
-        grid-column: 1 / -1;
-        margin-top: 20px;
-        padding-top: 0;
-        border-top: none;
-
+        margin-top: 20px; // Removed grid-column and border as it's a card
         h3 {
             font-size: 1.6em;
             color: #2c3e50;
             margin-bottom: 20px;
-            text-align: left;
+            text-align: left; // Default, but good to be explicit
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
         }
     }
-    .slots-view-grid {
+    .slots-view-grid { // For main slots
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 20px;
     }
-    .slot-view-item {
-        border: 1px solid #f0f0f0;
+    .slot-view-item.main-slot-view-item { // Styling for a main slot card
+        border: 1px solid #e0e0e0;
         border-radius: 6px;
         padding: 15px;
         background-color: #fdfdfd;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        h4 {
+        h4 { // Name of the main slot
             margin-top: 0;
             margin-bottom: 10px;
-            font-size: 1.2em;
+            font-size: 1.3em;
             color: #34495e;
         }
         p { margin-bottom: 8px; font-size: 0.95em;}
-        .slot-image-view {
+        .slot-image-view { // Image of the main slot
             max-width: 100%;
-            height: 120px;
+            height: 150px;
             object-fit: cover;
             border-radius: 4px;
             margin-bottom: 10px;
         }
         .btn-small {
             margin-top: 10px;
-            font-size: 0.8em;
-            padding: 5px 10px;
+            font-size: 0.85em;
+            padding: 6px 12px;
         }
     }
-    .slot-bookings-details {
-        margin-top: 10px;
-        padding-top: 10px;
+    .sub-slots-details-grid { // Grid for sub-slots within a main slot
+        margin-top: 15px;
+        padding-top: 15px;
         border-top: 1px dashed #ddd;
-        font-size: 0.9em;
-        ul {
-            list-style: none;
-            padding-left: 0;
-            li {
-                padding: 5px;
-                border-bottom: 1px solid #f5f5f5;
-                &:last-child { border-bottom: none;}
-                small { font-size: 0.8em; color: #777; display: block; margin-top: 3px;}
-            }
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    .sub-slot-view-item { // Styling for an individual sub-slot
+        border: 1px solid #f0f0f0;
+        border-radius: 4px;
+        padding: 10px;
+        background-color: #fff;
+        h5 { // Name of the sub-slot
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1em;
+            font-weight: 600;
         }
-        p { font-style: italic; color: #666;}
+        .available-status { color: #27ae60; font-weight: bold; }
+        .booked-status { color: #c0392b; font-weight: bold; }
+
+        .booking-info-details {
+            margin-top: 5px;
+            font-size: 0.9em;
+            p { margin-bottom: 3px; }
+            small { font-size: 0.8em; color: #777; display: block; margin-top: 2px;}
+        }
+    }
+    .no-slots-info, .no-subslots-info {
+        font-style: italic;
+        color: #666;
+        padding: 10px;
+        text-align: center;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        margin-top: 10px;
     }
 }
 

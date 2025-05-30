@@ -5,6 +5,7 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -26,6 +27,8 @@ import {
   TrailerType,
   EventDLCs,
   EventSlot,
+  EventSubSlot,
+  SubSlotBookingInfo,
 } from '../../../../../services/event.service';
 import { AuthService } from '../../../../../services/auth.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -89,13 +92,15 @@ export class EventManageComponent implements OnInit, OnDestroy {
   slotImageUploadProgress: { [slotId: string]: number | undefined } = {};
   isUploadingSlotImage: { [slotId: string]: boolean } = {};
   visibleBookingsForSlotId: string | null = null;
+  visibleSubSlotsForMainSlotId: string | null = null;
+
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   public eventService = inject(EventService);
-
   public imageModalService = inject(ImageModalService);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor() {
     const dlcGroup: { [key: string]: any } = {};
@@ -233,21 +238,18 @@ export class EventManageComponent implements OnInit, OnDestroy {
     return this.eventForm.get('slots') as FormArray;
   }
 
-  private createSlotFormGroup(slot?: EventSlot): FormGroup {
-    const booked =
-      slot?.bookings?.reduce((sum, b) => sum + b.participantsCount, 0) || 0;
+  private createMainSlotFormGroup(slot?: EventSlot): FormGroup {
     return this.fb.group({
       id: [slot?.id || uuidv4()],
       name: [slot?.name || '', Validators.required],
-      imageUrl: [slot?.imageUrl || null],
-      capacity: [slot?.capacity || 1, [Validators.required, Validators.min(1)]],
-      bookedPlaces: [{ value: booked, disabled: true }],
+      imageUrl: [slot?.imageUrl || this.eventService.defaultSlotImageUrl],
+      numberOfSubSlots: [slot?.numberOfSubSlots || 1, [Validators.required, Validators.min(1)]],
     });
   }
 
   addSlot(): void {
     if (this.mode === 'view') return;
-    this.slotsFormArray.push(this.createSlotFormGroup());
+    this.slotsFormArray.push(this.createMainSlotFormGroup());
   }
 
   removeSlot(index: number): void {
@@ -255,40 +257,35 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.slotsFormArray.removeAt(index);
   }
 
-  private populateSlotsFormArray(slots: EventSlot[]): void {
+  private populateSlotsFormArray(mainSlots: EventSlot[]): void {
     this.slotsFormArray.clear();
-    slots.forEach((slot) => {
-      this.slotsFormArray.push(this.createSlotFormGroup(slot));
+    mainSlots.forEach((slot) => {
+      this.slotsFormArray.push(this.createMainSlotFormGroup(slot));
     });
   }
 
-  getBookedPlacesForSlotControl(slotControl: AbstractControl): number {
-    return slotControl.get('bookedPlaces')?.value || 0;
+  getSubSlotsForMainSlot(mainSlotId: string): EventSubSlot[] {
+    return this.currentEvent?.slots?.find(s => s.id === mainSlotId)?.subSlots || [];
   }
 
-  getAvailablePlacesForSlotControl(slotControl: AbstractControl): number {
-    const capacity = slotControl.get('capacity')?.value || 0;
-    const booked = this.getBookedPlacesForSlotControl(slotControl);
-    return capacity - booked;
+  getTotalBookedInMainSlot(mainSlot: EventSlot | undefined): number {
+    if (!mainSlot || !mainSlot.subSlots) return 0;
+    return mainSlot.subSlots.filter(ss => ss.isBooked).length;
   }
 
-  getBookedPlacesForView(slot: EventSlot): number {
-    return slot.bookings?.reduce((sum, b) => sum + b.participantsCount, 0) || 0;
+  getTotalAvailableInMainSlot(mainSlot: EventSlot | undefined): number {
+     if (!mainSlot || !mainSlot.subSlots) return 0;
+     return mainSlot.numberOfSubSlots - this.getTotalBookedInMainSlot(mainSlot);
   }
 
-  getAvailablePlacesForView(slot: EventSlot): number {
-    const capacity = slot.capacity || 0;
-    const booked = this.getBookedPlacesForView(slot);
-    return capacity - booked;
-  }
-
-  toggleSlotBookingsVisibility(slotId: string): void {
-    if (this.visibleBookingsForSlotId === slotId) {
-      this.visibleBookingsForSlotId = null;
+  toggleSubSlotsVisibility(mainSlotId: string): void {
+    if (this.visibleSubSlotsForMainSlotId === mainSlotId) {
+      this.visibleSubSlotsForMainSlotId = null;
     } else {
-      this.visibleBookingsForSlotId = slotId;
+      this.visibleSubSlotsForMainSlotId = mainSlotId;
     }
   }
+
 
   hasSelectedDlcs(dlcs: EventDLCs | undefined | null): boolean {
     if (!dlcs) return false;
@@ -345,15 +342,15 @@ export class EventManageComponent implements OnInit, OnDestroy {
       photoAreaImageUrl: this.eventForm.get('photoAreaImageUrl')?.value,
       routeImageUrl: this.eventForm.get('routeImageUrl')?.value,
       slots: formValues.slots.map((slotFromForm: any) => {
-        const existingSlotData = this.currentEvent?.slots?.find(
+        const existingMainSlotData = this.currentEvent?.slots?.find(
           (s) => s.id === slotFromForm.id
         );
         return {
           id: slotFromForm.id,
           name: slotFromForm.name,
           imageUrl: slotFromForm.imageUrl,
-          capacity: slotFromForm.capacity,
-          bookings: existingSlotData?.bookings || [],
+          numberOfSubSlots: slotFromForm.numberOfSubSlots,
+          subSlots: existingMainSlotData?.subSlots || this.eventService['generateSubSlots'](slotFromForm.numberOfSubSlots)
         };
       }),
     };
@@ -380,6 +377,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
               this.updateFormAndPreviews(updatedEvent);
             }
             this.eventForm.disable();
+            this.cdr.detectChanges();
           });
       }
     } catch (err: any) {
@@ -434,18 +432,14 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
     let oldImageUrl: string | null | undefined = null;
     const isSlotImg = imageType === 'slotImage';
-    let slotIdForPath: string | undefined;
+    let mainSlotIdForPath: string | undefined;
 
-    if (isSlotImg && slotIndexOrId !== undefined) {
-      slotIdForPath =
-        typeof slotIndexOrId === 'number'
-          ? this.slotsFormArray.at(slotIndexOrId).get('id')?.value
-          : slotIndexOrId;
-      if (typeof slotIndexOrId === 'number') {
-        oldImageUrl = this.slotsFormArray
-          .at(slotIndexOrId)
-          .get('imageUrl')?.value;
-      }
+
+    if (isSlotImg && slotIndexOrId !== undefined && typeof slotIndexOrId === 'number') {
+      const mainSlotControl = this.slotsFormArray.at(slotIndexOrId);
+      mainSlotIdForPath = mainSlotControl.get('id')?.value;
+      oldImageUrl = mainSlotControl.get('imageUrl')?.value;
+
     } else {
       oldImageUrl =
         imageType === 'photoArea'
@@ -457,6 +451,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
       : imageType === 'photoArea'
       ? this.eventService.defaultEventPhotoAreaUrl
       : this.eventService.defaultEventRouteUrl;
+
     if (oldImageUrl === defaultUrl) oldImageUrl = null;
 
     if (imageType === 'photoArea') {
@@ -465,9 +460,9 @@ export class EventManageComponent implements OnInit, OnDestroy {
     } else if (imageType === 'routePath') {
       this.isUploadingRouteImage = true;
       this.routeImageUploadProgress = 0;
-    } else if (isSlotImg && slotIdForPath) {
-      this.isUploadingSlotImage[slotIdForPath] = true;
-      this.slotImageUploadProgress[slotIdForPath] = 0;
+    } else if (isSlotImg && mainSlotIdForPath) {
+      this.isUploadingSlotImage[mainSlotIdForPath] = true;
+      this.slotImageUploadProgress[mainSlotIdForPath] = 0;
     }
     this.successMessage = null;
     this.errorMessage = null;
@@ -482,7 +477,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
           this.eventId,
           file,
           imageType,
-          slotIdForPath
+          mainSlotIdForPath
         );
 
       uploadProgress$.subscribe(
@@ -491,13 +486,15 @@ export class EventManageComponent implements OnInit, OnDestroy {
             this.photoAreaUploadProgress = progress;
           else if (imageType === 'routePath')
             this.routeImageUploadProgress = progress;
-          else if (isSlotImg && slotIdForPath)
-            this.slotImageUploadProgress[slotIdForPath] = progress;
+          else if (isSlotImg && mainSlotIdForPath)
+            this.slotImageUploadProgress[mainSlotIdForPath] = progress;
+          this.cdr.detectChanges();
         },
         (error) => {
           this.errorMessage = `Errore upload. Dettagli: ${
             error.message || error
           }`;
+           this.cdr.detectChanges();
         }
       );
 
@@ -523,16 +520,17 @@ export class EventManageComponent implements OnInit, OnDestroy {
     } finally {
       if (imageType === 'photoArea') this.isUploadingPhotoArea = false;
       else if (imageType === 'routePath') this.isUploadingRouteImage = false;
-      else if (isSlotImg && slotIdForPath)
-        this.isUploadingSlotImage[slotIdForPath] = false;
+      else if (isSlotImg && mainSlotIdForPath)
+        this.isUploadingSlotImage[mainSlotIdForPath] = false;
 
       if (imageType === 'photoArea') this.photoAreaUploadProgress = undefined;
       else if (imageType === 'routePath')
         this.routeImageUploadProgress = undefined;
-      else if (isSlotImg && slotIdForPath)
-        this.slotImageUploadProgress[slotIdForPath] = undefined;
+      else if (isSlotImg && mainSlotIdForPath)
+        this.slotImageUploadProgress[mainSlotIdForPath] = undefined;
 
       if (input) input.value = '';
+      this.cdr.detectChanges();
     }
   }
 
@@ -543,11 +541,12 @@ export class EventManageComponent implements OnInit, OnDestroy {
     const isSlotImg = imageType === 'slotImage';
     let currentImageUrl: string | null | undefined;
     let defaultUrl: string;
+    let mainSlotId: string | undefined;
 
     if (isSlotImg && slotIndex !== undefined) {
-      currentImageUrl = this.slotsFormArray
-        .at(slotIndex)
-        .get('imageUrl')?.value;
+      const mainSlotControl = this.slotsFormArray.at(slotIndex);
+      currentImageUrl = mainSlotControl.get('imageUrl')?.value;
+      mainSlotId = mainSlotControl.get('id')?.value;
       defaultUrl = this.eventService.defaultSlotImageUrl;
     } else if (imageType === 'photoArea') {
       currentImageUrl = this.eventForm.get('photoAreaImageUrl')?.value;
@@ -568,26 +567,30 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.routeImagePreview = defaultUrl;
       }
       this.successMessage = 'Selezione immagine annullata.';
+      this.cdr.detectChanges();
       return;
     }
     if (
       isSlotImg &&
-      slotIndex !== undefined &&
-      this.slotsFormArray.at(slotIndex).get('id')?.value?.startsWith('temp_')
+      slotIndex !== undefined && mainSlotId &&
+      mainSlotId.startsWith('temp_')
     ) {
       this.slotsFormArray.at(slotIndex!).get('imageUrl')?.setValue(defaultUrl);
       this.successMessage = 'Selezione immagine slot annullata.';
+      this.cdr.detectChanges();
       return;
     }
 
     if (currentImageUrl === defaultUrl || !currentImageUrl) {
       this.successMessage = 'Nessuna immagine personalizzata da eliminare.';
+       this.cdr.detectChanges();
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = null;
     this.successMessage = null;
+    this.cdr.detectChanges();
     try {
       await this.eventService.deleteEventImage(currentImageUrl);
 
@@ -607,8 +610,10 @@ export class EventManageComponent implements OnInit, OnDestroy {
       }`;
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
+
 
   goBack(): void {
     this.router.navigate(['/dashboard/eventi']);

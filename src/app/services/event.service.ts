@@ -28,6 +28,7 @@ import {
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NotificationService } from './notification.service';
+import { v4 as uuidv4 } from 'uuid';
 
 export type EventState = 'nuovo' | 'programmato' | 'adesso' | 'concluso';
 export type ServerType = 'Simulation 1' | 'Simulation 2' | 'SCS Convoy' | 'Promods';
@@ -45,21 +46,27 @@ export interface EventDLCs {
   greece: boolean;
 }
 
-export interface SlotParticipantInfo {
+export interface SubSlotBookingInfo {
   bookingId: string;
   companyName: string;
   contactName: string;
   contactEmail: string;
-  participantsCount: number;
   bookedAt: Timestamp;
+}
+
+export interface EventSubSlot {
+  id: string;
+  name: string;
+  isBooked: boolean;
+  bookingInfo?: SubSlotBookingInfo | null;
 }
 
 export interface EventSlot {
   id: string;
   name: string;
   imageUrl?: string | null;
-  capacity: number;
-  bookings: SlotParticipantInfo[];
+  numberOfSubSlots: number;
+  subSlots: EventSubSlot[];
 }
 
 export interface AppEvent {
@@ -126,6 +133,24 @@ export class EventService {
     );
   }
 
+  private generateSubSlots(count: number, existingSubSlots?: EventSubSlot[]): EventSubSlot[] {
+    const newSubSlots: EventSubSlot[] = [];
+    for (let i = 0; i < count; i++) {
+      const existing = existingSubSlots?.find(es => es.name === `Postazione ${i + 1}`);
+      if (existing) {
+        newSubSlots.push(existing);
+      } else {
+        newSubSlots.push({
+          id: uuidv4(),
+          name: `Postazione ${i + 1}`,
+          isBooked: false,
+          bookingInfo: null
+        });
+      }
+    }
+    return newSubSlots;
+  }
+
   async addEvent(eventData: Omit<AppEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<any> {
     const dataToSave = {
       ...eventData,
@@ -136,7 +161,7 @@ export class EventService {
       slots: eventData.slots?.map(slot => ({
         ...slot,
         imageUrl: slot.imageUrl || this.defaultSlotImageUrl,
-        bookings: slot.bookings || []
+        subSlots: this.generateSubSlots(slot.numberOfSubSlots)
       })) || [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -164,12 +189,19 @@ export class EventService {
     if (eventData.hasOwnProperty('routeImageUrl')) {
         dataToUpdate.routeImageUrl = eventData.routeImageUrl === '' || eventData.routeImageUrl === null ? this.defaultEventRouteUrl : eventData.routeImageUrl;
     }
+
     if (eventData.hasOwnProperty('slots')) {
-        dataToUpdate.slots = eventData.slots?.map(slot => ({
-            ...slot,
-            imageUrl: slot.imageUrl === '' || slot.imageUrl === null ? this.defaultSlotImageUrl : slot.imageUrl,
-            bookings: slot.bookings || []
-        })) || [];
+      const currentEventSnapshot = await getDoc(eventDocRef);
+      const currentEventData = currentEventSnapshot.data() as AppEvent | undefined;
+
+      dataToUpdate.slots = eventData.slots?.map(updatedSlot => {
+        const existingMainSlot = currentEventData?.slots?.find(s => s.id === updatedSlot.id);
+        return {
+          ...updatedSlot,
+          imageUrl: updatedSlot.imageUrl === '' || updatedSlot.imageUrl === null ? this.defaultSlotImageUrl : updatedSlot.imageUrl,
+          subSlots: this.generateSubSlots(updatedSlot.numberOfSubSlots, existingMainSlot?.subSlots)
+        };
+      }) || [];
     }
     return updateDoc(eventDocRef, dataToUpdate);
   }
@@ -229,7 +261,12 @@ export class EventService {
     }
   }
 
-  async registerVtcToSlot(eventId: string, slotId: string, bookingInfo: Omit<SlotParticipantInfo, 'bookingId' | 'bookedAt'>): Promise<void> {
+  async registerVtcToEventSubSlot(
+    eventId: string,
+    mainSlotId: string,
+    subSlotId: string,
+    bookingDetails: Omit<SubSlotBookingInfo, 'bookingId' | 'bookedAt'>
+  ): Promise<void> {
     const eventDocRef = doc(this.firestore, this.eventsCollectionPath, eventId);
     return runTransaction(this.firestore, async (transaction) => {
       const eventSnap = await transaction.get(eventDocRef);
@@ -237,33 +274,46 @@ export class EventService {
         throw new Error("Evento non trovato!");
       }
       const eventData = eventSnap.data() as AppEvent;
-      const slots = eventData.slots ? JSON.parse(JSON.stringify(eventData.slots)) as EventSlot[] : [];
-      const slotIndex = slots.findIndex(s => s.id === slotId);
-      if (slotIndex === -1) {
-        throw new Error("Slot non trovato!");
+      const mainSlots = eventData.slots ? JSON.parse(JSON.stringify(eventData.slots)) as EventSlot[] : [];
+      const mainSlotIndex = mainSlots.findIndex(ms => ms.id === mainSlotId);
+
+      if (mainSlotIndex === -1) {
+        throw new Error("Zona (Slot Principale) non trovata!");
       }
-      const targetSlot = slots[slotIndex];
-      if (!targetSlot.bookings) {
-        targetSlot.bookings = [];
+      const targetMainSlot = mainSlots[mainSlotIndex];
+      if (!targetMainSlot.subSlots) {
+        targetMainSlot.subSlots = [];
       }
-      const currentBookedPlaces = targetSlot.bookings.reduce((sum, b) => sum + b.participantsCount, 0);
-      const availablePlaces = targetSlot.capacity - currentBookedPlaces;
-      if (availablePlaces < bookingInfo.participantsCount) {
-        throw new Error(`Posti insufficienti nello slot "${targetSlot.name}". Disponibili: ${availablePlaces}, Richiesti: ${bookingInfo.participantsCount}`);
+
+      const subSlotIndex = targetMainSlot.subSlots.findIndex(ss => ss.id === subSlotId);
+      if (subSlotIndex === -1) {
+        throw new Error("Postazione (Sub Slot) non trovata!");
       }
-      const newBooking: SlotParticipantInfo = {
-        ...bookingInfo,
-        bookingId: doc(collection(this.firestore, '_')).id,
+
+      const targetSubSlot = targetMainSlot.subSlots[subSlotIndex];
+      if (targetSubSlot.isBooked) {
+        throw new Error(`La postazione "${targetSubSlot.name}" nella zona "${targetMainSlot.name}" è già prenotata.`);
+      }
+
+      const newBooking: SubSlotBookingInfo = {
+        ...bookingDetails,
+        bookingId: doc(collection(this.firestore, '_')).id, // Generate a new unique ID for the booking
         bookedAt: Timestamp.now()
       };
-      targetSlot.bookings.push(newBooking);
-      slots[slotIndex] = targetSlot;
-      transaction.update(eventDocRef, { slots: slots, updatedAt: serverTimestamp() });
 
-      await this.notificationService.createSlotBookingNotification(
+      targetSubSlot.isBooked = true;
+      targetSubSlot.bookingInfo = newBooking;
+
+      targetMainSlot.subSlots[subSlotIndex] = targetSubSlot;
+      mainSlots[mainSlotIndex] = targetMainSlot;
+
+      transaction.update(eventDocRef, { slots: mainSlots, updatedAt: serverTimestamp() });
+
+      await this.notificationService.createSubSlotBookingNotification(
         { id: eventId, name: eventData.name },
-        { id: targetSlot.id, name: targetSlot.name },
-        { companyName: newBooking.companyName, participantsCount: newBooking.participantsCount }
+        { id: targetMainSlot.id, name: targetMainSlot.name },
+        { id: targetSubSlot.id, name: targetSubSlot.name },
+        { companyName: newBooking.companyName }
       );
     });
   }

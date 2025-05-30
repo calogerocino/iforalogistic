@@ -25,7 +25,7 @@
               [class.unread]="!notification.isRead"
               [class.interacted]="notification.interacted"
               (click)="setNotificationInteracted(notification, $event)"> <!-- Click sull'intero item per settare 'interacted' -->
-        
+
             <div class="notification-main-content" (click)="handleNotificationMainAction(notification)"> <!-- Click sulla parte principale per navigare/azione -->
               <div class="notification-icon-placeholder">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,16.5V15H13V16.5H11M11,7.5V13H13V7.5H11Z"></path></svg>
@@ -35,7 +35,7 @@
                 <span class="notification-timestamp">{{ notification.timestamp?.seconds ? (notification.timestamp.seconds * 1000 | date:'short') : 'N/D' }}</span>
               </div>
             </div>
-        
+
             <div class="notification-actions" *ngIf="notification.interacted"> <!-- Mostra solo se 'interacted' è true -->
               <button class="delete-notification-btn" (click)="deleteNotification(notification, $event)" aria-label="Elimina notifica">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>

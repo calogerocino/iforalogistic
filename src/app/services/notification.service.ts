@@ -1,21 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, collectionData, addDoc, serverTimestamp, Timestamp, doc, updateDoc, query, where, orderBy, limit, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { AppEvent, EventSlot, SlotParticipantInfo } from './event.service'; // Importa interfacce necessarie
+import { AppEvent, EventSlot, EventSubSlot, SubSlotBookingInfo } from './event.service';
 
 export interface AppNotification {
   id?: string;
   eventId: string;
   eventName: string;
-  slotId: string;
-  slotName: string;
+  mainSlotId: string;
+  mainSlotName: string;
+  subSlotId: string;
+  subSlotName: string;
   companyName: string;
-  participantsCount: number;
   message: string;
   timestamp: Timestamp;
   isRead: boolean;
-  interacted?: boolean; 
-  navigateTo?: string; 
+  interacted?: boolean;
+  navigateTo?: string;
 }
 
 @Injectable({
@@ -28,28 +29,29 @@ export class NotificationService {
 
   constructor() { }
 
-  // Crea una notifica per una nuova prenotazione di slot
-  async createSlotBookingNotification(
+  async createSubSlotBookingNotification(
     event: Pick<AppEvent, 'id' | 'name'>,
-    slot: Pick<EventSlot, 'id' | 'name'>,
-    booking: Pick<SlotParticipantInfo, 'companyName' | 'participantsCount'>
+    mainSlot: Pick<EventSlot, 'id' | 'name'>,
+    subSlot: Pick<EventSubSlot, 'id' | 'name'>,
+    booking: Pick<SubSlotBookingInfo, 'companyName'>
   ): Promise<void> {
-    if (!event.id || !slot.id) {
-      console.error('Event ID or Slot ID is missing for notification creation');
+    if (!event.id || !mainSlot.id || !subSlot.id) {
+      console.error('Event ID, Main Slot ID, or Sub Slot ID is missing for notification creation');
       return;
     }
-    const message = `La VTC "${booking.companyName}" si è registrata con ${booking.participantsCount} partecipanti allo slot "${slot.name}" per l'evento "${event.name}".`;
+    const message = `La VTC "${booking.companyName}" si è registrata alla postazione "${subSlot.name}" nella zona "${mainSlot.name}" per l'evento "${event.name}".`;
     const newNotification: Omit<AppNotification, 'id'> = {
       eventId: event.id,
       eventName: event.name,
-      slotId: slot.id,
-      slotName: slot.name,
+      mainSlotId: mainSlot.id,
+      mainSlotName: mainSlot.name,
+      subSlotId: subSlot.id,
+      subSlotName: subSlot.name,
       companyName: booking.companyName,
-      participantsCount: booking.participantsCount,
       message: message,
       timestamp: Timestamp.now(),
       isRead: false,
-      interacted: false, // Initialize as not interacted
+      interacted: false,
       navigateTo: `/dashboard/eventi/${event.id}`
     };
     try {
@@ -59,7 +61,6 @@ export class NotificationService {
     }
   }
 
-  // Ottiene le notifiche non lette, ordinate per data (le più recenti prima)
   getUnreadNotifications(count: number = 10): Observable<AppNotification[]> {
     const q = query(
       this.notificationsCollection,
@@ -70,7 +71,6 @@ export class NotificationService {
     return collectionData(q, { idField: 'id' }) as Observable<AppNotification[]>;
   }
 
-  // Ottiene tutte le notifiche, ordinate per data (le più recenti prima)
   getAllNotifications(count: number = 20): Observable<AppNotification[]> {
     const q = query(
       this.notificationsCollection,
@@ -80,8 +80,6 @@ export class NotificationService {
     return collectionData(q, { idField: 'id' }) as Observable<AppNotification[]>;
   }
 
-
-  // Segna una notifica come letta e come interagita
   async markAsRead(notificationId: string): Promise<void> {
     const notificationDocRef = doc(this.firestore, this.notificationsCollectionPath, notificationId);
     try {
@@ -91,7 +89,6 @@ export class NotificationService {
     }
   }
 
-  // Segna tutte le notifiche (visibili) come lette e interagite
   async markMultipleAsRead(notifications: AppNotification[]): Promise<void> {
     const batch = [];
     for (const notification of notifications) {
@@ -107,7 +104,6 @@ export class NotificationService {
     }
   }
 
-  // Elimina una notifica
   async deleteNotification(notificationId: string): Promise<void> {
     const notificationDocRef = doc(this.firestore, this.notificationsCollectionPath, notificationId);
     try {

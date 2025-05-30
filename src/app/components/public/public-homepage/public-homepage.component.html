@@ -30,7 +30,7 @@
             </svg>
           </div>
           <img *ngIf="event.routeImageUrl && event.routeImageUrl !== eventService.defaultEventRouteUrl"
-            [src]="event.routeImageUrl" alt="Area Foto Evento {{event.name}}"
+            [src]="event.routeImageUrl" alt="Immagine Evento {{event.name}}"
             (click)="openImageInModal(event.routeImageUrl)" class="event-image clickable-image">
 
           <div class="event-showcase-content">
@@ -45,7 +45,7 @@
             <p class="event-showcase-server" *ngIf="event.server">
               <span class="label">Server:</span> {{ event.server }}
             </p>
-            <button (click)="openEventModal(event)" class="details-link-button">Vedi Dettagli →</button>
+            <button (click)="openEventModal(event)" class="details-link-button">Vedi Dettagli & Registrati →</button>
           </div>
         </div>
       </div>
@@ -109,7 +109,6 @@
   <p>© {{ currentYear }} IFL by PixelSmart. Tutti i diritti riservati.</p>
 </footer>
 
-<!-- Floating Discord Button -->
 <a href="https://discord.gg/ukta28MMw8" target="_blank" rel="noopener noreferrer" class="discord-fab" aria-label="Unisciti al nostro server Discord">
   <span class="discord-fab-text">Discord</span>
   <svg class="discord-fab-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -123,8 +122,8 @@
       <div class="modal-header">
         <h2>{{ selectedEventForModal.name }}</h2>
         <div class="modal-header-actions">
-          <button class="btn-register-event" (click)="toggleRegistrationPanel()">
-            {{ isRegistrationPanelOpen ? 'Nascondi Registrazione' : 'Registrati all\'Evento' }}
+          <button class="btn-register-event" (click)="toggleRegistrationPanel()" *ngIf="selectedEventForModal.slots && selectedEventForModal.slots.length > 0">
+            {{ isRegistrationPanelOpen ? 'Nascondi Registrazione' : 'Registra la tua VTC' }}
           </button>
           <button class="modal-close-button" (click)="closeEventModal()" aria-label="Chiudi modale">×</button>
         </div>
@@ -143,12 +142,12 @@
         <div class="modal-detail-item">
           <span class="modal-label">Ora di Ritrovo:</span>
           <span class="modal-value">{{ selectedEventForModal.startDate?.seconds ?
-            (selectedEventForModal.startDate.seconds * 1000 | date:'EEEE, dd MMMM finalList, HH:mm') : 'N/D' }}</span>
+            (selectedEventForModal.startDate.seconds * 1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</span>
         </div>
         <div class="modal-detail-item" *ngIf="selectedEventForModal.endDate">
           <span class="modal-label">Ora di Inizio:</span>
           <span class="modal-value">{{ selectedEventForModal.endDate?.seconds ? (selectedEventForModal.endDate.seconds *
-            1000 | date:'EEEE, dd MMMM finalList, HH:mm') : 'N/D' }}</span>
+            1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</span>
         </div>
         <div class="modal-detail-item" *ngIf="selectedEventForModal.server">
           <span class="modal-label">Server:</span>
@@ -179,22 +178,38 @@
             </ng-container>
           </ul>
         </div>
-        
+
         <div class="modal-image-row full-width">
-          <div class="modal-image-section" 
+          <div class="modal-image-section"
             *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
             <span class="modal-label">Area Foto:</span>
             <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
               (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
               class="modal-event-image clickable-image">
           </div>
-          <div class="modal-image-section" 
+          <div class="modal-image-section"
             *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
             <span class="modal-label">Immagine Percorso:</span>
             <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
               (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
           </div>
         </div>
+         <div class="modal-slots-section full-width" *ngIf="selectedEventForModal.slots && selectedEventForModal.slots.length > 0">
+            <span class="modal-label">Zone Disponibili:</span>
+            <div class="main-slots-grid">
+                <div *ngFor="let mainSlot of selectedEventForModal.slots" class="main-slot-card">
+                    <img *ngIf="mainSlot.imageUrl && mainSlot.imageUrl !== eventService.defaultSlotImageUrl" [src]="mainSlot.imageUrl" [alt]="mainSlot.name" class="main-slot-image clickable-image" (click)="openImageInModal(mainSlot.imageUrl)">
+                     <div class="main-slot-image-placeholder" *ngIf="!mainSlot.imageUrl || mainSlot.imageUrl === eventService.defaultSlotImageUrl">
+                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    </div>
+                    <h4>{{mainSlot.name}}</h4>
+                    <p>Postazioni disponibili: {{ getUnbookedSubSlotsCount(mainSlot) }} / {{mainSlot.numberOfSubSlots}}</p>
+                </div>
+            </div>
+        </div>
+        <p *ngIf="!selectedEventForModal.slots || selectedEventForModal.slots.length === 0" class="no-slots-info full-width">
+            Nessuna zona di registrazione definita per questo evento.
+        </p>
 
       </div>
     </div>
@@ -203,7 +218,7 @@
       <div class="modal-header">
         <h3>Registra la tua VTC</h3>
       </div>
-      <div class="registration-panel-content">
+      <div class="registration-panel-content" *ngIf="selectedEventForModal">
         <form [formGroup]="vtcRegistrationForm" (ngSubmit)="onVtcRegisterSubmit()">
           <div class="form-group">
             <label for="companyName">Nome Azienda VTC</label>
@@ -235,51 +250,59 @@
               <small *ngIf="vtcRegistrationForm.get('contactEmail')?.errors?.['email']">Email non valida.</small>
             </div>
           </div>
-          <div class="form-group">
-            <label for="participantsCount">Numero Partecipanti</label>
-            <input type="number" id="participantsCount" formControlName="participantsCount" min="1">
-            <div
-              *ngIf="vtcRegistrationForm.get('participantsCount')?.invalid && vtcRegistrationForm.get('participantsCount')?.touched"
-              class="error-messages modal-error">
-              <small *ngIf="vtcRegistrationForm.get('participantsCount')?.errors?.['required']">Numero partecipanti
-                obbligatorio.</small>
-              <small *ngIf="vtcRegistrationForm.get('participantsCount')?.errors?.['min']">Almeno 1
-                partecipante.</small>
-            </div>
-          </div>
+
           <div class="form-group"
-            *ngIf="selectedEventForModal && selectedEventForModal.slots && selectedEventForModal.slots.length > 0">
-            <label for="selectedSlotId">Seleziona Slot</label>
-            <select id="selectedSlotId" formControlName="selectedSlotId">
-              <option [ngValue]="null" disabled>-- Scegli uno slot --</option>
-              <ng-container *ngFor="let slot of availableSlotsForBooking">
-                <option [value]="slot.id">
-                  {{ slot.name }} (Disponibili: {{ calculateAvailablePlaces(slot) }}/{{slot.capacity}})
+            *ngIf="selectedEventForModal.slots && selectedEventForModal.slots.length > 0">
+            <label for="selectedMainSlotId">Seleziona Zona</label>
+            <select id="selectedMainSlotId" formControlName="selectedMainSlotId">
+              <option [ngValue]="null" disabled>-- Scegli una Zona --</option>
+              <ng-container *ngFor="let mainSlot of selectedEventForModal.slots">
+                 <option [value]="mainSlot.id" *ngIf="getUnbookedSubSlotsCount(mainSlot) > 0">
+                  {{ mainSlot.name }} (Disponibili: {{ getUnbookedSubSlotsCount(mainSlot) }})
+                </option>
+                 <option [value]="mainSlot.id" *ngIf="getUnbookedSubSlotsCount(mainSlot) === 0" disabled>
+                  {{ mainSlot.name }} (Completo)
                 </option>
               </ng-container>
-              <option
-                *ngIf="availableSlotsForBooking.length === 0 && vtcRegistrationForm.get('participantsCount')?.value > 0"
-                [ngValue]="null" disabled>
-                Nessuno slot disponibile per {{ vtcRegistrationForm.get('participantsCount')?.value }} partecipanti.
-              </option>
             </select>
-            <div
-              *ngIf="vtcRegistrationForm.get('selectedSlotId')?.invalid && vtcRegistrationForm.get('selectedSlotId')?.touched"
+             <div
+              *ngIf="vtcRegistrationForm.get('selectedMainSlotId')?.invalid && vtcRegistrationForm.get('selectedMainSlotId')?.touched"
               class="error-messages modal-error">
-              <small *ngIf="vtcRegistrationForm.get('selectedSlotId')?.errors?.['required']">Selezione slot
-                obbligatoria.</small>
+              <small *ngIf="vtcRegistrationForm.get('selectedMainSlotId')?.errors?.['required']">Selezione zona obbligatoria.</small>
             </div>
           </div>
-          <p *ngIf="selectedEventForModal && selectedEventForModal.slots && selectedEventForModal.slots.length === 0"
+
+          <div class="form-group" *ngIf="selectedMainSlotForBooking && availableSubSlotsForBooking.length > 0">
+            <label for="selectedSubSlotId">Seleziona Postazione</label>
+            <select id="selectedSubSlotId" formControlName="selectedSubSlotId">
+              <option [ngValue]="null" disabled>-- Scegli una Postazione --</option>
+              <ng-container *ngFor="let subSlot of availableSubSlotsForBooking">
+                <option [value]="subSlot.id">
+                  {{ subSlot.name }}
+                </option>
+              </ng-container>
+            </select>
+            <div
+              *ngIf="vtcRegistrationForm.get('selectedSubSlotId')?.invalid && vtcRegistrationForm.get('selectedSubSlotId')?.touched"
+              class="error-messages modal-error">
+              <small *ngIf="vtcRegistrationForm.get('selectedSubSlotId')?.errors?.['required']">Selezione postazione obbligatoria.</small>
+            </div>
+          </div>
+           <p *ngIf="selectedMainSlotForBooking && availableSubSlotsForBooking.length === 0 && vtcRegistrationForm.get('selectedMainSlotId')?.value" class="no-slots-info modal-error">
+                Nessuna postazione disponibile in questa zona.
+            </p>
+
+
+          <p *ngIf="!selectedEventForModal.slots || selectedEventForModal.slots.length === 0"
             class="no-slots-info">
-            Nessuno slot definito per questo evento.
+            Nessuna zona di registrazione definita per questo evento.
           </p>
           <div *ngIf="registrationMessage"
             [ngClass]="registrationMessage.type === 'success' ? 'success-message' : 'error-message-form'"
             class="modal-feedback">
             {{ registrationMessage.text }}
           </div>
-          <button type="submit" class="btn-primary" [disabled]="vtcRegistrationForm.invalid || isLoadingRegistration">
+          <button type="submit" class="btn-primary" [disabled]="vtcRegistrationForm.invalid || isLoadingRegistration || (selectedMainSlotForBooking && availableSubSlotsForBooking.length === 0)">
             <span *ngIf="!isLoadingRegistration">Conferma Registrazione</span>
             <span *ngIf="isLoadingRegistration">Registrazione in corso...</span>
           </button>
@@ -295,7 +318,7 @@
       aria-label="Chiudi video">×</button>
     <div class="video-wrapper">
       <iframe width="560" height="315"
-        src="https://www.youtube.com/embed/O0e4NUCtl0U?si=7kMy8A-32HJmsqdY&amp;controls=0" title="YouTube video player"
+        src="https://www.youtube.com/embed/O0e4NUCtl0U?si=7kMy8A-32HJmsqdY&controls=0" title="YouTube video player"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

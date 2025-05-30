@@ -149,6 +149,9 @@
     }
     .event-image {
         object-fit: cover;
+        &.clickable-image {
+          cursor: pointer;
+        }
     }
 
     .event-showcase-content {
@@ -214,7 +217,6 @@
   }
 }
 
-/* Sezione VTC Partner */
 .vtc-partners-section {
   padding: 60px 0;
   background-color: #f8f9fa;
@@ -367,7 +369,6 @@
   margin-top: 0;
 }
 
-// MODAL STYLES (Event Details & Registration)
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -398,7 +399,7 @@
     max-width: 1000px;
   }
 }
-.modal-content {
+.modal-content { // Event Details Panel
   flex: 0 0 100%;
   max-width: 100%;
   padding: 25px 30px;
@@ -406,8 +407,8 @@
   transition: max-width 0.4s ease-in-out, flex-basis 0.4s ease-in-out;
 
   .modal-content-wrapper.registration-open & {
-    flex-basis: calc(100% - 320px);
-    max-width: calc(100% - 320px);
+    flex-basis: calc(100% - 350px); // Adjust if registration panel width changes
+    max-width: calc(100% - 350px);
   }
 }
 .modal-header {
@@ -418,12 +419,14 @@
   padding-bottom: 15px;
   border-bottom: 1px solid #ecf0f1;
 
-  h2 {
+  h2, h3 {
     font-size: 1.8em;
     color: #2c3e50;
     margin: 0;
     flex-grow: 1;
   }
+  h3 { font-size: 1.5em; }
+
 
   .modal-header-actions {
     display: flex;
@@ -473,24 +476,27 @@
 
   .modal-image-row {
     display: flex;
-    align-items: flex-start; 
-    gap: 20px; 
+    align-items: flex-start;
+    gap: 20px;
     grid-column: 1 / -1;
 
     .modal-image-section {
-      flex: 1; 
+      flex: 1;
 
       .modal-label {
-        display: block; 
+        display: block;
         margin-bottom: 8px;
       }
       .modal-event-image {
         width: 100%;
-        height: auto; 
-        max-height: 200px; 
-        object-fit: cover; 
+        height: auto;
+        max-height: 200px;
+        object-fit: cover;
         border-radius: 4px;
-        display: block; 
+        display: block;
+         &.clickable-image {
+          cursor: pointer;
+        }
       }
     }
   }
@@ -535,24 +541,78 @@
     margin-bottom: 3px;
   }
 }
-.modal-image-section {
-    margin-top: 10px;
-    &:not(.modal-image-row .modal-image-section) {}
-    .modal-label {
-        margin-bottom: 8px;
+
+.modal-slots-section { // Section for displaying main slots in view mode
+    .modal-label { // "Zone Disponibili:"
+        display: block;
+        font-weight: 600;
+        color: #34495e;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+    }
+    .main-slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    .main-slot-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        text-align: center;
+        h4 {
+            font-size: 1.1em;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        p {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .main-slot-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+             &.clickable-image {
+                cursor: pointer;
+            }
+        }
+        .main-slot-image-placeholder {
+            width: 100%;
+            height: 100px;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            svg {
+                width: 40px;
+                height: 40px;
+                fill: #bdc3c7;
+            }
+        }
     }
 }
-.modal-event-image {
-  width: 100%;
-  max-width: 300px; 
-  height: auto;
-  border-radius: 6px;
-  border: 1px solid #eee;
-  display: block;
-  margin-top: 5px;
+.no-slots-info {
+    font-size: 0.9em;
+    color: #6c757d;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    text-align: center;
+    margin-top: 10px;
+    &.full-width { grid-column: 1 / -1; }
 }
+
+
 .modal-registration-panel {
-  flex: 0 0 320px;
+  flex: 0 0 350px; // Slightly wider for better form layout
   background-color: #f8f9fa;
   padding: 25px 30px;
   border-left: 1px solid #e0e0e0;
@@ -562,12 +622,6 @@
 
   &.open {
     transform: translateX(0%);
-  }
-
-  .modal-header h3 {
-    font-size: 1.5em;
-    color: #2c3e50;
-    margin: 0;
   }
 
   .registration-panel-content {
@@ -582,7 +636,7 @@
     }
     input[type="text"],
     input[type="email"],
-    input[type="number"],
+    input[type="number"], // Not used currently but good to have
     select {
         width: 100%;
         padding: 10px 12px;
@@ -609,15 +663,15 @@
     .error-messages.modal-error small {
         font-size: 0.8em;
         color: #dc3545;
+        display: block; // Ensure errors take their own line
+        margin-top: 3px;
     }
-    .no-slots-info {
-        font-size: 0.9em;
-        color: #6c757d;
-        padding: 10px;
-        background-color: #f0f0f0;
-        border-radius: 4px;
-        text-align: center;
+     .no-slots-info.modal-error { // For messages like "no sub-slots available"
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
     }
+
     .modal-feedback {
         padding: 10px;
         margin-top: 15px;
@@ -635,11 +689,14 @@
       width: 100%;
       margin-top: 10px;
       padding: 12px;
+       &:disabled {
+        background-color: #a0b3c1;
+        cursor: not-allowed;
+      }
     }
   }
 }
 
-// VIDEO MODAL STYLES
 .video-modal-overlay {
   position: fixed;
   top: 0;
@@ -699,12 +756,11 @@
   }
 }
 
-// Floating Discord Button Styles
 .discord-fab {
   position: fixed;
   bottom: 25px;
   right: 25px;
-  background-color: #5865F2; 
+  background-color: #5865F2;
   color: white;
   border-radius: 50%;
   width: 60px;
@@ -714,21 +770,20 @@
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   text-decoration: none;
-  z-index: 1050; 
+  z-index: 1050;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  // overflow: hidden; // Not needed if robot is removed or icon handles its bounds
 
   .discord-fab-icon {
     width: 30px;
     height: 30px;
-    opacity: 1; 
+    opacity: 1;
   }
-  
+
   .discord-fab-text {
     position: absolute;
-    right: 100%; 
+    right: 100%;
     top: 50%;
-    transform: translateY(-50%) translateX(-15px); 
+    transform: translateY(-50%) translateX(-15px);
     background-color: #5865F2;
     color: white;
     padding: 6px 12px;
@@ -748,10 +803,7 @@
     .discord-fab-text {
       opacity: 1;
       visibility: visible;
-      transform: translateY(-50%) translateX(-10px); 
+      transform: translateY(-50%) translateX(-10px);
     }
-    // No need to hide .discord-fab-icon on hover anymore
   }
-}
-
-// Removed .discord-fab-robot styles and @keyframes robotPeek
+}   
