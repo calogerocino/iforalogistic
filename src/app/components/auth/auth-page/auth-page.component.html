@@ -15,7 +15,7 @@
       </div>
 
       <div class="auth-tabs" *ngIf="!infoMessage">
-        <a routerLink="/auth/login" routerLinkActive="active" class="tab-item" (click)="isLoginMode = true; allowRegistration = false; pageTitle = 'Accedi'; infoMessage = null">Accedi</a>
+        <a routerLink="/auth/login" routerLinkActive="active" class="tab-item" (click)="isLoginMode = true; allowRegistration = false; pageTitle = 'Accedi'; infoMessage = null; errorMessage = null;">Accedi</a>
         <a routerLink="/auth/registrazione" [queryParams]="allowRegistration && !isLoginMode ? { admin: 'true' } : null" routerLinkActive="active" class="tab-item" (click)="showRegistrationDisabledMessage()">Registrati</a>
       </div>
 
@@ -82,14 +82,6 @@
       <div *ngIf="errorMessage && !infoMessage" class="auth-error-message">
         <p>{{ errorMessage }}</p>
       </div>
-
-      <p *ngIf="isLoginMode && !infoMessage && !allowRegistration" class="auth-switch-link">
-        Non hai un account? <a routerLink="/auth/registrazione" (click)="showRegistrationDisabledMessage()">Registrati</a>
-      </p>
-       <p *ngIf="!isLoginMode && allowRegistration && !infoMessage" class="auth-switch-link">
-        Hai già un account? <a routerLink="/auth/login">Accedi</a>
-      </p>
-
     </div>
     <div class="auth-image-panel">
       <img src="assets/img/3d-safe.png" alt="IFL Visual">
