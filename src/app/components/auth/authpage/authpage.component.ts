@@ -10,8 +10,8 @@ import { take } from 'rxjs/operators';
   selector: 'app-auth-page',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './auth-page.component.html',
-  styleUrls: ['./auth-page.component.scss']
+  templateUrl: './authpage.component.html',
+  styleUrls: ['./authpage.component.scss']
 })
 export class AuthPageComponent implements OnInit, OnDestroy {
   isLoginMode: boolean = true;
@@ -195,7 +195,7 @@ export class AuthPageComponent implements OnInit, OnDestroy {
     if (this.autoLoginInProgress) return;
 
     if (!this.allowRegistration && !this.isLoginMode) {
-        this.isLoginMode = false; 
+        this.isLoginMode = false;
         this.pageTitle = 'Registrati';
         this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
         this.registerForm.disable();

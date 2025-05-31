@@ -9,7 +9,7 @@
   width: 100%;
   overflow: hidden;
   background-color: #f4f7f6;
-  transition: grid-template-columns 0.3s ease-in-out; // For grid based approach
+  transition: grid-template-columns 0.3s ease-in-out;
 
   &.sidebar-collapsed {
     // If using flexbox and sidebar width changes, this might not be strictly necessary
@@ -23,8 +23,6 @@
 
 .dashboard-sidebar {
   flex-shrink: 0;
-  // Width and transition are handled by sidebar.component.scss
-  // Ensure it has a z-index if it needs to overlay or be managed for mobile.
   @media (max-width: 768px) {
     // For mobile, if the sidebar becomes an overlay when open
     // position: fixed;
@@ -38,7 +36,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: margin-left 0.3s ease-in-out; // Example if sidebar was fixed and main content needed margin
+  transition: margin-left 0.3s ease-in-out;
 }
 
 .dashboard-navbar {
@@ -51,7 +49,6 @@
   overflow-y: auto;
 }
 
-// Example for mobile: If sidebar is collapsed, main content may need to adjust its left padding/margin
 @media (max-width: 768px) {
   .dashboard-layout.sidebar-collapsed .dashboard-main-content {
     // If sidebar is 60px when collapsed

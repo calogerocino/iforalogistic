@@ -21,7 +21,7 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () =>
-          import('./components/auth/auth-page/auth-page.component').then(
+          import('./components/auth/authpage/authpage.component').then(
             (m) => m.AuthPageComponent
           ),
         data: { isLoginMode: true, title: 'Accedi - IFL' },
@@ -30,7 +30,7 @@ export const routes: Routes = [
       {
         path: 'registrazione',
         loadComponent: () =>
-          import('./components/auth/auth-page/auth-page.component').then(
+          import('./components/auth/authpage/authpage.component').then(
             (m) => m.AuthPageComponent
           ),
         data: { isLoginMode: false, title: 'Registrati - IFL' },
@@ -42,7 +42,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
-      import('./components/dashboard/layout/dashboard-layout.component').then(
+      import('./components/dashboard/layout/dashboardlayout.component').then(
         (m) => m.DashboardLayoutComponent
       ),
     canActivate: [authGuard],
