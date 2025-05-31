@@ -3,7 +3,7 @@ import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signO
 import { Firestore, doc, setDoc, getDoc, docData, updateDoc } from '@angular/fire/firestore';
 import { Storage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, UploadTaskSnapshot } from '@angular/fire/storage';
 import { Observable, from, of, throwError } from 'rxjs';
-import { switchMap, catchError, finalize } from 'rxjs/operators';
+import { switchMap, catchError, finalize, tap } from 'rxjs/operators';
 import { UpdateData } from 'firebase/firestore';
 
 
@@ -13,6 +13,8 @@ export interface AppUser {
   firstName?: string;
   photoURL?: string | null;
 }
+
+const REMEMBER_ME_KEY = 'rememberUserActive';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +27,11 @@ export class AuthService {
   readonly defaultPhotoURL = 'assets/img/default-profile.jpeg';
 
   readonly currentUser$ = authState(this.auth).pipe(
+    tap(user => {
+      if (!user && this.isRememberMeActive()) {
+        localStorage.removeItem(REMEMBER_ME_KEY);
+      }
+    }),
     switchMap((user: User | null) => {
       if (user) {
         return this.getUserProfile(user.uid);
@@ -33,6 +40,14 @@ export class AuthService {
       }
     })
   );
+
+  constructor() {
+    onAuthStateChanged(this.auth, (user) => {
+        if (!user && this.isRememberMeActive()) {
+            localStorage.removeItem(REMEMBER_ME_KEY);
+        }
+    });
+  }
 
   async register(email: string, password: string, firstName: string): Promise<User | null> {
     try {
@@ -59,8 +74,16 @@ export class AuthService {
     try {
       await setPersistence(this.auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      if (userCredential.user) {
+        if (rememberMe) {
+          localStorage.setItem(REMEMBER_ME_KEY, 'true');
+        } else {
+          localStorage.removeItem(REMEMBER_ME_KEY);
+        }
+      }
       return userCredential.user;
     } catch (error) {
+      localStorage.removeItem(REMEMBER_ME_KEY);
       console.error("Login error: ", error);
       throw error;
     }
@@ -69,6 +92,7 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       await signOut(this.auth);
+      localStorage.removeItem(REMEMBER_ME_KEY);
     } catch (error) {
       console.error("Logout error: ", error);
       throw error;
@@ -156,21 +180,16 @@ export class AuthService {
 
  async deleteProfileImage(userId: string, photoURL: string | null | undefined): Promise<void> {
     if (!photoURL || photoURL === this.defaultPhotoURL) {
-      console.log('No custom image to delete or it is the default image.');
-      // Se l'immagine corrente è quella di default, aggiorniamo solo Firestore/Auth a null o default
       await this.updateUserProfileData(userId, { photoURL: this.defaultPhotoURL });
       return;
     }
 
     try {
-      const imageRef = storageRef(this.storage, photoURL); // Tenta di ottenere il riferimento dall'URL completo
+      const imageRef = storageRef(this.storage, photoURL);
       await deleteObject(imageRef);
-      console.log('Profile image deleted from Storage.');
     } catch (error) {
-      // Potrebbe fallire se l'URL non è un URL di storage diretto o per permessi
       console.error('Error deleting profile image from Storage, it might not exist or path is incorrect:', error);
     } finally {
-      // Imposta photoURL a default in Firestore e Auth Profile indipendentemente dal successo dell'eliminazione da Storage
       await this.updateUserProfileData(userId, { photoURL: this.defaultPhotoURL });
     }
   }
@@ -180,5 +199,9 @@ export class AuthService {
     return authState(this.auth).pipe(
       switchMap(user => of(!!user))
     );
+  }
+
+  isRememberMeActive(): boolean {
+    return localStorage.getItem(REMEMBER_ME_KEY) === 'true';
   }
 }

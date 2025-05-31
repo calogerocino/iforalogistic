@@ -2,16 +2,16 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  {
-    path: '',
-    loadComponent: () =>
-      import(
-        './components/public/under-construction/under-construction.component'
-      ).then((m) => m.UnderConstructionComponent),
-    title: 'Sito in Allestimento',
-  },
+  // {
+  //   path: '',
+  //   loadComponent: () =>
+  //     import(
+  //       './components/public/under-construction/under-construction.component'
+  //     ).then((m) => m.UnderConstructionComponent),
+  //   title: 'Sito in Allestimento',
+  // },
     {
-    path: 'home',
+    path: '',
     loadComponent: () => import('./components/public/public-homepage/public-homepage.component').then(m => m.PublicHomepageComponent),
     title: 'Benvenuto su IFL'
   },

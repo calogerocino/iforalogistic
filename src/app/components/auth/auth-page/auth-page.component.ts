@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, AppUser } from '../../../services/auth.service';
+import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-auth-page',
@@ -11,7 +13,7 @@ import { AuthService, AppUser } from '../../../services/auth.service';
   templateUrl: './auth-page.component.html',
   styleUrls: ['./auth-page.component.scss']
 })
-export class AuthPageComponent implements OnInit {
+export class AuthPageComponent implements OnInit, OnDestroy {
   isLoginMode: boolean = true;
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -21,15 +23,20 @@ export class AuthPageComponent implements OnInit {
   allowRegistration = false;
 
   private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService); // Public for template if needed
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
+
+  private autoLoginInProgress = false;
+  private authSubscription: Subscription | undefined;
+  private routeDataSubscription: Subscription | undefined;
+
 
   constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
-      rememberMe: [false]
+      rememberMe: [this.authService.isRememberMeActive()] // Initialize checkbox state
     });
 
     this.registerForm = this.fb.group({
@@ -41,7 +48,47 @@ export class AuthPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.activatedRoute.data.subscribe(data => {
+    if (this.authService.isRememberMeActive() && !this.autoLoginInProgress) {
+      this.autoLoginInProgress = true;
+      this.isLoginMode = true; // For UI consistency during auto-login
+      this.pageTitle = 'Accesso Automatico';
+      this.infoMessage = 'Verifica sessione in corso...';
+      this.loginForm.disable();
+      this.registerForm.disable();
+
+      // Give a brief moment for Firebase to potentially resolve auth state
+      // from persisted session before checking currentUser$.
+      setTimeout(() => {
+        this.authSubscription = this.authService.currentUser$.pipe(take(1)).subscribe(appUser => {
+          if (this.autoLoginInProgress) { // Check flag again, might have been resolved
+            if (appUser) {
+              this.router.navigate(['/dashboard']);
+            } else {
+              // Auto-login failed or no active Firebase session
+              this.infoMessage = 'Sessione non attiva o scaduta. Effettua nuovamente il login.';
+              this.pageTitle = 'Accedi';
+              // AuthService should have cleared the localStorage flag if user became null
+              this.loginForm.reset({ rememberMe: this.authService.isRememberMeActive() });
+              this.loginForm.enable();
+              // Keep registerForm disabled if we are in login mode
+              this.registerForm.disable();
+              this.autoLoginInProgress = false;
+              this.initializeFormBasedOnRouteData(); // Setup for manual login
+              setTimeout(() => this.infoMessage = null, 4000);
+            }
+          }
+        });
+      }, 200); // Short delay for Firebase auth state initialization
+
+    } else {
+      this.initializeFormBasedOnRouteData();
+    }
+  }
+
+  private initializeFormBasedOnRouteData(): void {
+    if (this.autoLoginInProgress) return; // Don't re-initialize if an auto-login attempt is active
+
+    this.routeDataSubscription = this.activatedRoute.data.subscribe(data => {
       const routeIsForLogin = data['isLoginMode'] !== undefined ? data['isLoginMode'] : true;
       const adminQueryParam = this.activatedRoute.snapshot.queryParamMap.get('admin');
       this.infoMessage = null;
@@ -54,22 +101,24 @@ export class AuthPageComponent implements OnInit {
           this.pageTitle = data['title'] || 'Registrati';
           this.registerForm.enable();
           this.registerForm.reset();
+          this.loginForm.disable();
         } else {
           this.allowRegistration = false;
           this.isLoginMode = true;
           this.pageTitle = 'Accesso';
           this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
-          this.loginForm.disable();
+          this.loginForm.disable(); // Keep login form disabled initially
+          this.registerForm.disable();
           setTimeout(() => {
             this.infoMessage = null;
             if (!this.router.url.endsWith('/auth/login')) {
                 this.router.navigate(['/auth/login'], { replaceUrl: true });
             }
-             setTimeout(() => {
+             setTimeout(() => { // Nested setTimeout to ensure navigation completes
                 this.isLoginMode = true;
                 this.pageTitle = 'Accedi';
                 this.loginForm.enable();
-                this.loginForm.reset({ rememberMe: false });
+                this.loginForm.reset({ rememberMe: this.authService.isRememberMeActive() });
             }, 0);
           }, 4000);
         }
@@ -78,7 +127,8 @@ export class AuthPageComponent implements OnInit {
         this.isLoginMode = true;
         this.pageTitle = data['title'] || 'Accedi';
         this.loginForm.enable();
-        this.loginForm.reset({ rememberMe: false });
+        this.loginForm.reset({ rememberMe: this.authService.isRememberMeActive() });
+        this.registerForm.disable();
       }
     });
   }
@@ -142,28 +192,43 @@ export class AuthPageComponent implements OnInit {
   }
 
   showRegistrationDisabledMessage(): void {
-    if (!this.allowRegistration) {
-      this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
-      this.isLoginMode = true;
-      this.pageTitle = 'Accesso';
-      this.loginForm.disable();
-      setTimeout(() => {
-        this.infoMessage = null;
-        if (!this.router.url.endsWith('/auth/login')) {
-            this.router.navigate(['/auth/login'], { replaceUrl: true });
-        }
-         setTimeout(() => {
-            this.isLoginMode = true;
-            this.pageTitle = 'Accedi';
-            this.loginForm.enable();
-            this.loginForm.reset({ rememberMe: false });
-        }, 0);
-      }, 4000);
-    } else {
+    if (this.autoLoginInProgress) return;
+
+    if (!this.allowRegistration && !this.isLoginMode) {
+        this.isLoginMode = false; 
+        this.pageTitle = 'Registrati';
+        this.infoMessage = 'Le registrazioni sono momentaneamente disabilitate. Sarai reindirizzato alla pagina di login.';
+        this.registerForm.disable();
+        this.loginForm.disable();
+        setTimeout(() => {
+            this.infoMessage = null;
+            this.router.navigate(['/auth/login'], { replaceUrl: true }).then(() => {
+                this.isLoginMode = true;
+                this.pageTitle = 'Accedi';
+                this.loginForm.enable();
+                this.loginForm.reset({ rememberMe: this.authService.isRememberMeActive() });
+                this.registerForm.reset();
+                this.registerForm.disable();
+            });
+        }, 4000);
+    } else if (this.allowRegistration && !this.isLoginMode) {
         this.isLoginMode = false;
         this.pageTitle = 'Registrati';
         this.registerForm.enable();
         this.registerForm.reset();
+        this.loginForm.disable();
+        this.loginForm.reset({ rememberMe: this.authService.isRememberMeActive() });
+        this.infoMessage = null;
+        this.errorMessage = null;
+    } else if (this.isLoginMode) {
+        this.isLoginMode = true;
+        this.pageTitle = 'Accedi';
+        this.loginForm.enable();
+        this.loginForm.reset({ rememberMe: this.authService.isRememberMeActive() });
+        this.registerForm.disable();
+        this.registerForm.reset();
+        this.infoMessage = null;
+        this.errorMessage = null;
     }
   }
 
@@ -174,5 +239,14 @@ export class AuthPageComponent implements OnInit {
         this.markFormGroupTouched(control);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+    if (this.routeDataSubscription) {
+      this.routeDataSubscription.unsubscribe();
+    }
   }
 }
