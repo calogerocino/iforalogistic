@@ -1,5 +1,5 @@
-<div class="dashboard-layout">
-  <app-sidebar class="dashboard-sidebar"></app-sidebar>
+<div class="dashboard-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <app-sidebar class="dashboard-sidebar" (toggleCollapse)="handleSidebarToggle($event)"></app-sidebar>
   <div class="dashboard-main-content">
     <app-navbar class="dashboard-navbar"></app-navbar>
     <main class="dashboard-page-content">

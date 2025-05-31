@@ -10,4 +10,10 @@ import { SidebarComponent } from '../shared-components/sidebar/sidebar.component
   templateUrl: './dashboard-layout.component.html',
   styleUrls: ['./dashboard-layout.component.scss']
 })
-export class DashboardLayoutComponent {}
+export class DashboardLayoutComponent {
+  isSidebarCollapsed = false;
+
+  handleSidebarToggle(collapsed: boolean): void {
+    this.isSidebarCollapsed = collapsed;
+  }
+}

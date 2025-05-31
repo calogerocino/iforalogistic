@@ -2,50 +2,98 @@
   display: block;
   width: 260px;
   background-color: #1e222d;
-  color: #aeb2b7;
+  color: #aeb2b7; /* Default color for text and icons within sidebar */
   height: 100vh;
   display: flex;
   flex-direction: column;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  transition: width 0.3s ease;
+  transition: width 0.3s ease-in-out;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 1000;
 }
 
-.sidebar-logo {
+.sidebar-header {
   display: flex;
   align-items: center;
-  padding: 0 20px; // Leggermente ridotto per fare spazio al testo
   height: 64px;
+  padding: 0 15px; /* Adjusted padding */
   border-bottom: 1px solid #2a2e39;
+  flex-shrink: 0;
+}
 
-  img {
-    height: 30px; // Leggermente ridotto
+:host(:not(.collapsed)) .sidebar-header {
+  justify-content: space-between; /* Logo left, button right */
+}
+
+:host(.collapsed) .sidebar-header {
+  justify-content: center; /* Center the toggle button when logo is gone */
+  padding: 0 10px;
+}
+
+.sidebar-logo-wrapper { /* Wrapper for logo and text */
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: #ffffff; /* Explicit color for logo text */
+
+  .logo-img {
+    height: 30px;
     margin-right: 10px;
+    flex-shrink: 0;
   }
 
   .logo-text-container {
     display: flex;
-    flex-direction: column; // Mette "by" sopra "PixElSmart"
-    line-height: 1.1; // Riduce l'interlinea
+    flex-direction: column;
+    line-height: 1.1;
+    white-space: nowrap;
+
+    .logo-prefix {
+      font-size: 10px;
+      font-weight: 300;
+      color: #868c96;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .logo-main-name {
+      font-size: 17px;
+      font-weight: 600;
+      /* color: #ffffff; Inherited from .sidebar-logo-wrapper */
+    }
+  }
+}
+
+.sidebar-toggle-button {
+  background: none;
+  border: none;
+  color: #aeb2b7; /* This color will be inherited by SVG if fill="currentColor" */
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  /* margin-left: auto; // Only if not using space-between on parent and logo is present */
+  z-index: 1; /* Ensure button is clickable */
+
+  &:hover {
+    background-color: #2a2e39;
+    color: #fff;
   }
 
-  .logo-prefix {
-    font-size: 10px; // Più piccolo
-    font-weight: 300;
-    color: #868c96; // Grigio più chiaro
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .logo-main-name {
-    font-size: 17px; // Leggermente più piccolo dell'originale "PixelSmart"
-    font-weight: 600;
-    color: #ffffff;
-    letter-spacing: 0.5px;
+  .toggle-icon {
+    width: 24px;
+    height: 24px;
+    fill: currentColor; /* Make SVG use the button's text color */
   }
 }
 
 .sidebar-nav {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-top: 15px;
 
   ul {
@@ -63,7 +111,21 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-top: 10px;
-      &:first-child {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: opacity 0.15s 0s, height 0.3s ease-in-out, padding 0.3s ease-in-out, margin 0.3s ease-in-out;
+
+      &.hidden { /* Applied by [class.hidden]="isCollapsed" */
+        opacity: 0;
+        height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: 0 !important;
+        overflow: hidden;
+        border: none;
+      }
+      &:first-of-type { /* Corrected from :first-child if it's not always the first child overall */
         margin-top: 0;
       }
     }
@@ -72,24 +134,31 @@
       display: flex;
       align-items: center;
       padding: 12px 24px;
-      color: #c8cdd3;
+      color: #c8cdd3; /* Default color for link text and icon */
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease, padding 0.3s ease-in-out;
       border-left: 3px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
 
       svg {
         width: 20px;
         height: 20px;
         margin-right: 16px;
-        fill: currentColor;
+        fill: currentColor; /* Icon inherits color from <a> tag */
         flex-shrink: 0;
         opacity: 0.8;
+        transition: margin-right 0.3s ease-in-out;
       }
 
-      span {
+      .nav-link-text { /* Class for the text span */
         flex-grow: 1;
+        opacity: 1;
+        transition: opacity 0.1s ease-out; /* Fast fade for text */
+        display: inline-block; /* Or remove if flex-grow is enough */
+        vertical-align: middle;
       }
 
       &:hover {
@@ -105,11 +174,30 @@
         color: #ffffff;
         font-weight: 600;
         border-left-color: #4a90e2;
-
         svg {
           opacity: 1;
         }
       }
+    }
+  }
+}
+
+:host(.collapsed) {
+  width: 80px; /* Collapsed width */
+
+  .sidebar-nav li a {
+    justify-content: center; /* Center icon */
+    padding: 12px 10px;
+    svg {
+      margin-right: 0; /* Remove margin when text is hidden */
+    }
+    .nav-link-text {
+      /* Effectively hidden by *ngIf="!isCollapsed" in HTML, no specific CSS needed here for hiding */
+      /* If not using *ngIf, then:
+      opacity: 0;
+      width: 0;
+      pointer-events: none;
+      */
     }
   }
 }
@@ -123,4 +211,44 @@
 }
 .sidebar-nav::-webkit-scrollbar-track {
   background-color: transparent;
+}
+
+@media (max-width: 768px) {
+  :host(.collapsed) {
+    width: 60px;
+     .sidebar-header {
+        padding: 0 5px;
+    }
+    .sidebar-toggle-button {
+      padding: 6px;
+      .toggle-icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+    .sidebar-nav li a {
+      padding: 10px 0; /* Adjusted for icon centering */
+      justify-content: center;
+      svg {
+        width: 22px;
+        height: 22px;
+        margin-right: 0;
+      }
+    }
+  }
+  /* Example: if sidebar should overlay content when open on mobile */
+  /*
+  :host(:not(.collapsed)) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 1030; // High z-index
+    box-shadow: 3px 0 10px rgba(0,0,0,0.2);
+  }
+  .dashboard-layout:not(.sidebar-collapsed) .dashboard-main-content {
+     // Add margin or a different mechanism to handle overlay
+     // For example, a backdrop could be shown.
+  }
+  */
 }
