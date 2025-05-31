@@ -7,7 +7,7 @@ import {
   ElementRef,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   ReactiveFormsModule,
@@ -37,7 +37,7 @@ import { ImageModalService } from '../../../../../services/image-modal.service';
 @Component({
   selector: 'app-event-manage',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TitleCasePipe, DatePipe],
   templateUrl: './event-manage.component.html',
   styleUrls: ['./event-manage.component.scss'],
 })
@@ -54,6 +54,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  copySuccessMessage: string | null = null;
   private routeSubscription: Subscription | undefined;
 
   availableEventStates: EventState[] = [];
@@ -91,7 +92,6 @@ export class EventManageComponent implements OnInit, OnDestroy {
   routeImageUploadProgress: number | undefined = 0;
   slotImageUploadProgress: { [slotId: string]: number | undefined } = {};
   isUploadingSlotImage: { [slotId: string]: boolean } = {};
-  visibleBookingsForSlotId: string | null = null;
   visibleSubSlotsForMainSlotId: string | null = null;
 
 
@@ -193,11 +193,13 @@ export class EventManageComponent implements OnInit, OnDestroy {
             this.errorMessage = 'Evento non trovato.';
           }
           this.isLoading = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.errorMessage = "Errore nel caricamento dei dati dell'evento.";
           console.error('Errore in ngOnInit (caricamento evento):', err);
           this.isLoading = false;
+          this.cdr.detectChanges();
         },
       });
   }
@@ -228,6 +230,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.routeImagePreview =
       eventData.routeImageUrl || this.eventService.defaultEventRouteUrl;
     this.populateSlotsFormArray(eventData.slots || []);
+    this.cdr.detectChanges();
   }
 
   get dlcsFormGroup(): FormGroup {
@@ -250,11 +253,13 @@ export class EventManageComponent implements OnInit, OnDestroy {
   addSlot(): void {
     if (this.mode === 'view') return;
     this.slotsFormArray.push(this.createMainSlotFormGroup());
+    this.cdr.detectChanges();
   }
 
   removeSlot(index: number): void {
     if (this.mode === 'view') return;
     this.slotsFormArray.removeAt(index);
+    this.cdr.detectChanges();
   }
 
   private populateSlotsFormArray(mainSlots: EventSlot[]): void {
@@ -262,10 +267,12 @@ export class EventManageComponent implements OnInit, OnDestroy {
     mainSlots.forEach((slot) => {
       this.slotsFormArray.push(this.createMainSlotFormGroup(slot));
     });
+    this.cdr.detectChanges();
   }
 
-  getSubSlotsForMainSlot(mainSlotId: string): EventSubSlot[] {
-    return this.currentEvent?.slots?.find(s => s.id === mainSlotId)?.subSlots || [];
+  getSubSlotsForMainSlotIdFromForm(mainSlotId: string): EventSubSlot[] {
+    const mainSlotData = this.currentEvent?.slots?.find(s => s.id === mainSlotId);
+    return mainSlotData?.subSlots || [];
   }
 
   getTotalBookedInMainSlot(mainSlot: EventSlot | undefined): number {
@@ -284,6 +291,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     } else {
       this.visibleSubSlotsForMainSlotId = mainSlotId;
     }
+    this.cdr.detectChanges();
   }
 
 
@@ -317,11 +325,13 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
     this.successMessage = null;
+    this.cdr.detectChanges();
 
     if (this.eventForm.invalid) {
       this.markFormGroupTouched(this.eventForm);
       this.errorMessage = 'Per favore, compila tutti i campi obbligatori.';
       this.isLoading = false;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -350,7 +360,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
           name: slotFromForm.name,
           imageUrl: slotFromForm.imageUrl,
           numberOfSubSlots: slotFromForm.numberOfSubSlots,
-          subSlots: existingMainSlotData?.subSlots || this.eventService['generateSubSlots'](slotFromForm.numberOfSubSlots)
+          subSlots: existingMainSlotData?.subSlots || []
         };
       }),
     };
@@ -377,8 +387,10 @@ export class EventManageComponent implements OnInit, OnDestroy {
               this.updateFormAndPreviews(updatedEvent);
             }
             this.eventForm.disable();
+            this.isLoading = false;
             this.cdr.detectChanges();
           });
+          return;
       }
     } catch (err: any) {
       this.errorMessage = `Errore durante il salvataggio dell'evento: ${
@@ -386,17 +398,22 @@ export class EventManageComponent implements OnInit, OnDestroy {
       }`;
       console.error('Errore in onSubmit:', err);
     } finally {
-      this.isLoading = false;
+      if (this.mode !== 'view') {
+         this.isLoading = false;
+      }
+      this.cdr.detectChanges();
     }
   }
 
   triggerImageInput(
-    type: 'photoArea' | 'routePath' | 'slotImage',
+    type: 'photoArea' | 'routePath' | 'slotImage', // Parameter is 'type'
     slotIndex?: number
   ): void {
-    if (!this.eventId && this.mode === 'create') {
-      this.errorMessage = "Salva prima l'evento per aggiungere immagini.";
+    // Corrected line: use 'type' instead of 'imageType'
+    if (!this.eventId && this.mode === 'create' && type !== 'slotImage') {
+      this.errorMessage = "Salva prima l'evento per aggiungere immagini principali.";
       setTimeout(() => (this.errorMessage = null), 3000);
+      this.cdr.detectChanges();
       return;
     }
     if (type === 'photoArea') {
@@ -420,13 +437,10 @@ export class EventManageComponent implements OnInit, OnDestroy {
     if (!input.files?.length) return;
     const file = input.files[0];
 
-    if (!this.eventId) {
-      console.error(
-        "Impossibile caricare l'immagine: eventId non è definito. Salva prima l'evento."
-      );
-      this.errorMessage =
-        "Devi prima salvare l'evento per poter caricare immagini.";
+    if (!this.eventId && this.mode === 'create' && (imageType === 'photoArea' || imageType === 'routePath')) {
+      this.errorMessage = "Devi prima salvare l'evento per poter caricare immagini principali dell'evento.";
       if (input) input.value = '';
+      this.cdr.detectChanges();
       return;
     }
 
@@ -466,15 +480,24 @@ export class EventManageComponent implements OnInit, OnDestroy {
     }
     this.successMessage = null;
     this.errorMessage = null;
+    this.cdr.detectChanges();
+
+    if (!this.eventId && isSlotImg) {
+         this.errorMessage = "Salva prima l'evento per caricare immagini per le zone.";
+         if (isSlotImg && mainSlotIdForPath) this.isUploadingSlotImage[mainSlotIdForPath] = false;
+         if (input) input.value = '';
+         this.cdr.detectChanges();
+         return;
+    }
 
     try {
-      if (oldImageUrl) {
+      if (oldImageUrl && this.eventId) {
         await this.eventService.deleteEventImage(oldImageUrl);
       }
 
       const { uploadProgress$, downloadUrlPromise } =
         this.eventService.uploadEventImage(
-          this.eventId,
+          this.eventId!,
           file,
           imageType,
           mainSlotIdForPath
@@ -556,34 +579,25 @@ export class EventManageComponent implements OnInit, OnDestroy {
       defaultUrl = this.eventService.defaultEventRouteUrl;
     }
 
-    if (!this.eventId && !isSlotImg) {
-      this.errorMessage =
-        "Salva prima l'evento per poter eliminare le immagini principali.";
-      if (imageType === 'photoArea') {
+    if (!this.eventId && (imageType === 'photoArea' || imageType === 'routePath' || (isSlotImg && mainSlotId && !mainSlotId.startsWith('temp_')) )) {
+       if (imageType === 'photoArea') {
         this.eventForm.get('photoAreaImageUrl')?.setValue(defaultUrl);
         this.photoAreaPreview = defaultUrl;
       } else if (imageType === 'routePath') {
         this.eventForm.get('routeImageUrl')?.setValue(defaultUrl);
         this.routeImagePreview = defaultUrl;
+      } else if (isSlotImg && slotIndex !== undefined) {
+        this.slotsFormArray.at(slotIndex).get('imageUrl')?.setValue(defaultUrl);
       }
-      this.successMessage = 'Selezione immagine annullata.';
-      this.cdr.detectChanges();
-      return;
-    }
-    if (
-      isSlotImg &&
-      slotIndex !== undefined && mainSlotId &&
-      mainSlotId.startsWith('temp_')
-    ) {
-      this.slotsFormArray.at(slotIndex!).get('imageUrl')?.setValue(defaultUrl);
-      this.successMessage = 'Selezione immagine slot annullata.';
+      this.successMessage = 'Selezione immagine annullata (evento non salvato).';
       this.cdr.detectChanges();
       return;
     }
 
+
     if (currentImageUrl === defaultUrl || !currentImageUrl) {
       this.successMessage = 'Nessuna immagine personalizzata da eliminare.';
-       this.cdr.detectChanges();
+      this.cdr.detectChanges();
       return;
     }
 
@@ -592,7 +606,9 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.successMessage = null;
     this.cdr.detectChanges();
     try {
-      await this.eventService.deleteEventImage(currentImageUrl);
+      if(this.eventId) {
+          await this.eventService.deleteEventImage(currentImageUrl);
+      }
 
       if (isSlotImg && slotIndex !== undefined) {
         this.slotsFormArray.at(slotIndex).get('imageUrl')?.setValue(defaultUrl);
@@ -603,7 +619,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.eventForm.get('routeImageUrl')?.setValue(defaultUrl);
         this.routeImagePreview = defaultUrl;
       }
-      this.successMessage = `Immagine eliminata. Salva l'evento per confermare la modifica.`;
+      this.successMessage = `Immagine ${this.eventId ? 'eliminata da storage e ' : ''}rimossa dalla selezione. Salva l'evento per confermare.`;
     } catch (error: any) {
       this.errorMessage = `Errore eliminazione immagine: ${
         error.message || 'Riprova.'
@@ -613,7 +629,6 @@ export class EventManageComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
   }
-
 
   goBack(): void {
     this.router.navigate(['/dashboard/eventi']);
@@ -626,6 +641,55 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.markFormGroupTouched(control);
       }
     });
+  }
+
+  getShareableLink(): string {
+    if (this.currentEvent && this.currentEvent.id && this.currentEvent.eventType === 'internal') {
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      return `${baseUrl}?eventId=${this.currentEvent.id}`;
+    }
+    return '';
+  }
+
+  copyShareableLink(): void {
+    const link = this.getShareableLink();
+    if (link && navigator.clipboard) {
+      navigator.clipboard.writeText(link).then(() => {
+        this.copySuccessMessage = 'Link copiato negli appunti!';
+        setTimeout(() => {
+          this.copySuccessMessage = null;
+          this.cdr.detectChanges();
+        }, 2500);
+        this.cdr.detectChanges();
+      }).catch(err => {
+        console.error('Impossibile copiare il link: ', err);
+        this.copySuccessMessage = 'Errore durante la copia.';
+         setTimeout(() => {
+          this.copySuccessMessage = null;
+          this.cdr.detectChanges();
+        }, 2500);
+        this.cdr.detectChanges();
+      });
+    } else if (link) {
+      const textArea = document.createElement('textarea');
+      textArea.value = link;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        this.copySuccessMessage = successful ? 'Link copiato! (fallback)' : 'Copia fallita (fallback)';
+      } catch (err) {
+        console.error('Impossibile copiare il link con fallback: ', err);
+        this.copySuccessMessage = 'Errore durante la copia.';
+      }
+      document.body.removeChild(textArea);
+       setTimeout(() => {
+        this.copySuccessMessage = null;
+        this.cdr.detectChanges();
+      }, 2500);
+      this.cdr.detectChanges();
+    }
   }
 
   ngOnDestroy(): void {

@@ -386,35 +386,35 @@
     }
 
     .slots-view-section {
-        margin-top: 20px; // Removed grid-column and border as it's a card
+        margin-top: 20px;
         h3 {
             font-size: 1.6em;
             color: #2c3e50;
             margin-bottom: 20px;
-            text-align: left; // Default, but good to be explicit
+            text-align: left;
             padding-bottom: 10px;
             border-bottom: 1px solid #f0f0f0;
         }
     }
-    .slots-view-grid { // For main slots
+    .slots-view-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 20px;
     }
-    .slot-view-item.main-slot-view-item { // Styling for a main slot card
+    .slot-view-item.main-slot-view-item {
         border: 1px solid #e0e0e0;
         border-radius: 6px;
         padding: 15px;
         background-color: #fdfdfd;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        h4 { // Name of the main slot
+        h4 {
             margin-top: 0;
             margin-bottom: 10px;
             font-size: 1.3em;
             color: #34495e;
         }
         p { margin-bottom: 8px; font-size: 0.95em;}
-        .slot-image-view { // Image of the main slot
+        .slot-image-view {
             max-width: 100%;
             height: 150px;
             object-fit: cover;
@@ -427,7 +427,7 @@
             padding: 6px 12px;
         }
     }
-    .sub-slots-details-grid { // Grid for sub-slots within a main slot
+    .sub-slots-details-grid {
         margin-top: 15px;
         padding-top: 15px;
         border-top: 1px dashed #ddd;
@@ -435,12 +435,12 @@
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 15px;
     }
-    .sub-slot-view-item { // Styling for an individual sub-slot
+    .sub-slot-view-item {
         border: 1px solid #f0f0f0;
         border-radius: 4px;
         padding: 10px;
         background-color: #fff;
-        h5 { // Name of the sub-slot
+        h5 {
             margin-top: 0;
             margin-bottom: 8px;
             font-size: 1em;
@@ -464,6 +464,44 @@
         background-color: #f9f9f9;
         border-radius: 4px;
         margin-top: 10px;
+    }
+    .view-column.shareable-link-section { // Ensure it spans if needed or fits
+        // grid-column: 1 / -1; // If it should span full width below others
+    }
+    .shareable-link-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px; // Add some space above the input if label is block
+
+        .shareable-link-input {
+            flex-grow: 1;
+            background-color: #e9ecef;
+            cursor: text;
+            border: 1px solid #ced4da;
+            padding: 9px 12px; // Adjusted to better match button
+            border-radius: 6px;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .btn-copy-link { // Inherits .btn-secondary by class, can add specifics
+            padding: 10px 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            svg {
+             fill: currentColor; // Ensure SVG picks up button text color
+            }
+        }
+    }
+    .copy-success-message {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        color: #27ae60;
+        font-weight: 500;
     }
 }
 

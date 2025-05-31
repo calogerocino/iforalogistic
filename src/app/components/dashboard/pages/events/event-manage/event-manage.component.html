@@ -2,7 +2,7 @@
   <header class="page-header">
     <h1>{{ pageTitle }}</h1>
     <button type="button" class="btn-outline-secondary" (click)="goBack()">
-      &larr; Torna alla Lista
+      ← Torna alla Lista
     </button>
   </header>
 
@@ -10,10 +10,10 @@
     <p>Caricamento...</p>
   </div>
 
-  <div *ngIf="errorMessage" class="error-message-form">
+  <div *ngIf="errorMessage && mode !== 'view'" class="error-message-form">
     {{ errorMessage }}
   </div>
-   <div *ngIf="successMessage" class="success-message">
+   <div *ngIf="successMessage && mode !== 'view'" class="success-message">
     {{ successMessage }}
   </div>
 
@@ -112,7 +112,7 @@
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('photoArea')" [disabled]="isUploadingPhotoArea">
-                            <span *ngIf="!isUploadingPhotoArea">{{ eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl ? 'Modifica' : 'Carica' }} Immagine</span>
+                            <span *ngIf="!isUploadingPhotoArea">{{ (eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl) ? 'Modifica' : 'Carica' }} Immagine</span>
                             <span *ngIf="isUploadingPhotoArea">Caricamento...</span>
                         </button>
                         <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('photoArea')" *ngIf="eventForm.get('photoAreaImageUrl')?.value && eventForm.get('photoAreaImageUrl')?.value !== eventService.defaultEventPhotoAreaUrl" [disabled]="isUploadingPhotoArea">
@@ -131,7 +131,7 @@
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('routePath')" [disabled]="isUploadingRouteImage">
-                             <span *ngIf="!isUploadingRouteImage">{{ eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl ? 'Modifica' : 'Carica' }} Immagine</span>
+                             <span *ngIf="!isUploadingRouteImage">{{ (eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl) ? 'Modifica' : 'Carica' }} Immagine</span>
                             <span *ngIf="isUploadingRouteImage">Caricamento...</span>
                         </button>
                          <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('routePath')" *ngIf="eventForm.get('routeImageUrl')?.value && eventForm.get('routeImageUrl')?.value !== eventService.defaultEventRouteUrl" [disabled]="isUploadingRouteImage">
@@ -176,7 +176,7 @@
                             </div>
                              <div class="image-actions">
                                 <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('slotImage', i)" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
-                                    <span *ngIf="!isUploadingSlotImage[slotCtrl.get('id')!.value]">{{ slotCtrl.get('imageUrl')?.value && slotCtrl.get('imageUrl')?.value !== eventService.defaultSlotImageUrl ? 'Modifica' : 'Carica' }}</span>
+                                    <span *ngIf="!isUploadingSlotImage[slotCtrl.get('id')!.value]">{{ (slotCtrl.get('imageUrl')?.value && slotCtrl.get('imageUrl')?.value !== eventService.defaultSlotImageUrl) ? 'Modifica' : 'Carica' }}</span>
                                     <span *ngIf="isUploadingSlotImage[slotCtrl.get('id')!.value]">Caricamento...</span>
                                 </button>
                                 <button type="button" class="btn-danger btn-small" (click)="deleteEventImage('slotImage', i)" *ngIf="slotCtrl.get('imageUrl')?.value && slotCtrl.get('imageUrl')?.value !== eventService.defaultSlotImageUrl" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
@@ -203,7 +203,7 @@
             <span *ngIf="!isLoading">{{ mode === 'create' ? 'Crea Evento' : 'Salva Modifiche' }}</span>
             <span *ngIf="isLoading">{{ mode === 'create' ? 'Creazione...' : 'Salvataggio...' }}</span>
           </button>
-          <button type="button" class="btn-secondary" (click)="goBack()" [disabled]="isLoading">
+          <button type="button" class="btn-outline-secondary" (click)="goBack()" [disabled]="isLoading">
             Annulla
           </button>
         </div>
@@ -216,8 +216,8 @@
               <div class="view-column">
                   <h3>Dettagli Principali</h3>
                   <p><strong>Descrizione:</strong> {{ currentEvent.description || 'N/D' }}</p>
-                  <p><strong>Ora di Ritrovo:</strong> {{ currentEvent.startDate?.seconds ? (currentEvent.startDate.seconds * 1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</p>
-                  <p><strong>Ora di Inizio:</strong> {{ currentEvent.endDate?.seconds ? (currentEvent.endDate.seconds * 1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</p>
+                  <p><strong>Ora di Ritrovo:</strong> {{ currentEvent.startDate?.seconds ? (currentEvent.startDate.seconds * 1000 | date:'EEEE, dd MMMM finalList, HH:mm') : 'N/D' }}</p>
+                  <p><strong>Ora di Inizio:</strong> {{ currentEvent.endDate?.seconds ? (currentEvent.endDate.seconds * 1000 | date:'EEEE, dd MMMM finalList, HH:mm') : 'N/D' }}</p>
                   <p><strong>Stato:</strong> <span class="event-state-view" [ngClass]="'event-state-' + currentEvent.state">{{ currentEvent.state | titlecase }}</span></p>
               </div>
               <div class="view-column">
@@ -242,7 +242,23 @@
                   <p><strong>Percorso:</strong></p>
                   <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl || eventService.defaultEventRouteUrl)" class="image-preview-view clickable-image">
               </div>
+
+              <div class="view-column shareable-link-section" *ngIf="currentEvent && currentEvent.id && currentEvent.eventType === 'internal'">
+                  <h3>Condividi Evento</h3>
+                  <div class="form-group">
+                      <label for="shareableLink">Link Condivisibile:</label>
+                      <div class="shareable-link-container">
+                          <input id="shareableLink" type="text" [value]="getShareableLink()" readonly class="shareable-link-input">
+                          <button type="button" class="btn-secondary btn-copy-link" (click)="copyShareableLink()">
+                              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                              Copia
+                          </button>
+                      </div>
+                      <small *ngIf="copySuccessMessage" class="copy-success-message">{{ copySuccessMessage }}</small>
+                  </div>
+              </div>
           </div>
+
           <div *ngIf="currentEvent.slots && currentEvent.slots.length > 0" class="slots-view-section card">
             <h3>Zone e Postazioni</h3>
             <div class="slots-view-grid">

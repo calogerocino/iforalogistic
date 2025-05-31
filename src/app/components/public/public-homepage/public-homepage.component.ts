@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { PublicNavbarComponent } from '../public-navbar/public-navbar.component';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and Router
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
-import { Observable, filter, map, of } from 'rxjs';
+import { Observable, Subscription, filter, map, of } from 'rxjs'; // Import Subscription
+import { take } from 'rxjs/operators'; // Import take
 import {
   EventService,
   AppEvent,
@@ -40,7 +41,7 @@ interface VTCPartner {
   templateUrl: './public-homepage.component.html',
   styleUrls: ['./public-homepage.component.scss'],
 })
-export class PublicHomepageComponent implements OnInit {
+export class PublicHomepageComponent implements OnInit, OnDestroy {
   currentYear: number;
   upcomingEvents$: Observable<AppEvent[]>;
   isLoadingEvents = true;
@@ -75,6 +76,12 @@ export class PublicHomepageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private imageModalService = inject(ImageModalService);
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  // private router = inject(Router); // Uncomment if you need to manipulate route further
+
+  private queryParamsSubscription: Subscription | undefined;
+  private eventSubscription: Subscription | undefined;
+
 
   vtcPartners: VTCPartner[] = [
     {
@@ -118,12 +125,53 @@ export class PublicHomepageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.upcomingEvents$.subscribe({
+    this.eventSubscription = this.upcomingEvents$.subscribe({
       next: () => (this.isLoadingEvents = false),
       error: (err) => {
         console.error('Errore caricamento eventi per homepage:', err);
         this.isLoadingEvents = false;
       },
+    });
+
+    this.queryParamsSubscription = this.route.queryParamMap.pipe(take(1)).subscribe(params => {
+      const eventId = params.get('eventId');
+      if (eventId) {
+        const initialLoadingState = this.isLoadingEvents;
+        this.isLoadingEvents = true;
+        this.cdr.detectChanges();
+
+        this.eventService.getEventById(eventId).subscribe({
+          next: (event) => {
+            if (event && event.id) { // Check if event and event.id are valid
+              // Allow opening modal for internal events regardless of state for direct links
+              // The registration panel within the modal will handle state-specific logic
+              if (event.eventType === 'internal') {
+                this.openEventModal(event);
+              } else {
+                console.warn(`Event ${eventId} is not an internal event and cannot be opened via direct link this way.`);
+                // Optionally, show a user-facing message
+              }
+            } else {
+              console.warn(`Event with ID ${eventId} not found for direct link.`);
+               // Optionally, show a user-facing message
+            }
+            this.isLoadingEvents = initialLoadingState; // Restore previous loading state if it was for the main list
+             if (!eventId) this.isLoadingEvents = false; // If no eventId, ensure loading is false after upcomingEvents might have set it
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error(`Error fetching event ${eventId} for direct link:`, err);
+            this.isLoadingEvents = initialLoadingState;
+            if (!eventId) this.isLoadingEvents = false;
+            this.cdr.detectChanges();
+          }
+        });
+      } else {
+        // Ensure isLoadingEvents is false if upcomingEvents$ already resolved or there's no eventId
+         if (!this.isLoadingEvents) { // only set to false if not already false from upcomingEvents sub
+            this.isLoadingEvents = false;
+         }
+      }
     });
 
     this.vtcRegistrationForm
@@ -150,6 +198,7 @@ export class PublicHomepageComponent implements OnInit {
        selectedSubSlotId: null
     });
     document.body.style.overflow = 'hidden';
+    this.cdr.detectChanges();
   }
 
   closeEventModal(): void {
@@ -159,6 +208,13 @@ export class PublicHomepageComponent implements OnInit {
     this.selectedMainSlotForBooking = null;
     this.availableSubSlotsForBooking = [];
     document.body.style.overflow = 'auto';
+    this.cdr.detectChanges();
+    // Optional: Clear eventId from URL if you want to prevent re-opening on refresh
+    // this.router.navigate([], {
+    //   relativeTo: this.route,
+    //   queryParams: { eventId: null },
+    //   queryParamsHandling: 'merge', // or 'preserve' if you have other params to keep
+    // });
   }
 
   toggleRegistrationPanel(): void {
@@ -171,6 +227,7 @@ export class PublicHomepageComponent implements OnInit {
         this.availableSubSlotsForBooking = [];
       }
     }
+    this.cdr.detectChanges();
   }
 
   updateAvailableSubSlots(mainSlotId: string | null): void {
@@ -199,11 +256,13 @@ export class PublicHomepageComponent implements OnInit {
       Object.values(this.vtcRegistrationForm.controls).forEach((control) =>
         control.markAsTouched()
       );
+      this.cdr.detectChanges();
       return;
     }
 
     this.isLoadingRegistration = true;
     this.registrationMessage = null;
+    this.cdr.detectChanges();
 
     const formValues = this.vtcRegistrationForm.value;
     const bookingDetails: Omit<SubSlotBookingInfo, 'bookingId' | 'bookedAt'> = {
@@ -223,12 +282,13 @@ export class PublicHomepageComponent implements OnInit {
         type: 'success',
         text: "Registrazione alla postazione completata con successo!",
       };
+      const previousMainSlotId = formValues.selectedMainSlotId;
       this.vtcRegistrationForm.reset({
-        selectedMainSlotId: null,
+        selectedMainSlotId: previousMainSlotId, // Keep main slot selected potentially
         selectedSubSlotId: null
       });
-      this.selectedMainSlotForBooking = null;
-      this.availableSubSlotsForBooking = [];
+      // this.selectedMainSlotForBooking = null; // This will be re-evaluated by updateAvailableSubSlots
+      // this.availableSubSlotsForBooking = [];
 
 
       if (this.selectedEventForModal && this.selectedEventForModal.id) {
@@ -236,8 +296,11 @@ export class PublicHomepageComponent implements OnInit {
           .getEventById(this.selectedEventForModal.id)
           .subscribe((updatedEvent) => {
             this.selectedEventForModal = updatedEvent;
-            if (formValues.selectedMainSlotId) {
-                 this.updateAvailableSubSlots(formValues.selectedMainSlotId);
+            if (previousMainSlotId) { // Re-filter sub-slots for the same main slot
+                 this.updateAvailableSubSlots(previousMainSlotId);
+            } else {
+                this.selectedMainSlotForBooking = null;
+                this.availableSubSlotsForBooking = [];
             }
             this.cdr.detectChanges();
           });
@@ -250,17 +313,20 @@ export class PublicHomepageComponent implements OnInit {
       console.error('Errore registrazione VTC:', error);
     } finally {
       this.isLoadingRegistration = false;
+      this.cdr.detectChanges();
     }
   }
 
   openVideoModal(): void {
     this.isVideoModalOpen = true;
     document.body.style.overflow = 'hidden';
+    this.cdr.detectChanges();
   }
 
   closeVideoModal(): void {
     this.isVideoModalOpen = false;
     document.body.style.overflow = 'auto';
+    this.cdr.detectChanges();
   }
 
   hasSelectedDlcsForModal(dlcs: EventDLCs | undefined | null): boolean {
@@ -279,6 +345,17 @@ export class PublicHomepageComponent implements OnInit {
    getUnbookedSubSlotsCount(mainSlot: EventSlot): number {
     if (!mainSlot || !mainSlot.subSlots) return 0;
     return mainSlot.subSlots.filter(ss => !ss.isBooked).length;
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
+    }
+    if (this.eventSubscription) {
+      this.eventSubscription.unsubscribe();
+    }
+    // Unsubscribe from selectedMainSlotId valueChanges if not handled automatically
+    // (usually FormControls handle their own subscriptions if component is destroyed)
   }
 
   objectValues = Object.values;
