@@ -6,10 +6,10 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { PublicNavbarComponent } from '../public-navbar/public-navbar.component';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and Router
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
-import { Observable, Subscription, filter, map, of } from 'rxjs'; // Import Subscription
-import { take } from 'rxjs/operators'; // Import take
+import { Observable, Subscription, filter, map, of } from 'rxjs';
+import { take } from 'rxjs/operators';
 import {
   EventService,
   AppEvent,
@@ -83,7 +83,6 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
   private imageModalService = inject(ImageModalService);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
-  // private router = inject(Router); // Uncomment if you need to manipulate route further
 
   private queryParamsSubscription: Subscription | undefined;
   private eventSubscription: Subscription | undefined;
@@ -150,25 +149,20 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
           this.eventService.getEventById(eventId).subscribe({
             next: (event) => {
               if (event && event.id) {
-                // Check if event and event.id are valid
-                // Allow opening modal for internal events regardless of state for direct links
-                // The registration panel within the modal will handle state-specific logic
                 if (event.eventType === 'internal') {
                   this.openEventModal(event);
                 } else {
                   console.warn(
                     `Event ${eventId} is not an internal event and cannot be opened via direct link this way.`
                   );
-                  // Optionally, show a user-facing message
                 }
               } else {
                 console.warn(
                   `Event with ID ${eventId} not found for direct link.`
                 );
-                // Optionally, show a user-facing message
               }
-              this.isLoadingEvents = initialLoadingState; // Restore previous loading state if it was for the main list
-              if (!eventId) this.isLoadingEvents = false; // If no eventId, ensure loading is false after upcomingEvents might have set it
+              this.isLoadingEvents = initialLoadingState;
+              if (!eventId) this.isLoadingEvents = false;
               this.cdr.detectChanges();
             },
             error: (err) => {
@@ -182,9 +176,7 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
             },
           });
         } else {
-          // Ensure isLoadingEvents is false if upcomingEvents$ already resolved or there's no eventId
           if (!this.isLoadingEvents) {
-            // only set to false if not already false from upcomingEvents sub
             this.isLoadingEvents = false;
           }
         }
@@ -225,12 +217,6 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     this.availableSubSlotsForBooking = [];
     document.body.style.overflow = 'auto';
     this.cdr.detectChanges();
-    // Optional: Clear eventId from URL if you want to prevent re-opening on refresh
-    // this.router.navigate([], {
-    //   relativeTo: this.route,
-    //   queryParams: { eventId: null },
-    //   queryParamsHandling: 'merge', // or 'preserve' if you have other params to keep
-    // });
   }
 
   toggleRegistrationPanel(): void {
@@ -272,6 +258,17 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // Nuova funzione per ottenere il link pubblico dell'evento
+  getPublicEventLink(): string {
+    if (this.selectedEventForModal && this.selectedEventForModal.id) {
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      // Questo presuppone che tu abbia una rotta pubblica configurata per mostrare i dettagli dell'evento.
+      // Adatta '/eventi-pubblico/' alla tua rotta effettiva se è diversa.
+      return `${baseUrl}/eventi-pubblico/${this.selectedEventForModal.id}`;
+    }
+    return '';
+  }
+
   async onVtcRegisterSubmit(): Promise<void> {
     if (this.vtcRegistrationForm.invalid || !this.selectedEventForModal?.id) {
       this.registrationMessage = {
@@ -297,11 +294,15 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     };
 
     try {
+      // Ottieni il link pubblico dell'evento
+      const appLink = this.getPublicEventLink();
+
       await this.eventService.registerVtcToEventSubSlot(
         this.selectedEventForModal.id!,
         formValues.selectedMainSlotId,
         formValues.selectedSubSlotId,
-        bookingDetails
+        bookingDetails,
+        appLink // Passa il link pubblico come quinto argomento
       );
       this.registrationMessage = {
         type: 'success',
@@ -309,11 +310,9 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
       };
       const previousMainSlotId = formValues.selectedMainSlotId;
       this.vtcRegistrationForm.reset({
-        selectedMainSlotId: previousMainSlotId, // Keep main slot selected potentially
+        selectedMainSlotId: previousMainSlotId,
         selectedSubSlotId: null,
       });
-      // this.selectedMainSlotForBooking = null; // This will be re-evaluated by updateAvailableSubSlots
-      // this.availableSubSlotsForBooking = [];
 
       if (this.selectedEventForModal && this.selectedEventForModal.id) {
         this.eventService
@@ -321,7 +320,6 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
           .subscribe((updatedEvent) => {
             this.selectedEventForModal = updatedEvent;
             if (previousMainSlotId) {
-              // Re-filter sub-slots for the same main slot
               this.updateAvailableSubSlots(previousMainSlotId);
             } else {
               this.selectedMainSlotForBooking = null;
@@ -379,8 +377,6 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     if (this.eventSubscription) {
       this.eventSubscription.unsubscribe();
     }
-    // Unsubscribe from selectedMainSlotId valueChanges if not handled automatically
-    // (usually FormControls handle their own subscriptions if component is destroyed)
   }
 
   objectValues = Object.values;

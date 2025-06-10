@@ -25,10 +25,12 @@ import {
   deleteObject,
   UploadTaskSnapshot
 } from '@angular/fire/storage';
-import { Observable, from } from 'rxjs';
+import { Observable, from, firstValueFrom } from 'rxjs'; // Importa firstValueFrom
 import { map } from 'rxjs/operators';
 import { NotificationService } from './notification.service';
 import { v4 as uuidv4 } from 'uuid';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 export type EventState = 'nuovo' | 'programmato' | 'adesso' | 'concluso';
 export type ServerType = 'Simulation 1' | 'Simulation 2' | 'SCS Convoy' | 'Promods';
@@ -48,22 +50,22 @@ export interface EventDLCs {
 
 export interface SubSlotBookingInfo {
   bookingId: string;
-  companyName: string;
-  contactName: string;
-  contactEmail: string;
+  companyName: string; // Nome della VTC
+  contactName: string; // Nome del referente VTC
+  contactEmail: string; // Email del referente VTC
   bookedAt: Timestamp;
 }
 
 export interface EventSubSlot {
   id: string;
-  name: string;
+  name: string; // Es: "Postazione 1"
   isBooked: boolean;
   bookingInfo?: SubSlotBookingInfo | null;
 }
 
 export interface EventSlot {
   id: string;
-  name: string;
+  name: string; // Es: "Zona A"
   imageUrl?: string | null;
   numberOfSubSlots: number;
   subSlots: EventSubSlot[];
@@ -97,11 +99,14 @@ export class EventService {
   private firestore: Firestore = inject(Firestore);
   private storage: Storage = inject(Storage);
   private notificationService = inject(NotificationService);
+  private http: HttpClient = inject(HttpClient);
   private eventsCollectionPath = 'events';
   private eventsCollection = collection(this.firestore, this.eventsCollectionPath);
   readonly defaultEventPhotoAreaUrl = 'assets/img/default-placeholder.png';
   readonly defaultEventRouteUrl = 'assets/img/default-placeholder.png';
   readonly defaultSlotImageUrl = 'assets/img/default-slot-placeholder.png';
+
+  private firebaseEventWebhookUrl = environment.firebaseEventWebhookUrl;
 
   constructor() { }
 
@@ -265,7 +270,8 @@ export class EventService {
     eventId: string,
     mainSlotId: string,
     subSlotId: string,
-    bookingDetails: Omit<SubSlotBookingInfo, 'bookingId' | 'bookedAt'>
+    bookingDetails: Omit<SubSlotBookingInfo, 'bookingId' | 'bookedAt'>,
+    appLink: string // Aggiunto appLink come parametro
   ): Promise<void> {
     const eventDocRef = doc(this.firestore, this.eventsCollectionPath, eventId);
     return runTransaction(this.firestore, async (transaction) => {
@@ -297,7 +303,7 @@ export class EventService {
 
       const newBooking: SubSlotBookingInfo = {
         ...bookingDetails,
-        bookingId: doc(collection(this.firestore, '_')).id, // Generate a new unique ID for the booking
+        bookingId: doc(collection(this.firestore, '_')).id,
         bookedAt: Timestamp.now()
       };
 
@@ -315,6 +321,53 @@ export class EventService {
         { id: targetSubSlot.id, name: targetSubSlot.name },
         { companyName: newBooking.companyName }
       );
+
+      // --- NUOVA LOGICA: Invio dell'embed a Discord dopo l'iscrizione riuscita ---
+      try {
+        const eventDataForDiscord = {
+          eventName: eventData.name,
+          vtcName: newBooking.companyName,
+          registeredByUsername: newBooking.contactName,
+          vtcLogo: '', // TODO: Aggiungi qui l'URL del logo della VTC se disponibile
+          registeredByUserAvatar: '', // TODO: Aggiungi qui l'URL dell'avatar dell'utente se disponibile
+          server: eventData.server || 'N/D',
+          meetingPoint: eventData.departure || 'N/D',
+          departureTime: eventData.startDate.toDate().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) || 'N/D',
+          departureLocation: eventData.departure || 'N/D',
+          destination: eventData.destination || 'N/D',
+          notes: eventData.description || 'Nessuna nota specifica per l\'evento.',
+          // Nuovi campi richiesti:
+          mainSlotName: targetMainSlot.name,
+          subSlotName: targetSubSlot.name,
+          contactName: newBooking.contactName,
+          contactEmail: newBooking.contactEmail,
+          appLink: appLink // Il link all'app
+        };
+        await this.sendVtcSubscriptionToDiscord(eventDataForDiscord);
+        console.log('Notifica Discord per iscrizione VTC inviata con successo.');
+      } catch (discordError) {
+        console.error('Errore durante l\'invio della notifica Discord per iscrizione VTC:', discordError);
+      }
+      // --- FINE NUOVA LOGICA ---
     });
+  }
+
+  /**
+   * Invia i dati di iscrizione di una VTC a un evento al webhook di Discord.
+   * @param eventData L'oggetto contenente le informazioni dell'evento e della VTC.
+   * @returns Promise<any> che indica il successo o l'errore della richiesta HTTP.
+   */
+  async sendVtcSubscriptionToDiscord(eventData: any): Promise<any> {
+    if (!this.firebaseEventWebhookUrl) {
+      console.error('URL del webhook Firebase per eventi non configurato in environment.ts');
+      return Promise.reject('URL del webhook non configurato.');
+    }
+
+    try {
+      return await firstValueFrom(this.http.post(this.firebaseEventWebhookUrl, eventData));
+    } catch (error) {
+      console.error('Errore nella richiesta HTTP per Discord webhook:', error);
+      throw error;
+    }
   }
 }

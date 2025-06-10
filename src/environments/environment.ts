@@ -11,4 +11,5 @@ export const environment = {
     appId: '1:529681295627:web:f152eb8f189b2680eeda0e',
     measurementId: 'G-0H31MC3FS3',
   },
+  firebaseEventWebhookUrl: 'https://us-central1-iforalogistics.cloudfunctions.net/eventSubscriptionWebhook'
 };
