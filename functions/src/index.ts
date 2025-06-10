@@ -1,23 +1,33 @@
 import { onRequest, HttpsOptions } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import * as admin from 'firebase-admin';
-import axios from 'axios'; // Importa axios
+import axios from 'axios';
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Configurazione per le funzioni HTTPS
 const httpsOptions: HttpsOptions = {
-  region: 'us-central1', // Assicurati che questa regione corrisponda alla tua configurazione
+  region: 'us-central1',
 };
 
-// URL del webhook Discord per l'invio degli embed
-// IMPORTANTISSIMO: SOSTITUISCI QUESTO URL CON IL TUO WEBHOOK REALE DI DISCORD PER IL CANALE TARGET (ID: 1316924842867425290)
 const DISCORD_EMBED_WEBHOOK_URL = 'https://discord.com/api/webhooks/1382102405319233636/w4bQRcIqAcBT5BegNVRvkxRaNxHTR0hqHLN4lZNXrP1-WvNuMX1gR0vEeX09s6zL9ul5';
 
-// Funzione Firebase per ricevere e salvare i messaggi Discord (esistente)
+function setCorsHeaders(res: any, req: any) {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.set('Access-Control-Max-Age', '3600');
+}
+
 export const discordWebhookListener = onRequest(httpsOptions, async (req, res) => {
+  setCorsHeaders(res, req);
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
   if (req.method !== 'POST') {
     logger.warn("Metodo non permesso per discordWebhookListener:", req.method);
     res.status(405).send('Method Not Allowed');
@@ -74,8 +84,14 @@ export const discordWebhookListener = onRequest(httpsOptions, async (req, res) =
   }
 });
 
-// Nuova funzione Firebase per la gestione dell'iscrizione delle VTC agli eventi e l'invio dell'embed su Discord
 export const eventSubscriptionWebhook = onRequest(httpsOptions, async (req, res) => {
+  setCorsHeaders(res, req);
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
   if (req.method !== 'POST') {
     logger.warn("Metodo non permesso per eventSubscriptionWebhook:", req.method);
     res.status(405).send('Method Not Allowed');
@@ -86,44 +102,49 @@ export const eventSubscriptionWebhook = onRequest(httpsOptions, async (req, res)
     const eventData = req.body;
     logger.info("Dati di iscrizione evento VTC ricevuti:", { payload: eventData });
 
-    // Validazione dei dati essenziali
-    if (!eventData.eventName || !eventData.vtcName || !eventData.registeredByUsername) {
+    if (!eventData.eventName || !eventData.vtcName || !eventData.registeredByUsername ||
+        !eventData.mainSlotName || !eventData.subSlotName ||
+        !eventData.contactName || !eventData.contactEmail || !eventData.appLink) {
       logger.error("Dati mancanti o malformati per l'iscrizione all'evento VTC:", { payload: eventData });
-      res.status(400).send('Bad Request: Missing essential event subscription data (eventName, vtcName, registeredByUsername).');
+      res.status(400).send('Bad Request: Missing essential event subscription data (eventName, vtcName, registeredByUsername, mainSlotName, subSlotName, contactName, contactEmail, appLink).');
       return;
     }
 
-    // Costruzione dell'embed di Discord basato sull'immagine fornita
     const embed = {
-      color: 0x0099ff, // Un colore blu simile a quello dell'immagine
+      color: 0x0099ff,
       author: {
-        name: `VTC iscritta all'evento`,
-        icon_url: eventData.vtcLogo || 'https://placehold.co/64x64/0099ff/ffffff?text=VTC', // Usa il logo della VTC o un placeholder
+        name: `Nuova Iscrizione Evento VTC`,
+        icon_url: eventData.vtcLogo || 'https://placehold.co/64x64/0099ff/ffffff?text=VTC',
       },
-      title: `Nome Evento: ${eventData.eventName}`,
-      description: `Nuova VTC iscritta: **${eventData.vtcName}**`,
+      title: `Evento: ${eventData.eventName}`,
+      url: eventData.appLink,
+      description: `Dettagli dell'iscrizione:`,
       fields: [
+        { name: 'VTC Iscritta', value: eventData.vtcName, inline: true },
+        { name: 'Referente', value: eventData.contactName, inline: true },
+        { name: 'Email Referente', value: eventData.contactEmail, inline: true },
+        { name: 'Zona Scelta', value: eventData.mainSlotName, inline: true },
+        { name: 'Postazione Scelta', value: eventData.subSlotName, inline: true },
         { name: 'Server', value: eventData.server || 'N/D', inline: true },
         { name: 'Punto di Ritrovo', value: eventData.meetingPoint || 'N/D', inline: true },
         { name: 'Ora di Partenza', value: eventData.departureTime || 'N/D', inline: true },
         { name: 'Luogo di Partenza', value: eventData.departureLocation || 'N/D', inline: true },
         { name: 'Destinazione', value: eventData.destination || 'N/D', inline: true },
-        { name: 'Note per l\'evento', value: eventData.notes || 'Nessuna nota', inline: false },
+        { name: 'Note Evento', value: eventData.notes || 'Nessuna nota', inline: false },
       ],
-      timestamp: new Date().toISOString(), // Timestamp attuale
+      timestamp: new Date().toISOString(),
       footer: {
         text: `Iscritto da: ${eventData.registeredByUsername}`,
-        icon_url: eventData.registeredByUserAvatar || 'https://placehold.co/32x32/0099ff/ffffff?text=User', // Avatar dell'utente o placeholder
+        icon_url: eventData.registeredByUserAvatar || 'https://placehold.co/32x32/0099ff/ffffff?text=User',
       },
     };
 
-    // Payload per il webhook di Discord
     const discordPayload = {
       embeds: [embed],
     };
 
-    // Invio dell'embed a Discord
     logger.info("Invio embed a Discord:", { payload: discordPayload });
+
     await axios.post(DISCORD_EMBED_WEBHOOK_URL, discordPayload, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -146,4 +167,3 @@ export const eventSubscriptionWebhook = onRequest(httpsOptions, async (req, res)
     return;
   }
 });
-

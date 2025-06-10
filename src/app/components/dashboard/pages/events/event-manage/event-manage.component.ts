@@ -111,12 +111,12 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.eventForm = this.fb.group({
       name: ['', Validators.required],
       description: [''],
-      meetingTime: ['', Validators.required],
-      startTime: [''],
+      meetingTime: ['', Validators.required], // Corrisponde a startDate
+      startTime: [''], // Corrisponde a endDate
       state: ['nuovo' as EventState, Validators.required],
       server: [null as ServerType | null],
       dlcs: this.fb.group(dlcGroup),
-      departure: [''],
+      departure: [''], // Può essere usato come Meeting Point e Departure Location
       destination: [''],
       photoAreaImageUrl: [null as string | null],
       trailerType: [null as TrailerType | null],
@@ -208,8 +208,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.eventForm.patchValue({
       name: eventData.name,
       description: eventData.description,
-      meetingTime: this.formatDateForInput(eventData.startDate),
-      startTime: this.formatDateForInput(eventData.endDate),
+      meetingTime: this.formatDateForInput(eventData.startDate), // Corrisponde a startDate
+      startTime: this.formatDateForInput(eventData.endDate), // Corrisponde a endDate
       state: eventData.state,
       server: eventData.server,
       dlcs:
@@ -304,17 +304,23 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   formatDateForInput(dateValue: any): string {
     if (!dateValue) return '';
-    if (dateValue && typeof dateValue.seconds === 'number') {
-      const date = new Date(dateValue.seconds * 1000);
-      const year = date.getFullYear();
-      const month = ('0' + (date.getMonth() + 1)).slice(-2);
-      const day = ('0' + date.getDate()).slice(-2);
-      const hours = ('0' + date.getHours()).slice(-2);
-      const minutes = ('0' + date.getMinutes()).slice(-2);
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Gestisce sia oggetti Timestamp di Firebase che oggetti Date nativi
+    let date: Date;
+    if (dateValue && typeof dateValue.toDate === 'function') { // Firebase Timestamp
+      date = dateValue.toDate();
+    } else if (dateValue instanceof Date) { // Oggetto Date nativo
+      date = dateValue;
+    } else {
+      return ''; // Valore non riconosciuto
     }
-    return dateValue;
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
+
 
   convertInputDateToTimestamp(dateString: string): any {
     if (!dateString) return null;
@@ -492,7 +498,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
     try {
       if (oldImageUrl && this.eventId) {
-        await this.eventService.deleteEventImage(oldImageUrl);
+        await this.eventService.deleteEventImage(oldImageUrl as string | null | undefined);
       }
 
       const { uploadProgress$, downloadUrlPromise } =
@@ -607,7 +613,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
     try {
       if(this.eventId) {
-          await this.eventService.deleteEventImage(currentImageUrl);
+          await this.eventService.deleteEventImage(currentImageUrl as string | null | undefined);
       }
 
       if (isSlotImg && slotIndex !== undefined) {
@@ -644,9 +650,11 @@ export class EventManageComponent implements OnInit, OnDestroy {
   }
 
   getShareableLink(): string {
-    if (this.currentEvent && this.currentEvent.id && this.currentEvent.eventType === 'internal') {
+    if (this.currentEvent && this.currentEvent.id) {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-      return `${baseUrl}?eventId=${this.currentEvent.id}`;
+      // MODIFICA QUI: Punta a una rotta pubblica per i dettagli dell'evento.
+      // Devi assicurarti che questa rotta esista e non richieda autenticazione.
+      return `${baseUrl}/eventi-pubblico/${this.currentEvent.id}`;
     }
     return '';
   }
@@ -700,7 +708,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   openImageInModal(imageUrl: string | null | undefined): void {
     if (imageUrl) {
-      this.imageModalService.openModal(imageUrl);
+      this.imageModalService.openModal(imageUrl as string);
     }
   }
 
