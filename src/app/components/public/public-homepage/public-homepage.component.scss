@@ -361,12 +361,58 @@
 }
 
 .public-footer {
-  text-align: center;
   padding: 25px;
   background-color: #343a40;
   color: #f8f9fa;
   font-size: 0.9em;
   margin-top: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-content-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1300px;
+}
+
+.social-icons {
+  flex-grow: 1;
+  text-align: center;
+
+  a {
+    color: #f8f9fa;
+    font-size: 20px;
+    margin: 0 12px;
+    transition: color 0.3s ease;
+  }
+
+ .social-facebook:hover {
+    color: #1877F2;
+  }
+  .social-youtube:hover {
+    color: #FF0000;
+  }
+  .social-instagram:hover {
+    color: #E1306C;
+  }
+  .social-tiktok:hover {
+    color: #FE2C55;
+  }
+  .social-truckersmp:hover {
+    color: #3976c2;
+  }
+  .social-trucksbook:hover {
+    color: #f0ad4e;
+  }
+}
+
+.copyright-text {
+  margin: 0;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .modal-overlay {
@@ -542,7 +588,8 @@
   }
 }
 
-.modal-slots-section { // Section for displaying main slots in view mode
+.modal-slots-section {
+  margin-top: 20px; 
     .modal-label { // "Zone Disponibili:"
         display: block;
         font-weight: 600;
@@ -806,4 +853,4 @@
       transform: translateY(-50%) translateX(-10px);
     }
   }
-}   
+}

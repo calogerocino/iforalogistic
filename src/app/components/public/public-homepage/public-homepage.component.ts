@@ -1,4 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  ChangeDetectorRef,
+  OnDestroy,
+} from '@angular/core';
 import { PublicNavbarComponent } from '../public-navbar/public-navbar.component';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and Router
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
@@ -82,7 +88,6 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
   private queryParamsSubscription: Subscription | undefined;
   private eventSubscription: Subscription | undefined;
 
-
   vtcPartners: VTCPartner[] = [
     {
       name: 'Logis 2.0',
@@ -133,46 +138,57 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
       },
     });
 
-    this.queryParamsSubscription = this.route.queryParamMap.pipe(take(1)).subscribe(params => {
-      const eventId = params.get('eventId');
-      if (eventId) {
-        const initialLoadingState = this.isLoadingEvents;
-        this.isLoadingEvents = true;
-        this.cdr.detectChanges();
+    this.queryParamsSubscription = this.route.queryParamMap
+      .pipe(take(1))
+      .subscribe((params) => {
+        const eventId = params.get('eventId');
+        if (eventId) {
+          const initialLoadingState = this.isLoadingEvents;
+          this.isLoadingEvents = true;
+          this.cdr.detectChanges();
 
-        this.eventService.getEventById(eventId).subscribe({
-          next: (event) => {
-            if (event && event.id) { // Check if event and event.id are valid
-              // Allow opening modal for internal events regardless of state for direct links
-              // The registration panel within the modal will handle state-specific logic
-              if (event.eventType === 'internal') {
-                this.openEventModal(event);
+          this.eventService.getEventById(eventId).subscribe({
+            next: (event) => {
+              if (event && event.id) {
+                // Check if event and event.id are valid
+                // Allow opening modal for internal events regardless of state for direct links
+                // The registration panel within the modal will handle state-specific logic
+                if (event.eventType === 'internal') {
+                  this.openEventModal(event);
+                } else {
+                  console.warn(
+                    `Event ${eventId} is not an internal event and cannot be opened via direct link this way.`
+                  );
+                  // Optionally, show a user-facing message
+                }
               } else {
-                console.warn(`Event ${eventId} is not an internal event and cannot be opened via direct link this way.`);
+                console.warn(
+                  `Event with ID ${eventId} not found for direct link.`
+                );
                 // Optionally, show a user-facing message
               }
-            } else {
-              console.warn(`Event with ID ${eventId} not found for direct link.`);
-               // Optionally, show a user-facing message
-            }
-            this.isLoadingEvents = initialLoadingState; // Restore previous loading state if it was for the main list
-             if (!eventId) this.isLoadingEvents = false; // If no eventId, ensure loading is false after upcomingEvents might have set it
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            console.error(`Error fetching event ${eventId} for direct link:`, err);
-            this.isLoadingEvents = initialLoadingState;
-            if (!eventId) this.isLoadingEvents = false;
-            this.cdr.detectChanges();
-          }
-        });
-      } else {
-        // Ensure isLoadingEvents is false if upcomingEvents$ already resolved or there's no eventId
-         if (!this.isLoadingEvents) { // only set to false if not already false from upcomingEvents sub
+              this.isLoadingEvents = initialLoadingState; // Restore previous loading state if it was for the main list
+              if (!eventId) this.isLoadingEvents = false; // If no eventId, ensure loading is false after upcomingEvents might have set it
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              console.error(
+                `Error fetching event ${eventId} for direct link:`,
+                err
+              );
+              this.isLoadingEvents = initialLoadingState;
+              if (!eventId) this.isLoadingEvents = false;
+              this.cdr.detectChanges();
+            },
+          });
+        } else {
+          // Ensure isLoadingEvents is false if upcomingEvents$ already resolved or there's no eventId
+          if (!this.isLoadingEvents) {
+            // only set to false if not already false from upcomingEvents sub
             this.isLoadingEvents = false;
-         }
-      }
-    });
+          }
+        }
+      });
 
     this.vtcRegistrationForm
       .get('selectedMainSlotId')
@@ -194,8 +210,8 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     this.selectedMainSlotForBooking = null;
     this.availableSubSlotsForBooking = [];
     this.vtcRegistrationForm.reset({
-       selectedMainSlotId: null,
-       selectedSubSlotId: null
+      selectedMainSlotId: null,
+      selectedSubSlotId: null,
     });
     document.body.style.overflow = 'hidden';
     this.cdr.detectChanges();
@@ -220,7 +236,8 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
   toggleRegistrationPanel(): void {
     this.isRegistrationPanelOpen = !this.isRegistrationPanelOpen;
     if (this.isRegistrationPanelOpen) {
-      const currentMainSlotId = this.vtcRegistrationForm.get('selectedMainSlotId')?.value;
+      const currentMainSlotId =
+        this.vtcRegistrationForm.get('selectedMainSlotId')?.value;
       if (currentMainSlotId) {
         this.updateAvailableSubSlots(currentMainSlotId);
       } else {
@@ -231,18 +248,26 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
   }
 
   updateAvailableSubSlots(mainSlotId: string | null): void {
-    this.vtcRegistrationForm.get('selectedSubSlotId')?.reset(null, { emitEvent: false });
+    this.vtcRegistrationForm
+      .get('selectedSubSlotId')
+      ?.reset(null, { emitEvent: false });
     this.availableSubSlotsForBooking = [];
 
     if (mainSlotId && this.selectedEventForModal?.slots) {
-      this.selectedMainSlotForBooking = this.selectedEventForModal.slots.find(ms => ms.id === mainSlotId) || null;
-      if (this.selectedMainSlotForBooking && this.selectedMainSlotForBooking.subSlots) {
-        this.availableSubSlotsForBooking = this.selectedMainSlotForBooking.subSlots.filter(
-          (subSlot) => !subSlot.isBooked
-        );
+      this.selectedMainSlotForBooking =
+        this.selectedEventForModal.slots.find((ms) => ms.id === mainSlotId) ||
+        null;
+      if (
+        this.selectedMainSlotForBooking &&
+        this.selectedMainSlotForBooking.subSlots
+      ) {
+        this.availableSubSlotsForBooking =
+          this.selectedMainSlotForBooking.subSlots.filter(
+            (subSlot) => !subSlot.isBooked
+          );
       }
     } else {
-       this.selectedMainSlotForBooking = null;
+      this.selectedMainSlotForBooking = null;
     }
     this.cdr.detectChanges();
   }
@@ -280,27 +305,27 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
       );
       this.registrationMessage = {
         type: 'success',
-        text: "Registrazione alla postazione completata con successo!",
+        text: 'Registrazione alla postazione completata con successo!',
       };
       const previousMainSlotId = formValues.selectedMainSlotId;
       this.vtcRegistrationForm.reset({
         selectedMainSlotId: previousMainSlotId, // Keep main slot selected potentially
-        selectedSubSlotId: null
+        selectedSubSlotId: null,
       });
       // this.selectedMainSlotForBooking = null; // This will be re-evaluated by updateAvailableSubSlots
       // this.availableSubSlotsForBooking = [];
-
 
       if (this.selectedEventForModal && this.selectedEventForModal.id) {
         this.eventService
           .getEventById(this.selectedEventForModal.id)
           .subscribe((updatedEvent) => {
             this.selectedEventForModal = updatedEvent;
-            if (previousMainSlotId) { // Re-filter sub-slots for the same main slot
-                 this.updateAvailableSubSlots(previousMainSlotId);
+            if (previousMainSlotId) {
+              // Re-filter sub-slots for the same main slot
+              this.updateAvailableSubSlots(previousMainSlotId);
             } else {
-                this.selectedMainSlotForBooking = null;
-                this.availableSubSlotsForBooking = [];
+              this.selectedMainSlotForBooking = null;
+              this.availableSubSlotsForBooking = [];
             }
             this.cdr.detectChanges();
           });
@@ -342,9 +367,9 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     }
   }
 
-   getUnbookedSubSlotsCount(mainSlot: EventSlot): number {
+  getUnbookedSubSlotsCount(mainSlot: EventSlot): number {
     if (!mainSlot || !mainSlot.subSlots) return 0;
-    return mainSlot.subSlots.filter(ss => !ss.isBooked).length;
+    return mainSlot.subSlots.filter((ss) => !ss.isBooked).length;
   }
 
   ngOnDestroy(): void {
