@@ -22,14 +22,14 @@
       <div *ngIf="events && events.length > 0; else noUpcomingEvents" class="events-showcase-grid">
         <div *ngFor="let event of events" class="event-showcase-card">
           <div class="event-image-placeholder"
-            *ngIf="!event.thumbrouteImageUrl || event.thumbrouteImageUrl === eventService.defaultEventRouteUrl">
+            *ngIf="!event.thumbrouteImageUrl || event.routeImageUrl === eventService.defaultEventRouteUrl">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path
                 d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.5l-2.14 2.58h10.3z">
               </path>
             </svg>
           </div>
-          <img *ngIf="event.thumbrouteImageUrl && event.thumbrouteImageUrl !== eventService.defaultEventRouteUrl"
+          <img *ngIf="event.thumbrouteImageUrl && event.routeImageUrl !== eventService.defaultEventRouteUrl"
             [src]="event.thumbrouteImageUrl" alt="Immagine Evento {{event.name}}"
             (click)="openImageInModal(event.routeImageUrl)" class="event-image clickable-image">
 
@@ -191,14 +191,14 @@
 
         <div class="modal-image-row full-width">
           <div class="modal-image-section"
-            *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
+            *ngIf="selectedEventForModal.thumbphotoAreaImageUrl || selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
             <span class="modal-label">Area Foto:</span>
             <img [src]="selectedEventForModal.thumbphotoAreaImageUrl || selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
               (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
               class="modal-event-image clickable-image">
           </div>
           <div class="modal-image-section"
-            *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
+            *ngIf="selectedEventForModal.thumbrouteImageUrl || selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
             <span class="modal-label">Immagine Percorso:</span>
             <img [src]="selectedEventForModal.thumbrouteImageUrl || selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
               (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
