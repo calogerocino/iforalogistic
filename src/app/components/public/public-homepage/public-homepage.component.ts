@@ -258,13 +258,10 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // Nuova funzione per ottenere il link pubblico dell'evento
   getPublicEventLink(): string {
     if (this.selectedEventForModal && this.selectedEventForModal.id) {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-      // Questo presuppone che tu abbia una rotta pubblica configurata per mostrare i dettagli dell'evento.
-      // Adatta '/eventi-pubblico/' alla tua rotta effettiva se è diversa.
-      return `${baseUrl}/eventi-pubblico/${this.selectedEventForModal.id}`;
+      return `${baseUrl}/?eventId=${this.selectedEventForModal.id}`;
     }
     return '';
   }
@@ -294,7 +291,6 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
     };
 
     try {
-      // Ottieni il link pubblico dell'evento
       const appLink = this.getPublicEventLink();
 
       await this.eventService.registerVtcToEventSubSlot(
@@ -302,7 +298,7 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
         formValues.selectedMainSlotId,
         formValues.selectedSubSlotId,
         bookingDetails,
-        appLink // Passa il link pubblico come quinto argomento
+        appLink
       );
       this.registrationMessage = {
         type: 'success',

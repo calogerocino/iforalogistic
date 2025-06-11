@@ -2,6 +2,10 @@ import { onRequest, HttpsOptions } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import * as admin from 'firebase-admin';
 import axios from 'axios';
+import { getStorage } from 'firebase-admin/storage';
+import { onObjectFinalized, onObjectDeleted } from "firebase-functions/storage";
+import * as path from 'path';
+import sharp from 'sharp';
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -166,4 +170,137 @@ export const eventSubscriptionWebhook = onRequest(httpsOptions, async (req, res)
     res.status(500).send(`Internal Server Error: ${errorMessage}`);
     return;
   }
+});
+
+export const generateThumbnail = onObjectFinalized(async (event) => {
+  const fileBucket = event.data.bucket;
+  const filePath = event.data.name;
+  const contentType = event.data.contentType;
+  const metageneration = event.data.metageneration;
+
+  if (!filePath || !contentType || !metageneration || !contentType.startsWith('image/')) {
+    return;
+  }
+
+  if (!filePath.includes('/original/')) {
+    return;
+  }
+
+  if (filePath.includes('/thumbnails/')) {
+    return;
+  }
+
+  const fileName = path.basename(filePath);
+  const thumbnailFilePath = filePath.replace('/original/', '/thumbnails/thumb_');
+  const bucket = getStorage().bucket(fileBucket);
+  const file = bucket.file(filePath);
+  const thumbnailFile = bucket.file(thumbnailFilePath);
+  const tempFilePath = path.join('/tmp', fileName);
+  const tempThumbnailPath = path.join('/tmp', `thumb_${fileName}`);
+
+  await file.download({ destination: tempFilePath });
+
+  await sharp(tempFilePath)
+    .resize(200, 200, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    })
+    .toFile(tempThumbnailPath);
+
+  await bucket.upload(tempThumbnailPath, {
+    destination: thumbnailFilePath,
+    metadata: {
+      contentType: contentType,
+    },
+  });
+
+  const [originalUrl] = await file.getSignedUrl({ action: 'read', expires: '03-09-2491' });
+  const [thumbnailUrl] = await thumbnailFile.getSignedUrl({ action: 'read', expires: '03-09-2491' });
+
+  const parts = filePath.split('/');
+  const eventId = parts[1];
+  const imageCategory = parts[2]; // 'photoArea', 'route', or 'slots'
+  let targetDocRef;
+  let targetFieldName;
+  let targetThumbnailFieldName;
+
+  if (imageCategory === 'photoArea') {
+    targetDocRef = admin.firestore().collection('events').doc(eventId);
+    targetFieldName = 'photoAreaImageUrl';
+    targetThumbnailFieldName = 'thumbphotoAreaImageUrl';
+  } else if (imageCategory === 'route') {
+    targetDocRef = admin.firestore().collection('events').doc(eventId);
+    targetFieldName = 'routeImageUrl';
+    targetThumbnailFieldName = 'thumbrouteImageUrl';
+  } else if (imageCategory === 'slots' && parts[3]) { // parts[3] would be the slotId
+    const slotIdActual = parts[3];
+    targetDocRef = admin.firestore().collection('events').doc(eventId).collection('eventSlots').doc(slotIdActual);
+    targetFieldName = 'imageUrl';
+    targetThumbnailFieldName = 'thumbimageUrl';
+  } else {
+    logger.warn('Percorso immagine non riconosciuto per aggiornamento Firestore:', filePath);
+    return;
+  }
+
+  // Update the Firestore document
+  await targetDocRef.update({
+    [targetFieldName]: originalUrl,
+    [targetThumbnailFieldName]: thumbnailUrl,
+  });
+
+  logger.info(`Miniatura generata e URL aggiornati per ${filePath}`);
+});
+
+export const deleteThumbnail = onObjectDeleted(async (event) => {
+  const fileBucket = event.data.bucket;
+  const filePath = event.data.name;
+
+  if (!filePath || !filePath.includes('/original/')) {
+    // Only process deletions of original images
+    return;
+  }
+
+  const thumbnailFilePath = filePath.replace('/original/', '/thumbnails/thumb_');
+  const bucket = getStorage().bucket(fileBucket);
+  const thumbnailFile = bucket.file(thumbnailFilePath);
+
+  try {
+    await thumbnailFile.delete();
+    logger.info(`Miniatura eliminata: ${thumbnailFilePath}`);
+  } catch (error) {
+    logger.warn(`Errore durante l'eliminazione della miniatura (potrebbe non esistere): ${thumbnailFilePath}`, error);
+  }
+
+  const parts = filePath.split('/');
+  const eventId = parts[1];
+  const imageCategory = parts[2]; // 'photoArea', 'route', or 'slots'
+  let docRef;
+  let fieldName;
+  let thumbnailFieldName;
+
+  if (imageCategory === 'photoArea') {
+    docRef = admin.firestore().collection('events').doc(eventId);
+    fieldName = 'photoAreaImageUrl';
+    thumbnailFieldName = 'thumbphotoAreaImageUrl';
+  } else if (imageCategory === 'route') {
+    docRef = admin.firestore().collection('events').doc(eventId);
+    fieldName = 'routeImageUrl';
+    thumbnailFieldName = 'thumbrouteImageUrl';
+  } else if (imageCategory === 'slots' && parts[3]) { // parts[3] is slotId
+    const slotId = parts[3];
+    docRef = admin.firestore().collection('events').doc(eventId).collection('eventSlots').doc(slotId);
+    fieldName = 'imageUrl';
+    thumbnailFieldName = 'thumbimageUrl';
+  } else {
+    logger.warn('Percorso immagine non riconosciuto per eliminazione Firestore:', filePath);
+    return;
+  }
+
+  // Set fields to null to explicitly clear them in Firestore
+  await docRef.update({
+    [fieldName]: null,
+    [thumbnailFieldName]: null,
+  });
+
+  logger.info(`URL immagine e miniatura rimossi da Firestore per ${filePath}`);
 });

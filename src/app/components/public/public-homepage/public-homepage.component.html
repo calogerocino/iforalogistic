@@ -22,15 +22,15 @@
       <div *ngIf="events && events.length > 0; else noUpcomingEvents" class="events-showcase-grid">
         <div *ngFor="let event of events" class="event-showcase-card">
           <div class="event-image-placeholder"
-            *ngIf="!event.routeImageUrl || event.routeImageUrl === eventService.defaultEventRouteUrl">
+            *ngIf="!event.thumbrouteImageUrl || event.thumbrouteImageUrl === eventService.defaultEventRouteUrl">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path
                 d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.5l-2.14 2.58h10.3z">
               </path>
             </svg>
           </div>
-          <img *ngIf="event.routeImageUrl && event.routeImageUrl !== eventService.defaultEventRouteUrl"
-            [src]="event.routeImageUrl" alt="Immagine Evento {{event.name}}"
+          <img *ngIf="event.thumbrouteImageUrl && event.thumbrouteImageUrl !== eventService.defaultEventRouteUrl"
+            [src]="event.thumbrouteImageUrl" alt="Immagine Evento {{event.name}}"
             (click)="openImageInModal(event.routeImageUrl)" class="event-image clickable-image">
 
           <div class="event-showcase-content">
@@ -113,7 +113,6 @@
       <a href="https://www.instagram.com/iforalogistics/" target="_blank" title="Instagram" class="social-instagram"><i class="fab fa-instagram"></i></a>
       <a href="https://www.youtube.com/@iforalogistics" target="_blank" title="YouTube" class="social-youtube"><i class="fab fa-youtube"></i></a>
       <a href="https://www.tiktok.com/@iforalogistics/" target="_blank" title="TikTok" class="social-tiktok"><i class="fab fa-tiktok"></i></a>
-      <!-- <a href="#" target="_blank" title="Facebook" class="social-facebook"><i class="fab fa-facebook"></i></a> -->
     </div>
     <p class="copyright-text">© {{ currentYear }} IFL by PixelSmart. Tutti i diritti riservati.</p>
   </div>
@@ -154,13 +153,11 @@
         </div>
         <div class="modal-detail-item">
           <span class="modal-label">Ora di Ritrovo:</span>
-          <span class="modal-value">{{ selectedEventForModal.startDate?.seconds ?
-            (selectedEventForModal.startDate.seconds * 1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</span>
+          <span class="modal-value">{{ selectedEventForModal.startDate?.seconds ? (selectedEventForModal.startDate.seconds * 1000 | date:'EEEE, dd MMMM, HH:mm') : 'N/D' }}</span>
         </div>
         <div class="modal-detail-item" *ngIf="selectedEventForModal.endDate">
           <span class="modal-label">Ora di Inizio:</span>
-          <span class="modal-value">{{ selectedEventForModal.endDate?.seconds ? (selectedEventForModal.endDate.seconds *
-            1000 | date:'EEEE, dd MMMM yyyy, HH:mm') : 'N/D' }}</span>
+          <span class="modal-value">{{ selectedEventForModal.endDate?.seconds ? (selectedEventForModal.endDate.seconds * 1000 | date:'EEEE, dd MMMM, HH:mm') : 'N/D' }}</span>
         </div>
         <div class="modal-detail-item" *ngIf="selectedEventForModal.server">
           <span class="modal-label">Server:</span>
@@ -196,14 +193,14 @@
           <div class="modal-image-section"
             *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
             <span class="modal-label">Area Foto:</span>
-            <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
+            <img [src]="selectedEventForModal.thumbphotoAreaImageUrl || selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
               (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
               class="modal-event-image clickable-image">
           </div>
           <div class="modal-image-section"
             *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
             <span class="modal-label">Immagine Percorso:</span>
-            <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
+            <img [src]="selectedEventForModal.thumbrouteImageUrl || selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
               (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
           </div>
         </div>
@@ -214,11 +211,11 @@
           <span class="modal-label">Zone Disponibili:</span>
           <div class="main-slots-grid">
             <div *ngFor="let mainSlot of selectedEventForModal.slots" class="main-slot-card">
-              <img *ngIf="mainSlot.imageUrl && mainSlot.imageUrl !== eventService.defaultSlotImageUrl"
-                [src]="mainSlot.imageUrl" [alt]="mainSlot.name" class="main-slot-image clickable-image"
+              <img *ngIf="mainSlot.thumbimageUrl && mainSlot.thumbimageUrl !== eventService.defaultSlotImageUrl"
+                [src]="mainSlot.thumbimageUrl" [alt]="mainSlot.name" class="main-slot-image clickable-image"
                 (click)="openImageInModal(mainSlot.imageUrl)">
               <div class="main-slot-image-placeholder"
-                *ngIf="!mainSlot.imageUrl || mainSlot.imageUrl === eventService.defaultSlotImageUrl">
+                *ngIf="!mainSlot.thumbimageUrl || mainSlot.thumbimageUrl === eventService.defaultSlotImageUrl">
                 <svg viewBox="0 0 24 24">
                   <path
                     d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />

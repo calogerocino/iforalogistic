@@ -68,6 +68,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
   serverOptions: ServerType[] = [
     'Simulation 1',
     'Simulation 2',
+    'Server evento',
     'SCS Convoy',
     'Promods',
   ];
@@ -86,6 +87,9 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   photoAreaPreview: string | null = null;
   routeImagePreview: string | null = null;
+  photoAreaThumbnailPreview: string | null = null;
+  routeImageThumbnailPreview: string | null = null;
+
   isUploadingPhotoArea = false;
   isUploadingRouteImage = false;
   photoAreaUploadProgress: number | undefined = 0;
@@ -111,17 +115,19 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.eventForm = this.fb.group({
       name: ['', Validators.required],
       description: [''],
-      meetingTime: ['', Validators.required], // Corrisponde a startDate
-      startTime: [''], // Corrisponde a endDate
+      meetingTime: ['', Validators.required],
+      startTime: [''],
       state: ['nuovo' as EventState, Validators.required],
       server: [null as ServerType | null],
       dlcs: this.fb.group(dlcGroup),
-      departure: [''], // Può essere usato come Meeting Point e Departure Location
+      departure: [''],
       destination: [''],
       photoAreaImageUrl: [null as string | null],
+      thumbphotoAreaImageUrl: [null as string | null],
       trailerType: [null as TrailerType | null],
       cargo: [''],
       routeImageUrl: [null as string | null],
+      thumbrouteImageUrl: [null as string | null],
       slots: this.fb.array([]),
     });
   }
@@ -147,7 +153,9 @@ export class EventManageComponent implements OnInit, OnDestroy {
         switchMap(() => {
           if (this.mode === 'create') {
             this.photoAreaPreview = this.eventService.defaultEventPhotoAreaUrl;
+            this.photoAreaThumbnailPreview = this.eventService.defaultEventPhotoAreaUrl;
             this.routeImagePreview = this.eventService.defaultEventRouteUrl;
+            this.routeImageThumbnailPreview = this.eventService.defaultEventRouteUrl;
             this.eventForm.get('state')?.setValue('nuovo');
             this.slotsFormArray.clear();
             return of(null);
@@ -208,8 +216,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.eventForm.patchValue({
       name: eventData.name,
       description: eventData.description,
-      meetingTime: this.formatDateForInput(eventData.startDate), // Corrisponde a startDate
-      startTime: this.formatDateForInput(eventData.endDate), // Corrisponde a endDate
+      meetingTime: this.formatDateForInput(eventData.startDate),
+      startTime: this.formatDateForInput(eventData.endDate),
       state: eventData.state,
       server: eventData.server,
       dlcs:
@@ -221,14 +229,20 @@ export class EventManageComponent implements OnInit, OnDestroy {
       departure: eventData.departure,
       destination: eventData.destination,
       photoAreaImageUrl: eventData.photoAreaImageUrl,
+      thumbphotoAreaImageUrl: eventData.thumbphotoAreaImageUrl,
       trailerType: eventData.trailerType,
       cargo: eventData.cargo,
       routeImageUrl: eventData.routeImageUrl,
+      thumbrouteImageUrl: eventData.thumbrouteImageUrl,
     });
     this.photoAreaPreview =
       eventData.photoAreaImageUrl || this.eventService.defaultEventPhotoAreaUrl;
+    this.photoAreaThumbnailPreview =
+      eventData.thumbphotoAreaImageUrl || this.eventService.defaultEventPhotoAreaUrl;
     this.routeImagePreview =
       eventData.routeImageUrl || this.eventService.defaultEventRouteUrl;
+    this.routeImageThumbnailPreview =
+      eventData.thumbrouteImageUrl || this.eventService.defaultEventRouteUrl;
     this.populateSlotsFormArray(eventData.slots || []);
     this.cdr.detectChanges();
   }
@@ -246,6 +260,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
       id: [slot?.id || uuidv4()],
       name: [slot?.name || '', Validators.required],
       imageUrl: [slot?.imageUrl || this.eventService.defaultSlotImageUrl],
+      thumbimageUrl: [slot?.thumbimageUrl || this.eventService.defaultSlotImageUrl],
       numberOfSubSlots: [slot?.numberOfSubSlots || 1, [Validators.required, Validators.min(1)]],
     });
   }
@@ -258,6 +273,11 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   removeSlot(index: number): void {
     if (this.mode === 'view') return;
+    const slotControl = this.slotsFormArray.at(index);
+    const imageUrl = slotControl.get('imageUrl')?.value;
+    if (imageUrl && imageUrl !== this.eventService.defaultSlotImageUrl) {
+        this.deleteEventImage('slotImage', index);
+    }
     this.slotsFormArray.removeAt(index);
     this.cdr.detectChanges();
   }
@@ -294,7 +314,6 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-
   hasSelectedDlcs(dlcs: EventDLCs | undefined | null): boolean {
     if (!dlcs) return false;
     return Object.values(dlcs).some((isSelected) => isSelected === true);
@@ -304,14 +323,13 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   formatDateForInput(dateValue: any): string {
     if (!dateValue) return '';
-    // Gestisce sia oggetti Timestamp di Firebase che oggetti Date nativi
     let date: Date;
-    if (dateValue && typeof dateValue.toDate === 'function') { // Firebase Timestamp
+    if (dateValue && typeof dateValue.toDate === 'function') {
       date = dateValue.toDate();
-    } else if (dateValue instanceof Date) { // Oggetto Date nativo
+    } else if (dateValue instanceof Date) {
       date = dateValue;
     } else {
-      return ''; // Valore non riconosciuto
+      return '';
     }
     const year = date.getFullYear();
     const month = ('0' + (date.getMonth() + 1)).slice(-2);
@@ -320,7 +338,6 @@ export class EventManageComponent implements OnInit, OnDestroy {
     const minutes = ('0' + date.getMinutes()).slice(-2);
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
-
 
   convertInputDateToTimestamp(dateString: string): any {
     if (!dateString) return null;
@@ -335,7 +352,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
     if (this.eventForm.invalid) {
       this.markFormGroupTouched(this.eventForm);
-      this.errorMessage = 'Per favore, compila tutti i campi obbligatori.';
+      this.errorMessage = 'Per favorere, compila tutti i campi obbligatori.';
       this.isLoading = false;
       this.cdr.detectChanges();
       return;
@@ -355,8 +372,9 @@ export class EventManageComponent implements OnInit, OnDestroy {
       destination: formValues.destination,
       trailerType: formValues.trailerType,
       cargo: formValues.cargo,
-      photoAreaImageUrl: this.eventForm.get('photoAreaImageUrl')?.value,
-      routeImageUrl: this.eventForm.get('routeImageUrl')?.value,
+      // Only pass original image URLs. The service will manage thumbnail URLs based on this.
+      photoAreaImageUrl: formValues.photoAreaImageUrl,
+      routeImageUrl: formValues.routeImageUrl,
       slots: formValues.slots.map((slotFromForm: any) => {
         const existingMainSlotData = this.currentEvent?.slots?.find(
           (s) => s.id === slotFromForm.id
@@ -364,7 +382,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
         return {
           id: slotFromForm.id,
           name: slotFromForm.name,
-          imageUrl: slotFromForm.imageUrl,
+          imageUrl: slotFromForm.imageUrl, // Only pass original URL
           numberOfSubSlots: slotFromForm.numberOfSubSlots,
           subSlots: existingMainSlotData?.subSlots || []
         };
@@ -385,6 +403,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.pageTitle = `Dettaglio: ${
           eventDataToSave.name || this.currentEvent?.name
         }`;
+        // Re-fetch to get the latest state including thumbnails from Cloud Function
         this.eventService
           .getEventById(this.eventId)
           .subscribe((updatedEvent) => {
@@ -412,11 +431,10 @@ export class EventManageComponent implements OnInit, OnDestroy {
   }
 
   triggerImageInput(
-    type: 'photoArea' | 'routePath' | 'slotImage', // Parameter is 'type'
+    type: 'photoArea' | 'routePath' | 'slotImage',
     slotIndex?: number
   ): void {
-    // Corrected line: use 'type' instead of 'imageType'
-    if (!this.eventId && this.mode === 'create' && type !== 'slotImage') {
+    if (!this.eventId && this.mode === 'create' && (type === 'photoArea' || type === 'routePath')) {
       this.errorMessage = "Salva prima l'evento per aggiungere immagini principali.";
       setTimeout(() => (this.errorMessage = null), 3000);
       this.cdr.detectChanges();
@@ -437,42 +455,51 @@ export class EventManageComponent implements OnInit, OnDestroy {
   async onImageSelected(
     event: Event,
     imageType: 'photoArea' | 'routePath' | 'slotImage',
-    slotIndexOrId?: number | string
+    slotIndex?: number
   ): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
 
-    if (!this.eventId && this.mode === 'create' && (imageType === 'photoArea' || imageType === 'routePath')) {
+    const isSlotImg = imageType === 'slotImage';
+    let mainSlotIdForPath: string | undefined;
+
+    if (!this.eventId && this.mode === 'create' && !isSlotImg) {
       this.errorMessage = "Devi prima salvare l'evento per poter caricare immagini principali dell'evento.";
       if (input) input.value = '';
       this.cdr.detectChanges();
       return;
     }
 
-    let oldImageUrl: string | null | undefined = null;
-    const isSlotImg = imageType === 'slotImage';
-    let mainSlotIdForPath: string | undefined;
-
-
-    if (isSlotImg && slotIndexOrId !== undefined && typeof slotIndexOrId === 'number') {
-      const mainSlotControl = this.slotsFormArray.at(slotIndexOrId);
-      mainSlotIdForPath = mainSlotControl.get('id')?.value;
-      oldImageUrl = mainSlotControl.get('imageUrl')?.value;
-
-    } else {
-      oldImageUrl =
-        imageType === 'photoArea'
-          ? this.eventForm.get('photoAreaImageUrl')?.value
-          : this.eventForm.get('routeImageUrl')?.value;
+    if (isSlotImg && slotIndex !== undefined) {
+        const mainSlotControl = this.slotsFormArray.at(slotIndex);
+        mainSlotIdForPath = mainSlotControl.get('id')?.value;
+        if (!this.eventId) {
+            this.errorMessage = "Salva prima l'evento per caricare immagini per le zone.";
+            if (input) input.value = '';
+            this.cdr.detectChanges();
+            return;
+        }
     }
+
+    let oldImageUrl: string | null | undefined = null;
+
+    if (isSlotImg && slotIndex !== undefined) {
+        const mainSlotControl = this.slotsFormArray.at(slotIndex);
+        oldImageUrl = mainSlotControl.get('imageUrl')?.value;
+    } else {
+        oldImageUrl = imageType === 'photoArea' ? this.eventForm.get('photoAreaImageUrl')?.value : this.eventForm.get('routeImageUrl')?.value;
+    }
+
     const defaultUrl = isSlotImg
       ? this.eventService.defaultSlotImageUrl
       : imageType === 'photoArea'
       ? this.eventService.defaultEventPhotoAreaUrl
       : this.eventService.defaultEventRouteUrl;
 
-    if (oldImageUrl === defaultUrl) oldImageUrl = null;
+    if (oldImageUrl && oldImageUrl !== defaultUrl) {
+      await this.eventService.deleteEventImage(oldImageUrl);
+    }
 
     if (imageType === 'photoArea') {
       this.isUploadingPhotoArea = true;
@@ -488,19 +515,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.cdr.detectChanges();
 
-    if (!this.eventId && isSlotImg) {
-         this.errorMessage = "Salva prima l'evento per caricare immagini per le zone.";
-         if (isSlotImg && mainSlotIdForPath) this.isUploadingSlotImage[mainSlotIdForPath] = false;
-         if (input) input.value = '';
-         this.cdr.detectChanges();
-         return;
-    }
-
     try {
-      if (oldImageUrl && this.eventId) {
-        await this.eventService.deleteEventImage(oldImageUrl as string | null | undefined);
-      }
-
       const { uploadProgress$, downloadUrlPromise } =
         this.eventService.uploadEventImage(
           this.eventId!,
@@ -527,21 +542,23 @@ export class EventManageComponent implements OnInit, OnDestroy {
         }
       );
 
-      const newImageUrl = await downloadUrlPromise;
+      const newOriginalUrl = await downloadUrlPromise;
 
       if (imageType === 'photoArea') {
-        this.eventForm.get('photoAreaImageUrl')?.setValue(newImageUrl);
-        this.photoAreaPreview = newImageUrl;
+        this.eventForm.get('photoAreaImageUrl')?.setValue(newOriginalUrl);
+        this.photoAreaPreview = newOriginalUrl;
+        this.eventForm.get('thumbphotoAreaImageUrl')?.setValue(null); // Set thumbnail to null, Cloud Function will update it
+        this.photoAreaThumbnailPreview = defaultUrl; // Show default placeholder in UI
       } else if (imageType === 'routePath') {
-        this.eventForm.get('routeImageUrl')?.setValue(newImageUrl);
-        this.routeImagePreview = newImageUrl;
-      } else if (isSlotImg && typeof slotIndexOrId === 'number') {
-        this.slotsFormArray
-          .at(slotIndexOrId)
-          .get('imageUrl')
-          ?.setValue(newImageUrl);
+        this.eventForm.get('routeImageUrl')?.setValue(newOriginalUrl);
+        this.routeImagePreview = newOriginalUrl;
+        this.eventForm.get('thumbrouteImageUrl')?.setValue(null); // Set thumbnail to null, Cloud Function will update it
+        this.routeImageThumbnailPreview = defaultUrl; // Show default placeholder in UI
+      } else if (isSlotImg && typeof slotIndex === 'number') {
+        this.slotsFormArray.at(slotIndex).get('imageUrl')?.setValue(newOriginalUrl);
+        this.slotsFormArray.at(slotIndex).get('thumbimageUrl')?.setValue(null); // Set thumbnail to null, Cloud Function will update it
       }
-      this.successMessage = `Immagine caricata. Salva l'evento per applicare.`;
+      this.successMessage = `Immagine caricata. Verrà generata una miniatura. Salva l'evento per applicare le modifiche.`;
     } catch (error: any) {
       this.errorMessage = `Errore gestione immagine. Dettagli: ${
         error.message || error
@@ -570,36 +587,18 @@ export class EventManageComponent implements OnInit, OnDestroy {
     const isSlotImg = imageType === 'slotImage';
     let currentImageUrl: string | null | undefined;
     let defaultUrl: string;
-    let mainSlotId: string | undefined;
 
     if (isSlotImg && slotIndex !== undefined) {
       const mainSlotControl = this.slotsFormArray.at(slotIndex);
       currentImageUrl = mainSlotControl.get('imageUrl')?.value;
-      mainSlotId = mainSlotControl.get('id')?.value;
       defaultUrl = this.eventService.defaultSlotImageUrl;
     } else if (imageType === 'photoArea') {
       currentImageUrl = this.eventForm.get('photoAreaImageUrl')?.value;
       defaultUrl = this.eventService.defaultEventPhotoAreaUrl;
-    } else {
+    } else { // routePath
       currentImageUrl = this.eventForm.get('routeImageUrl')?.value;
       defaultUrl = this.eventService.defaultEventRouteUrl;
     }
-
-    if (!this.eventId && (imageType === 'photoArea' || imageType === 'routePath' || (isSlotImg && mainSlotId && !mainSlotId.startsWith('temp_')) )) {
-       if (imageType === 'photoArea') {
-        this.eventForm.get('photoAreaImageUrl')?.setValue(defaultUrl);
-        this.photoAreaPreview = defaultUrl;
-      } else if (imageType === 'routePath') {
-        this.eventForm.get('routeImageUrl')?.setValue(defaultUrl);
-        this.routeImagePreview = defaultUrl;
-      } else if (isSlotImg && slotIndex !== undefined) {
-        this.slotsFormArray.at(slotIndex).get('imageUrl')?.setValue(defaultUrl);
-      }
-      this.successMessage = 'Selezione immagine annullata (evento non salvato).';
-      this.cdr.detectChanges();
-      return;
-    }
-
 
     if (currentImageUrl === defaultUrl || !currentImageUrl) {
       this.successMessage = 'Nessuna immagine personalizzata da eliminare.';
@@ -611,21 +610,28 @@ export class EventManageComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.successMessage = null;
     this.cdr.detectChanges();
+
     try {
-      if(this.eventId) {
-          await this.eventService.deleteEventImage(currentImageUrl as string | null | undefined);
+      if(currentImageUrl && !currentImageUrl.startsWith('blob:') && !currentImageUrl.startsWith('assets/')) {
+          await this.eventService.deleteEventImage(currentImageUrl);
+          // Cloud Function will handle Firestore update (setting to null/default).
       }
 
       if (isSlotImg && slotIndex !== undefined) {
         this.slotsFormArray.at(slotIndex).get('imageUrl')?.setValue(defaultUrl);
+        this.slotsFormArray.at(slotIndex).get('thumbimageUrl')?.setValue(defaultUrl);
       } else if (imageType === 'photoArea') {
         this.eventForm.get('photoAreaImageUrl')?.setValue(defaultUrl);
+        this.eventForm.get('thumbphotoAreaImageUrl')?.setValue(defaultUrl);
         this.photoAreaPreview = defaultUrl;
-      } else {
+        this.photoAreaThumbnailPreview = defaultUrl;
+      } else { // routePath
         this.eventForm.get('routeImageUrl')?.setValue(defaultUrl);
+        this.eventForm.get('thumbrouteImageUrl')?.setValue(defaultUrl);
         this.routeImagePreview = defaultUrl;
+        this.routeImageThumbnailPreview = defaultUrl;
       }
-      this.successMessage = `Immagine ${this.eventId ? 'eliminata da storage e ' : ''}rimossa dalla selezione. Salva l'evento per confermare.`;
+      this.successMessage = `Immagine rimossa. Salva l'evento per confermare.`;
     } catch (error: any) {
       this.errorMessage = `Errore eliminazione immagine: ${
         error.message || 'Riprova.'
@@ -652,9 +658,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
   getShareableLink(): string {
     if (this.currentEvent && this.currentEvent.id) {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-      // MODIFICA QUI: Punta a una rotta pubblica per i dettagli dell'evento.
-      // Devi assicurarti che questa rotta esista e non richieda autenticazione.
-      return `${baseUrl}/eventi-pubblico/${this.currentEvent.id}`;
+      return `${baseUrl}/?eventId=${this.currentEvent.id}`;
     }
     return '';
   }
@@ -708,7 +712,23 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   openImageInModal(imageUrl: string | null | undefined): void {
     if (imageUrl) {
-      this.imageModalService.openModal(imageUrl as string);
+        let fullResUrl: string | undefined | null;
+        if (imageUrl === this.photoAreaThumbnailPreview) {
+            fullResUrl = this.eventForm.get('photoAreaImageUrl')?.value;
+        } else if (imageUrl === this.routeImageThumbnailPreview) {
+            fullResUrl = this.eventForm.get('routeImageUrl')?.value;
+        } else {
+            const slotControl = this.slotsFormArray.controls.find(control => control.get('thumbimageUrl')?.value === imageUrl);
+            fullResUrl = slotControl?.get('imageUrl')?.value;
+        }
+
+        if (fullResUrl && fullResUrl !== this.eventService.defaultEventPhotoAreaUrl && fullResUrl !== this.eventService.defaultEventRouteUrl && fullResUrl !== this.eventService.defaultSlotImageUrl) {
+            this.imageModalService.openModal(fullResUrl);
+        } else if (imageUrl.startsWith('assets/')) {
+            console.log('Cannot open default placeholder image in modal.');
+        } else {
+            this.imageModalService.openModal(imageUrl);
+        }
     }
   }
 

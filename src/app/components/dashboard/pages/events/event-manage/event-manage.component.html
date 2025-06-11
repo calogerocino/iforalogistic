@@ -108,7 +108,7 @@
                 <div class="form-group image-upload-group">
                     <label>Area Foto</label>
                     <div class="image-preview-box">
-                        <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(photoAreaPreview || eventService.defaultEventPhotoAreaUrl)" alt="Anteprima Area Foto" class="image-preview clickable-image">
+                        <img [src]="photoAreaThumbnailPreview || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(photoAreaPreview || eventService.defaultEventPhotoAreaUrl)" alt="Anteprima Area Foto" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('photoArea')" [disabled]="isUploadingPhotoArea">
@@ -127,7 +127,7 @@
                 <div class="form-group image-upload-group">
                     <label>Percorso (Immagine)</label>
                      <div class="image-preview-box">
-                        <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" (click)="openImageInModal(routeImagePreview || eventService.defaultEventRouteUrl)" alt="Anteprima Percorso" class="image-preview clickable-image">
+                        <img [src]="routeImageThumbnailPreview || eventService.defaultEventRouteUrl" (click)="openImageInModal(routeImagePreview || eventService.defaultEventRouteUrl)" alt="Anteprima Percorso" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('routePath')" [disabled]="isUploadingRouteImage">
@@ -238,9 +238,9 @@
                <div class="view-column">
                   <h3>Immagini</h3>
                   <p><strong>Area Foto:</strong></p>
-                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl)" class="image-preview-view clickable-image">
+                  <img [src]="currentEvent.thumbphotoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl)" class="image-preview-view clickable-image">
                   <p><strong>Percorso:</strong></p>
-                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl || eventService.defaultEventRouteUrl)" class="image-preview-view clickable-image">
+                  <img [src]="currentEvent.thumbrouteImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl || eventService.defaultEventRouteUrl)" class="image-preview-view clickable-image">
               </div>
 
               <div class="view-column shareable-link-section" *ngIf="currentEvent && currentEvent.id && currentEvent.eventType === 'internal'">
