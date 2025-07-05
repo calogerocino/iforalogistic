@@ -15,7 +15,7 @@ import {
   FieldValue,
   UpdateData,
   where,
-wwwwwwwwwwwwwwwwwwwwwwwwwwwww  runTransaction
+  runTransaction
 } from '@angular/fire/firestore';
 import {
   Storage,
