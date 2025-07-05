@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  padding: 20px;
+}
+
+.users-list-container {
+  h1 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+  }
+
+  thead {
+    background-color: #f4f6f8;
+    th {
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  tbody tr:nth-of-type(even) {
+    background-color: #f9f9f9;
+  }
+
+  tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+}
+
+.role {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #fff;
+  text-transform: uppercase;
+
+  &.admin { background-color: #e74c3c; }
+  &.editor { background-color: #3498db; }
+  &.user { background-color: #2ecc71; }
+}

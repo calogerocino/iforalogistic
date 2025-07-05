@@ -1,0 +1,25 @@
+<div class="users-list-container">
+  <h1>Lista Utenti</h1>
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Ruolo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of (users$ | async); trackBy: trackByUser">
+        <td>{{ user.id }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <span class="role" [ngClass]="user.role?.toLowerCase() || 'user'">
+            {{ user.role || 'User' }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
