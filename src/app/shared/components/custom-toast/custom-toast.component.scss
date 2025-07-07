@@ -1,0 +1,61 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1050; // Valore alto per stare sopra gli altri elementi
+  animation: fadeIn 0.3s ease-out;
+  font-family: sans-serif;
+  font-size: 15px;
+}
+
+// Colori di base (simili al language-warning)
+.toast-success {
+  background-color: #28a745; // Verde
+}
+
+.toast-error {
+  background-color: #dc3545; // Rosso
+}
+
+.toast-warning {
+  background-color: #ffc107; // Giallo
+  color: #212529;
+}
+
+.toast-info {
+  background-color: #17a2b8; // Ciano/Blu
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+  }
+}

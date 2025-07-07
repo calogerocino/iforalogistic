@@ -1,0 +1,6 @@
+<ng-container *ngIf="toastState$ | async as state">
+  <div *ngIf="state.show" class="toast-container" [ngClass]="'toast-' + state.type">
+    <span class="toast-message">{{ state.message }}</span>
+    <button class="close-button" (click)="closeToast()">×</button>
+  </div>
+</ng-container>
