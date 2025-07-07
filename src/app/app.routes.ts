@@ -19,6 +19,14 @@ export const routes: Routes = [
     title: 'Benvenuto su IFL',
   },
   {
+    path: 'download',
+    loadComponent: () =>
+      import(
+        './components/public/public-download/public-download.component'
+      ).then((m) => m.PublicDownloadComponent),
+    title: 'Download in corso',
+  },
+  {
     path: 'auth',
     children: [
       {

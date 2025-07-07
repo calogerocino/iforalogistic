@@ -1,0 +1,17 @@
+<div class="download-page-wrapper">
+  <div class="download-content">
+    <img src="assets/img/logo.png" alt="Logo App" class="logo">
+    <div *ngIf="!errorMessage && !downloadUrl" class="loading-indicator">
+      <h1>Recupero informazioni per il download...</h1>
+      <p>Il download inizierà a breve.</p>
+    </div>
+    <div *ngIf="downloadUrl && !errorMessage">
+      <h1>Download in corso...</h1>
+      <p>Il download è stato avviato automaticamente. Se non dovesse partire, <a [href]="downloadUrl">clicca qui</a> per scaricare manualmente.</p>
+    </div>
+    <div *ngIf="errorMessage" class="error-message">
+      <h1>Errore</h1>
+      <p>{{ errorMessage }}</p>
+    </div>
+  </div>
+</div>
