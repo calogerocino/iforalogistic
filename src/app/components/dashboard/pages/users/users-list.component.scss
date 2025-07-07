@@ -50,3 +50,18 @@
   &.editor { background-color: #3498db; }
   &.user { background-color: #2ecc71; }
 }
+.role-select {
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  font-size: 14px;
+  min-width: 100px;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: #e9ecef;
+    opacity: 0.7;
+  }
+}

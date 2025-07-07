@@ -15,9 +15,23 @@
         <td>{{ user.name }}</td>
         <td>{{ user.email }}</td>
         <td>
-          <span class="role" [ngClass]="user.role?.toLowerCase() || 'user'">
-            {{ user.role || 'User' }}
-          </span>
+          <ng-container *ngIf="isAdmin; else readOnlyRole">
+            <select
+              (change)="onRoleChange($event, user)"
+              class="role-select"
+              [disabled]="user.email === (currentUser$ | async)?.email"
+            >
+              <option *ngFor="let role of availableRoles" [value]="role" [selected]="role === user.role">
+                {{ role }}
+              </option>
+            </select>
+          </ng-container>
+
+          <ng-template #readOnlyRole>
+            <span class="role" [ngClass]="user.role?.toLowerCase() || 'user'">
+              {{ user.role || 'User' }}
+            </span>
+          </ng-template>
         </td>
       </tr>
     </tbody>
