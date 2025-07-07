@@ -75,23 +75,6 @@ export const routes: Routes = [
         title: 'Il Mio Profilo',
       },
       {
-        path: 'discord',
-        loadComponent: () =>
-          import(
-            './components/dashboard/pages/discord-messages/discord-messages.component'
-          ).then((m) => m.DiscordMessagesComponent),
-        title: 'Messaggi Discord',
-      },
-      {
-        path: 'player-stats',
-        loadComponent: () =>
-          import(
-            './components/dashboard/pages/player-stats/player-stats.component'
-          ).then((m) => m.PlayerStatsComponent),
-        title: 'Statistiche Giocatori',
-      },
-
-      {
         path: 'datahub',
         loadComponent: () =>
           import('./components/dashboard/pages/datahub/datahub.component').then(
