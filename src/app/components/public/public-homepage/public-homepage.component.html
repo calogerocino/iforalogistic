@@ -2,9 +2,9 @@
 
 <main class="homepage-content-wrapper">
   <section class="hero-section">
-    <h1>Presentazione <span class="highlight-skin">nuova skin</span></h1>
-    <p class="subtitle">Siamo entusiasti di presentarvi la nostra nuova skin, lanciata a novembre scorso, che combina
-      design elegante e funzionalità avanzate per un'esperienza utente senza pari.</p>
+    <h1>Fora di testa per la <span class="highlight-skin">logistica perfetta</span></h1>
+    <p class="subtitle">Unisciti a una VTC diversa dal solito: eventi, community attiva e passione per ogni chilometro. Con noi, ogni corsa conta.
+</p>
     <button class="play-video-button" (click)="openVideoModal()" aria-label="Guarda il video di presentazione">
       <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M8 5v14l11-7z" />
@@ -82,24 +82,46 @@
     <h2>Il nostro Team</h2>
     <div class="team-grid">
       <div class="team-member-card">
-        <div class="team-member-image-wrapper placeholder-bg-1"></div>
+        <div class="team-member-image-wrapper">
+          <img src="assets/img/team/DADE2000.png" alt="Foto di dade2000" class="team-member-image">
+        </div>
         <h3 class="team-member-name">dade2000</h3>
         <p class="team-member-role">C.E.O.</p>
       </div>
       <div class="team-member-card">
-        <div class="team-member-image-wrapper placeholder-bg-2"></div>
+        <div class="team-member-image-wrapper">
+          <img src="assets/img/team/LORESNIPE99.png" alt="Foto di loresnipe99" class="team-member-image">
+        </div>
         <h3 class="team-member-name">loresnipe99</h3>
         <p class="team-member-role">C.O.O.</p>
       </div>
       <div class="team-member-card">
-        <div class="team-member-image-wrapper placeholder-bg-4"></div>
+        <div class="team-member-image-wrapper">
+          <img src="assets/img/team/DOUBLEC.png" alt="Foto di DoubleC" class="team-member-image">
+        </div>
         <h3 class="team-member-name">DoubleC</h3>
-        <p class="team-member-role">Manager/Dev</p>
+        <p class="team-member-role">🦺 Manager / 🔰 Dev</p>
       </div>
       <div class="team-member-card">
-        <div class="team-member-image-wrapper placeholder-bg-3"></div>
+        <div class="team-member-image-wrapper">
+          <img src="assets/img/team/MATTIAFERIOLI_2.png" alt="Foto di Mattia" class="team-member-image">
+        </div>
         <h3 class="team-member-name">Mattia</h3>
-        <p class="team-member-role">Human Resource</p>
+        <p class="team-member-role">👨‍✈️ Human Resources</p>
+      </div>
+      <div class="team-member-card">
+        <div class="team-member-image-wrapper">
+          <img src="assets/img/team/GRAISH75.png" alt="Foto di Graish75" class="team-member-image">
+        </div>
+        <h3 class="team-member-name">Graish75</h3>
+        <p class="team-member-role">🥇 External Relations Manager / 🔰 Dev</p>
+      </div>
+      <div class="team-member-card">
+        <div class="team-member-image-wrapper">
+          <img src="assets/img/team/ADAMSKI_2.png" alt="Foto di Le Flamand Rose" class="team-member-image">
+        </div>
+        <h3 class="team-member-name">Le Flamand Rose</h3>
+        <p class="team-member-role">🚚 Event Manager</p>
       </div>
     </div>
   </section>
@@ -108,11 +130,16 @@
 <footer class="public-footer">
   <div class="footer-content-wrapper">
     <div class="social-icons">
-      <a href="https://truckersmp.com/vtc/74948" target="_blank" title="TruckersMP" class="social-truckersmp"><i class="fas fa-truck"></i></a>
-      <a href="https://trucksbook.eu/company/193367" target="_blank" title="TrucksBook" class="social-trucksbook"><i class="fas fa-book-open"></i></a>
-      <a href="https://www.instagram.com/iforalogistics/" target="_blank" title="Instagram" class="social-instagram"><i class="fab fa-instagram"></i></a>
-      <a href="https://www.youtube.com/@iforalogistics" target="_blank" title="YouTube" class="social-youtube"><i class="fab fa-youtube"></i></a>
-      <a href="https://www.tiktok.com/@iforalogistics/" target="_blank" title="TikTok" class="social-tiktok"><i class="fab fa-tiktok"></i></a>
+      <a href="https://truckersmp.com/vtc/74948" target="_blank" title="TruckersMP" class="social-truckersmp"><i
+          class="fas fa-truck"></i></a>
+      <a href="https://trucksbook.eu/company/193367" target="_blank" title="TrucksBook" class="social-trucksbook"><i
+          class="fas fa-book-open"></i></a>
+      <a href="https://www.instagram.com/iforalogistics/" target="_blank" title="Instagram" class="social-instagram"><i
+          class="fab fa-instagram"></i></a>
+      <a href="https://www.youtube.com/@iforalogistics" target="_blank" title="YouTube" class="social-youtube"><i
+          class="fab fa-youtube"></i></a>
+      <a href="https://www.tiktok.com/@iforalogistics/" target="_blank" title="TikTok" class="social-tiktok"><i
+          class="fab fa-tiktok"></i></a>
       <!-- <a href="#" target="_blank" title="Facebook" class="social-facebook"><i class="fab fa-facebook"></i></a> -->
     </div>
     <p class="copyright-text">© {{ currentYear }} IFL by PixelSmart. Tutti i diritti riservati.</p>
@@ -209,30 +236,30 @@
         </div>
 
       </div>
-        <div class="modal-slots-section full-width"
-          *ngIf="selectedEventForModal.slots && selectedEventForModal.slots.length > 0">
-          <span class="modal-label">Zone Disponibili:</span>
-          <div class="main-slots-grid">
-            <div *ngFor="let mainSlot of selectedEventForModal.slots" class="main-slot-card">
-              <img *ngIf="mainSlot.imageUrl && mainSlot.imageUrl !== eventService.defaultSlotImageUrl"
-                [src]="mainSlot.imageUrl" [alt]="mainSlot.name" class="main-slot-image clickable-image"
-                (click)="openImageInModal(mainSlot.imageUrl)">
-              <div class="main-slot-image-placeholder"
-                *ngIf="!mainSlot.imageUrl || mainSlot.imageUrl === eventService.defaultSlotImageUrl">
-                <svg viewBox="0 0 24 24">
-                  <path
-                    d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                </svg>
-              </div>
-              <h4>{{mainSlot.name}}</h4>
-              <p>Postazioni disponibili: {{ getUnbookedSubSlotsCount(mainSlot) }} / {{mainSlot.numberOfSubSlots}}</p>
+      <div class="modal-slots-section full-width"
+        *ngIf="selectedEventForModal.slots && selectedEventForModal.slots.length > 0">
+        <span class="modal-label">Zone Disponibili:</span>
+        <div class="main-slots-grid">
+          <div *ngFor="let mainSlot of selectedEventForModal.slots" class="main-slot-card">
+            <img *ngIf="mainSlot.imageUrl && mainSlot.imageUrl !== eventService.defaultSlotImageUrl"
+              [src]="mainSlot.imageUrl" [alt]="mainSlot.name" class="main-slot-image clickable-image"
+              (click)="openImageInModal(mainSlot.imageUrl)">
+            <div class="main-slot-image-placeholder"
+              *ngIf="!mainSlot.imageUrl || mainSlot.imageUrl === eventService.defaultSlotImageUrl">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+              </svg>
             </div>
+            <h4>{{mainSlot.name}}</h4>
+            <p>Postazioni disponibili: {{ getUnbookedSubSlotsCount(mainSlot) }} / {{mainSlot.numberOfSubSlots}}</p>
           </div>
         </div>
-        <p *ngIf="!selectedEventForModal.slots || selectedEventForModal.slots.length === 0"
-          class="no-slots-info full-width">
-          Nessuna zona di registrazione definita per questo evento.
-        </p>
+      </div>
+      <p *ngIf="!selectedEventForModal.slots || selectedEventForModal.slots.length === 0"
+        class="no-slots-info full-width">
+        Nessuna zona di registrazione definita per questo evento.
+      </p>
 
     </div>
 
