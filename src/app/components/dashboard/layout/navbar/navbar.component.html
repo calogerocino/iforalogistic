@@ -42,90 +42,83 @@
       <ng-container *ngIf="isAdmin">
         <li>
           <a routerLink="/dashboard/users" routerLinkActive="active-link">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
             </svg>
             <span>Utenti</span>
           </a>
         </li>
       </ng-container>
-      <li>
-        <a routerLink="/" target="_blank">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M10.71 12.29l4.88-4.88c.39-.39.39-1.02 0-1.41a.9959.9959 0 00-1.41 0L9.31 11.59a.9959.9959 0 000 1.41l4.88 4.88c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L10.71 12.29zM4 3h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0 16h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0-8h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1z">
-            </path>
-          </svg>
-          <span>Sito Pubblico</span>
-        </a>
-      </li>
     </ul>
   </div>
 
 
   <div class="navbar-right">
+    <button routerLink="/" class="language-button" (click)="handleLanguageButtonClick()">Vai al
+      sito</button>
     <button class="language-button" (click)="handleLanguageButtonClick()">Italiano</button>
-
-    <div class="notification-wrapper">
-      <button class="icon-button notification-button" aria-label="Notifiche" (click)="toggleNotificationDropdown()">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M12 22a2.2 2.2 0 002.2-2.2h-4.4a2.2 2.2 0 002.2 2.2zm6.6-6.6V9.9c0-3.37-1.79-6.2-4.95-6.95V2.2c0-.91-.75-1.65-1.65-1.65s-1.65.74-1.65 1.65v.75C6.19 3.7 4.4 6.53 4.4 9.9v5.5L2.2 17.6v1.1h19.6v-1.1l-2.2-2.2z">
-          </path>
-        </svg>
-        <span class="notification-badge" *ngIf="unreadCount > 0" [class.flashing]="unreadCount > 0">
-          {{ unreadCount > 9 ? '9+' : unreadCount }}
-        </span>
-      </button>
-      <div class="notification-dropdown" *ngIf="isNotificationDropdownOpen"
-        (clickOutside)="closeNotificationDropdown()">
-        <div class="dropdown-header notifications-header">
-          <span>Notifiche</span>
-          <!-- <button class="mark-all-read-btn" (click)="markAllNotificationsAsRead(allNotifications$ | async)" *ngIf="(allNotifications$ | async)?.length">
+    <ng-container *ngIf="isAdmin ||isEventManager">
+      <div class="notification-wrapper">
+        <button class="icon-button notification-button" aria-label="Notifiche" (click)="toggleNotificationDropdown()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 22a2.2 2.2 0 002.2-2.2h-4.4a2.2 2.2 0 002.2 2.2zm6.6-6.6V9.9c0-3.37-1.79-6.2-4.95-6.95V2.2c0-.91-.75-1.65-1.65-1.65s-1.65.74-1.65 1.65v.75C6.19 3.7 4.4 6.53 4.4 9.9v5.5L2.2 17.6v1.1h19.6v-1.1l-2.2-2.2z">
+            </path>
+          </svg>
+          <span class="notification-badge" *ngIf="unreadCount > 0" [class.flashing]="unreadCount > 0">
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
+        </button>
+        <div class="notification-dropdown" *ngIf="isNotificationDropdownOpen"
+          (clickOutside)="closeNotificationDropdown()">
+          <div class="dropdown-header notifications-header">
+            <span>Notifiche</span>
+            <!-- <button class="mark-all-read-btn" (click)="markAllNotificationsAsRead(allNotifications$ | async)" *ngIf="(allNotifications$ | async)?.length">
             Segna tutte come lette
           </button> -->
+          </div>
+          <ul class="notification-list" *ngIf="(allNotifications$ | async) as notifications; else noNotifications">
+            <li *ngFor="let notification of notifications" class="notification-item-wrapper"
+              [class.unread]="!notification.isRead" [class.interacted]="notification.interacted"
+              (click)="setNotificationInteracted(notification, $event)">
+              <!-- Click sull'intero item per settare 'interacted' -->
+
+              <div class="notification-main-content" (click)="handleNotificationMainAction(notification)">
+                <!-- Click sulla parte principale per navigare/azione -->
+                <div class="notification-icon-placeholder">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path
+                      d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,16.5V15H13V16.5H11M11,7.5V13H13V7.5H11Z">
+                    </path>
+                  </svg>
+                </div>
+                <div class="notification-content-text"> <!-- Nome classe aggiornato -->
+                  <p class="notification-message">{{ notification.message }}</p>
+                  <span class="notification-timestamp">{{ notification.timestamp?.seconds ?
+                    (notification.timestamp.seconds * 1000 | date:'short') : 'N/D' }}</span>
+                </div>
+              </div>
+
+              <div class="notification-actions" *ngIf="notification.interacted">
+                <!-- Mostra solo se 'interacted' è true -->
+                <button class="delete-notification-btn" (click)="deleteNotification(notification, $event)"
+                  aria-label="Elimina notifica">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                  </svg>
+                </button>
+              </div>
+            </li>
+            <li *ngIf="notifications.length === 0" class="no-notifications-item">Nessuna notifica.</li>
+          </ul>
+          <ng-template #noNotifications>
+            <div class="no-notifications-item">Nessuna notifica.</div>
+          </ng-template>
+          <!-- Footer del dropdown  -->
         </div>
-        <ul class="notification-list" *ngIf="(allNotifications$ | async) as notifications; else noNotifications">
-          <li *ngFor="let notification of notifications" class="notification-item-wrapper"
-            [class.unread]="!notification.isRead" [class.interacted]="notification.interacted"
-            (click)="setNotificationInteracted(notification, $event)">
-            <!-- Click sull'intero item per settare 'interacted' -->
-
-            <div class="notification-main-content" (click)="handleNotificationMainAction(notification)">
-              <!-- Click sulla parte principale per navigare/azione -->
-              <div class="notification-icon-placeholder">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                  <path
-                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,16.5V15H13V16.5H11M11,7.5V13H13V7.5H11Z">
-                  </path>
-                </svg>
-              </div>
-              <div class="notification-content-text"> <!-- Nome classe aggiornato -->
-                <p class="notification-message">{{ notification.message }}</p>
-                <span class="notification-timestamp">{{ notification.timestamp?.seconds ?
-                  (notification.timestamp.seconds * 1000 | date:'short') : 'N/D' }}</span>
-              </div>
-            </div>
-
-            <div class="notification-actions" *ngIf="notification.interacted">
-              <!-- Mostra solo se 'interacted' è true -->
-              <button class="delete-notification-btn" (click)="deleteNotification(notification, $event)"
-                aria-label="Elimina notifica">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                </svg>
-              </button>
-            </div>
-          </li>
-          <li *ngIf="notifications.length === 0" class="no-notifications-item">Nessuna notifica.</li>
-        </ul>
-        <ng-template #noNotifications>
-          <div class="no-notifications-item">Nessuna notifica.</div>
-        </ng-template>
-        <!-- Footer del dropdown  -->
       </div>
-    </div>
-
+    </ng-container>
     <button class="icon-button" aria-label="Messaggi">
       <svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M22 4H2.01L2 22l4-4h16V4zm-2 12H6l-2 2V6h16v10z"></path>
