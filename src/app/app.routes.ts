@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 
+import { roleGuard } from './guards/role.guard';
+
 export const routes: Routes = [
   // {
   //   path: '',
@@ -90,6 +92,7 @@ export const routes: Routes = [
             './components/dashboard/pages/users/users-list.component'
           ).then((m) => m.UsersListComponent),
         title: 'Lista utenti - IFL',
+        canActivate: [roleGuard(['Admin'])],
       },
       {
         path: 'eventi',
@@ -101,6 +104,7 @@ export const routes: Routes = [
                 './components/dashboard/pages/events/event-list/event-list.component'
               ).then((m) => m.EventListComponent),
             title: 'Lista Eventi - IFL',
+            canActivate: [roleGuard(['Admin', 'Eventmanager'])],
           },
           {
             path: 'nuovo',
