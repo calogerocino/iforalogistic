@@ -44,9 +44,6 @@
 
         <button type="submit" class="btn-continue" [disabled]="loginForm.invalid">Accedi</button>
 
-        <p class="switch-mode-text">
-          Non hai un account? <a routerLink="/auth/registrazione">Registrati</a>
-        </p>
       </form>
 
       <form *ngIf="!isLoginMode && allowRegistration && !infoMessage" [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
@@ -82,9 +79,9 @@
         <button type="submit" class="btn-continue" [disabled]="registerForm.invalid">Registrati</button>
       </form>
 
-      <div *ngIf="errorMessage && !infoMessage" class="auth-error-message">
-        <p>{{ errorMessage }}</p>
-      </div>
+   <div *ngIf="errorMessage" class="auth-error-message">
+  <p>{{ errorMessage }}</p>
+</div>
     </div>
     <div class="auth-image-panel">
       <img src="assets/img/3d-safe.png" alt="IFL Visual">
