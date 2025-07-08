@@ -17,7 +17,7 @@
     {{ successMessage }}
   </div>
 
-  <div class="form-container" *ngIf="!isLoading || isUploadingPhotoArea || isUploadingRouteImage || objectValues(isUploadingSlotImage).includes(true)">
+  <div class="form-container" *ngIf="eventForm && (!isLoading || isUploadingPhotoArea || isUploadingRouteImage || objectValues(isUploadingSlotImage).includes(true))">
     <ng-container *ngIf="mode !== 'view'; else viewModeContent">
       <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
         <div class="form-columns-wrapper card">
@@ -108,7 +108,7 @@
                 <div class="form-group image-upload-group">
                     <label>Area Foto</label>
                     <div class="image-preview-box">
-                        <img [src]="photoAreaPreview || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(photoAreaPreview || eventService.defaultEventPhotoAreaUrl)" alt="Anteprima Area Foto" class="image-preview clickable-image">
+                        <img [src]="eventForm.get('photoAreaImageThumbnailUrl')?.value || eventForm.get('photoAreaImageUrl')?.value || eventService.defaultEventPhotoAreaUrl" (click)="openImageInModal(eventForm.get('photoAreaImageUrl')?.value)" alt="Anteprima Area Foto" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('photoArea')" [disabled]="isUploadingPhotoArea">
@@ -127,7 +127,7 @@
                 <div class="form-group image-upload-group">
                     <label>Percorso (Immagine)</label>
                      <div class="image-preview-box">
-                        <img [src]="routeImagePreview || eventService.defaultEventRouteUrl" (click)="openImageInModal(routeImagePreview || eventService.defaultEventRouteUrl)" alt="Anteprima Percorso" class="image-preview clickable-image">
+                        <img [src]="eventForm.get('routeImageThumbnailUrl')?.value || eventForm.get('routeImageUrl')?.value || eventService.defaultEventRouteUrl" (click)="openImageInModal(eventForm.get('routeImageUrl')?.value)" alt="Anteprima Percorso" class="image-preview clickable-image">
                     </div>
                     <div class="image-actions">
                         <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('routePath')" [disabled]="isUploadingRouteImage">
@@ -172,7 +172,7 @@
                         <div class="form-group image-upload-group">
                             <label [for]="'slotImageInput-' + i">Immagine Zona</label>
                             <div class="image-preview-box slot-image-preview-box">
-                                <img [src]="slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl" [alt]="'Anteprima Zona ' + (i + 1)" (click)="openImageInModal(slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl)" class="image-preview clickable-image">
+                                <img [src]="slotCtrl.get('imageThumbnailUrl')?.value || slotCtrl.get('imageUrl')?.value || eventService.defaultSlotImageUrl" [alt]="'Anteprima Zona ' + (i + 1)" (click)="openImageInModal(slotCtrl.get('imageUrl')?.value)" class="image-preview clickable-image">
                             </div>
                              <div class="image-actions">
                                 <button type="button" class="btn-outline-secondary btn-small" (click)="triggerImageInput('slotImage', i)" [disabled]="isUploadingSlotImage[slotCtrl.get('id')!.value]">
@@ -238,9 +238,9 @@
                <div class="view-column">
                   <h3>Immagini</h3>
                   <p><strong>Area Foto:</strong></p>
-                  <img [src]="currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl)" class="image-preview-view clickable-image">
+                  <img [src]="currentEvent.photoAreaImageThumbnailUrl || currentEvent.photoAreaImageUrl || eventService.defaultEventPhotoAreaUrl" alt="Area Foto" (click)="openImageInModal(currentEvent.photoAreaImageUrl)" class="image-preview-view clickable-image">
                   <p><strong>Percorso:</strong></p>
-                  <img [src]="currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl || eventService.defaultEventRouteUrl)" class="image-preview-view clickable-image">
+                  <img [src]="currentEvent.routeImageThumbnailUrl || currentEvent.routeImageUrl || eventService.defaultEventRouteUrl" alt="Percorso" (click)="openImageInModal(currentEvent.routeImageUrl)" class="image-preview-view clickable-image">
               </div>
 
               <div class="view-column shareable-link-section" *ngIf="currentEvent && currentEvent.id && currentEvent.eventType === 'internal'">
@@ -264,7 +264,7 @@
             <div class="slots-view-grid">
                 <div *ngFor="let mainSlot of currentEvent.slots" class="slot-view-item main-slot-view-item">
                     <h4>{{ mainSlot.name }}</h4>
-                    <img [src]="mainSlot.imageUrl || eventService.defaultSlotImageUrl" [alt]="'Immagine Zona ' + mainSlot.name" (click)="openImageInModal(mainSlot.imageUrl || eventService.defaultSlotImageUrl)" class="image-preview-view slot-image-view clickable-image">
+                    <img [src]="mainSlot.imageThumbnailUrl || mainSlot.imageUrl || eventService.defaultSlotImageUrl" [alt]="'Immagine Zona ' + mainSlot.name" (click)="openImageInModal(mainSlot.imageUrl)" class="image-preview-view slot-image-view clickable-image">
                     <p><strong>Numero Postazioni Totali:</strong> {{ mainSlot.numberOfSubSlots }}</p>
                     <p><strong>Postazioni Prenotate:</strong> {{ getTotalBookedInMainSlot(mainSlot) }}</p>
                     <p><strong>Postazioni Disponibili:</strong> {{ getTotalAvailableInMainSlot(mainSlot) }}</p>

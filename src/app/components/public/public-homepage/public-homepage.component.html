@@ -3,8 +3,9 @@
 <main class="homepage-content-wrapper">
   <section class="hero-section">
     <h1>Fora di testa per la <span class="highlight-skin">logistica perfetta</span></h1>
-    <p class="subtitle">Unisciti a una VTC diversa dal solito: eventi, community attiva e passione per ogni chilometro. Con noi, ogni corsa conta.
-</p>
+    <p class="subtitle">Unisciti a una VTC diversa dal solito: eventi, community attiva e passione per ogni chilometro.
+      Con noi, ogni corsa conta.
+    </p>
     <button class="play-video-button" (click)="openVideoModal()" aria-label="Guarda il video di presentazione">
       <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M8 5v14l11-7z" />
@@ -30,7 +31,7 @@
             </svg>
           </div>
           <img *ngIf="event.routeImageUrl && event.routeImageUrl !== eventService.defaultEventRouteUrl"
-            [src]="event.routeImageUrl" alt="Immagine Evento {{event.name}}"
+            [src]="event.routeImageThumbnailUrl || event.routeImageUrl" alt="Immagine Evento {{event.name}}"
             (click)="openImageInModal(event.routeImageUrl)" class="event-image clickable-image">
 
           <div class="event-showcase-content">
@@ -223,15 +224,16 @@
           <div class="modal-image-section"
             *ngIf="selectedEventForModal.photoAreaImageUrl && selectedEventForModal.photoAreaImageUrl !== eventService.defaultEventPhotoAreaUrl">
             <span class="modal-label">Area Foto:</span>
-            <img [src]="selectedEventForModal.photoAreaImageUrl" alt="Area Foto Evento"
-              (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
+            <img [src]="selectedEventForModal.photoAreaImageThumbnailUrl || selectedEventForModal.photoAreaImageUrl"
+              alt="Area Foto Evento" (click)="openImageInModal(selectedEventForModal.photoAreaImageUrl)"
               class="modal-event-image clickable-image">
           </div>
           <div class="modal-image-section"
             *ngIf="selectedEventForModal.routeImageUrl && selectedEventForModal.routeImageUrl !== eventService.defaultEventRouteUrl">
             <span class="modal-label">Immagine Percorso:</span>
-            <img [src]="selectedEventForModal.routeImageUrl" alt="Immagine Percorso Evento"
-              (click)="openImageInModal(selectedEventForModal.routeImageUrl)" class="modal-event-image clickable-image">
+            <img [src]="selectedEventForModal.routeImageThumbnailUrl || selectedEventForModal.routeImageUrl"
+              alt="Immagine Percorso Evento" (click)="openImageInModal(selectedEventForModal.routeImageUrl)"
+              class="modal-event-image clickable-image">
           </div>
         </div>
 
@@ -242,8 +244,8 @@
         <div class="main-slots-grid">
           <div *ngFor="let mainSlot of selectedEventForModal.slots" class="main-slot-card">
             <img *ngIf="mainSlot.imageUrl && mainSlot.imageUrl !== eventService.defaultSlotImageUrl"
-              [src]="mainSlot.imageUrl" [alt]="mainSlot.name" class="main-slot-image clickable-image"
-              (click)="openImageInModal(mainSlot.imageUrl)">
+              [src]="mainSlot.imageThumbnailUrl || mainSlot.imageUrl" [alt]="mainSlot.name"
+              class="main-slot-image clickable-image" (click)="openImageInModal(mainSlot.imageUrl)">
             <div class="main-slot-image-placeholder"
               *ngIf="!mainSlot.imageUrl || mainSlot.imageUrl === eventService.defaultSlotImageUrl">
               <svg viewBox="0 0 24 24">
