@@ -15,7 +15,8 @@ import {
   FieldValue,
   UpdateData,
   where,
-  runTransaction
+  runTransaction,
+  onSnapshot
 } from '@angular/fire/firestore';
 import {
   Storage,
@@ -23,9 +24,10 @@ import {
   uploadBytesResumable,
   getDownloadURL,
   deleteObject,
-  UploadTaskSnapshot
+  UploadTaskSnapshot,
+  UploadTask
 } from '@angular/fire/storage';
-import { Observable, from, firstValueFrom } from 'rxjs'; // Importa firstValueFrom
+import { Observable, from, firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NotificationService } from './notification.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,25 +52,26 @@ export interface EventDLCs {
 
 export interface SubSlotBookingInfo {
   bookingId: string;
-  companyName: string; // Nome della VTC
-  contactName: string; // Nome del referente VTC
-  contactEmail: string; // Email del referente VTC
+  companyName: string;
+  contactName: string;
+  contactEmail: string;
   bookedAt: Timestamp;
 }
 
 export interface EventSubSlot {
   id: string;
-  name: string; // Es: "Postazione 1"
+  name: string;
   isBooked: boolean;
   bookingInfo?: SubSlotBookingInfo | null;
 }
 
 export interface EventSlot {
   id: string;
-  name: string; // Es: "Zona A"
-  imageUrl?: string | null;
+  name: string;
   numberOfSubSlots: number;
   subSlots: EventSubSlot[];
+  imageUrl?: string | null;
+  imageThumbnailUrl?: string | null;
 }
 
 export interface AppEvent {
@@ -87,6 +90,8 @@ export interface AppEvent {
   trailerType?: TrailerType;
   cargo?: string;
   routeImageUrl?: string | null;
+  photoAreaImageThumbnailUrl?: string | null;
+  routeImageThumbnailUrl?: string | null;
   slots?: EventSlot[];
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -136,6 +141,22 @@ export class EventService {
         }
       })
     );
+  }
+
+  getEventRealtime(eventId: string): Observable<AppEvent | null> {
+    const eventDocRef = doc(this.firestore, this.eventsCollectionPath, eventId);
+    return new Observable(observer => {
+      const unsubscribe = onSnapshot(eventDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          observer.next({ id: docSnap.id, ...docSnap.data() } as AppEvent);
+        } else {
+          observer.next(null);
+        }
+      }, (error) => {
+        observer.error(error);
+      });
+      return unsubscribe;
+    });
   }
 
   private generateSubSlots(count: number, existingSubSlots?: EventSubSlot[]): EventSubSlot[] {
@@ -219,39 +240,34 @@ export class EventService {
   uploadEventImage(
     eventId: string,
     file: File,
-    imageType: 'photoArea' | 'routePath' | 'slotImage',
+    imageType: 'photoAreaImage' | 'routeImage' | 'slotImage',
     slotId?: string
-  ): { uploadProgress$: Observable<number | undefined>; downloadUrlPromise: Promise<string> } {
-    let filePath = `event_images/${eventId}/`;
+  ): { uploadProgress$: Observable<number | undefined>; task: UploadTask } {
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const originalFileName = `${imageType}_original.${fileExtension}`;
+    let filePath = `events/${eventId}/`;
     if (imageType === 'slotImage' && slotId) {
-      filePath += `slots/${slotId}/${Date.now()}_${file.name}`;
+      filePath += `slots/${slotId}/${originalFileName}`;
     } else {
-      filePath += `${imageType}/${Date.now()}_${file.name}`;
+      filePath += originalFileName;
     }
-
     const fileRef = storageRef(this.storage, filePath);
     const uploadTask = uploadBytesResumable(fileRef, file);
-
     const uploadProgress$ = new Observable<number | undefined>((observer) => {
-      uploadTask.on('state_changed', (snapshot) => {
+      uploadTask.on('state_changed',
+        (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           observer.next(progress);
-        }, (error) => observer.error(error),
-        () => { observer.next(100); observer.complete(); }
+        },
+        (error) => observer.error(error),
+        () => {
+          observer.next(100);
+          observer.complete();
+        }
       );
       return () => uploadTask.cancel();
     });
-
-    const downloadUrlPromise = new Promise<string>((resolve, reject) => {
-      uploadTask.then(async (snapshot: UploadTaskSnapshot) => {
-          try {
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            resolve(downloadURL);
-          } catch (error) { reject(error); }
-        }, (error) => reject(error)
-      );
-    });
-    return { uploadProgress$, downloadUrlPromise };
+    return { uploadProgress$, task: uploadTask };
   }
 
   async deleteEventImage(imageUrl: string | null | undefined): Promise<void> {
@@ -271,7 +287,7 @@ export class EventService {
     mainSlotId: string,
     subSlotId: string,
     bookingDetails: Omit<SubSlotBookingInfo, 'bookingId' | 'bookedAt'>,
-    appLink: string // Aggiunto appLink come parametro
+    appLink: string
   ): Promise<void> {
     const eventDocRef = doc(this.firestore, this.eventsCollectionPath, eventId);
     return runTransaction(this.firestore, async (transaction) => {
@@ -322,41 +338,32 @@ export class EventService {
         { companyName: newBooking.companyName }
       );
 
-      // --- NUOVA LOGICA: Invio dell'embed a Discord dopo l'iscrizione riuscita ---
       try {
         const eventDataForDiscord = {
           eventName: eventData.name,
           vtcName: newBooking.companyName,
           registeredByUsername: newBooking.contactName,
-          vtcLogo: '', // TODO: Aggiungi qui l'URL del logo della VTC se disponibile
-          registeredByUserAvatar: '', // TODO: Aggiungi qui l'URL dell'avatar dell'utente se disponibile
+          vtcLogo: '',
+          registeredByUserAvatar: '',
           server: eventData.server || 'N/D',
           meetingPoint: eventData.departure || 'N/D',
           departureTime: eventData.startDate.toDate().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) || 'N/D',
           departureLocation: eventData.departure || 'N/D',
           destination: eventData.destination || 'N/D',
           notes: eventData.description || 'Nessuna nota specifica per l\'evento.',
-          // Nuovi campi richiesti:
           mainSlotName: targetMainSlot.name,
           subSlotName: targetSubSlot.name,
           contactName: newBooking.contactName,
           contactEmail: newBooking.contactEmail,
-          appLink: appLink // Il link all'app
+          appLink: appLink
         };
         await this.sendVtcSubscriptionToDiscord(eventDataForDiscord);
-        console.log('Notifica Discord per iscrizione VTC inviata con successo.');
       } catch (discordError) {
         console.error('Errore durante l\'invio della notifica Discord per iscrizione VTC:', discordError);
       }
-      // --- FINE NUOVA LOGICA ---
     });
   }
 
-  /**
-   * Invia i dati di iscrizione di una VTC a un evento al webhook di Discord.
-   * @param eventData L'oggetto contenente le informazioni dell'evento e della VTC.
-   * @returns Promise<any> che indica il successo o l'errore della richiesta HTTP.
-   */
   async sendVtcSubscriptionToDiscord(eventData: any): Promise<any> {
     if (!this.firebaseEventWebhookUrl) {
       console.error('URL del webhook Firebase per eventi non configurato in environment.ts');

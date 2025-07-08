@@ -10,7 +10,7 @@ import { ToastService } from '../../../../services/toast.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './users-list.component.html',
-  styleUrls: ['./users-list.component.scss']
+  styleUrls: ['./users-list.component.scss'],
 })
 export class UsersListComponent implements OnInit {
   public users$!: Observable<DisplayUser[]>;
@@ -19,37 +19,56 @@ export class UsersListComponent implements OnInit {
   private currentUserSubscription: Subscription | undefined;
 
   private toastService = inject(ToastService);
-  public availableRoles: ('Admin' | 'User' | 'Editor')[] = ['Admin', 'Editor', 'User'];
+  public availableRoles: ('Admin' | 'User' | 'Eventmanager' | 'Nuovo')[] = [
+    'Admin',
+    'Nuovo',
+    'Eventmanager',
+    'User',
+  ];
 
-
-  constructor(private userService: UserService, private authService: AuthService) {
+  constructor(
+    private userService: UserService,
+    private authService: AuthService
+  ) {
     this.currentUser$ = this.authService.currentUser$;
   }
 
   ngOnInit(): void {
     this.users$ = this.userService.getUsers();
-    this.currentUserSubscription = this.authService.currentUser$.subscribe(user => {
-      this.isAdmin = (user as any)?.role === 'Admin';
-    });
+    this.currentUserSubscription = this.authService.currentUser$.subscribe(
+      (user) => {
+        this.isAdmin = (user as any)?.role === 'Admin';
+      }
+    );
   }
 
   trackByUser(index: number, user: DisplayUser): string {
     return user.id;
   }
 
-   onRoleChange(event: Event, user: DisplayUser): void {
+  onRoleChange(event: Event, user: DisplayUser): void {
     const selectElement = event.target as HTMLSelectElement;
-    const newRole = selectElement.value as 'Admin' | 'User' | 'Editor';
+    const newRole = selectElement.value as
+      | 'Admin'
+      | 'User'
+      | 'Nuovo';
 
-    this.userService.updateUserRole(user.id, newRole)
+    this.userService
+      .updateUserRole(user.id, newRole)
       .then(() => {
-        this.toastService.show(`Ruolo di ${user.name} aggiornato a ${newRole}.`, 'success');
+        this.toastService.show(
+          `Ruolo di ${user.name} aggiornato a ${newRole}.`,
+          'success'
+        );
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Errore durante l'aggiornamento del ruolo:", error);
-        this.toastService.show(`Errore nell'aggiornare il ruolo di ${user.name}.`, 'error');
+        this.toastService.show(
+          `Errore nell'aggiornare il ruolo di ${user.name}.`,
+          'error'
+        );
 
-        selectElement.value = user.role; 
+        selectElement.value = user.role;
       });
   }
 
