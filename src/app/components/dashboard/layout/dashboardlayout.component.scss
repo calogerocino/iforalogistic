@@ -5,30 +5,11 @@
 
 .dashboard-layout {
   display: flex;
+  flex-direction: column; // Modificato da 'row' a 'column'
   height: 100%;
   width: 100%;
   overflow: hidden;
   background-color: #f4f7f6;
-  transition: grid-template-columns 0.3s ease-in-out;
-
-  &.sidebar-collapsed {
-    // If using flexbox and sidebar width changes, this might not be strictly necessary
-    // as flex-grow on main-content will adapt.
-    // However, if sidebar has fixed positioning or grid is used,
-    // main content might need explicit adjustments.
-    // For flex: the margin-left of dashboard-main-content could be animated if sidebar is fixed/absolute
-    // Or, if the sidebar itself is part of the flex flow and just shrinks, this class is for broader page adjustments.
-  }
-}
-
-.dashboard-sidebar {
-  flex-shrink: 0;
-  @media (max-width: 768px) {
-    // For mobile, if the sidebar becomes an overlay when open
-    // position: fixed;
-    // height: 100%;
-    // z-index: 1001; // Above main content but below modals/navbar dropdowns
-  }
 }
 
 .dashboard-main-content {
@@ -36,27 +17,14 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: margin-left 0.3s ease-in-out;
 }
 
 .dashboard-navbar {
-  flex-shrink: 0;
+  flex-shrink: 0; // La navbar non si restringe
 }
 
 .dashboard-page-content {
   flex-grow: 1;
   padding: 24px;
-  overflow-y: auto;
-}
-
-@media (max-width: 768px) {
-  .dashboard-layout.sidebar-collapsed .dashboard-main-content {
-    // If sidebar is 60px when collapsed
-    // margin-left: 60px; // Or handled by flexbox naturally
-  }
-  .dashboard-layout:not(.sidebar-collapsed) .dashboard-main-content {
-    // If sidebar is an overlay when open on mobile, main content might have margin 0
-    // or a mechanism to be pushed/dimmed.
-    // For now, assuming sidebar is part of flow or fixed and layout component handles it.
-  }
+  overflow-y: auto; // Permette lo scroll solo nel contenuto principale
 }

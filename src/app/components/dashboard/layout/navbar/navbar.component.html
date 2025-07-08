@@ -1,18 +1,84 @@
 <nav class="navbar-container">
   <div class="navbar-left">
-   <!-- sx navbar -->
+    <div class="sidebar-logo-wrapper">
+      <img src="assets/img/logo.png" alt="Logo App IFL" class="logo-img">
+      <div class="logo-text-container">
+        <span class="logo-prefix">by</span>
+        <span class="logo-main-name">PixelSmart</span>
+      </div>
+    </div>
   </div>
+
+  <div class="navbar-center">
+    <ul class="top-nav-menu">
+      <li>
+        <a routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <ng-container *ngIf="isAdmin || isEventManager">
+        <li>
+          <a routerLink="/dashboard/eventi" routerLinkActive="active-link">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z">
+              </path>
+            </svg>
+            <span>Eventi</span>
+          </a>
+        </li>
+      </ng-container>
+      <li>
+        <a routerLink="/dashboard/datahub" routerLinkActive="active-link">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"></path>
+          </svg>
+          <span>DataHUB</span>
+        </a>
+      </li>
+      <ng-container *ngIf="isAdmin">
+        <li>
+          <a routerLink="/dashboard/users" routerLinkActive="active-link">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"></path>
+            </svg>
+            <span>Utenti</span>
+          </a>
+        </li>
+      </ng-container>
+      <li>
+        <a routerLink="/" target="_blank">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M10.71 12.29l4.88-4.88c.39-.39.39-1.02 0-1.41a.9959.9959 0 00-1.41 0L9.31 11.59a.9959.9959 0 000 1.41l4.88 4.88c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L10.71 12.29zM4 3h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0 16h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0-8h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1z">
+            </path>
+          </svg>
+          <span>Sito Pubblico</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+
   <div class="navbar-right">
     <button class="language-button" (click)="handleLanguageButtonClick()">Italiano</button>
 
     <div class="notification-wrapper">
       <button class="icon-button notification-button" aria-label="Notifiche" (click)="toggleNotificationDropdown()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.2 2.2 0 002.2-2.2h-4.4a2.2 2.2 0 002.2 2.2zm6.6-6.6V9.9c0-3.37-1.79-6.2-4.95-6.95V2.2c0-.91-.75-1.65-1.65-1.65s-1.65.74-1.65 1.65v.75C6.19 3.7 4.4 6.53 4.4 9.9v5.5L2.2 17.6v1.1h19.6v-1.1l-2.2-2.2z"></path></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 22a2.2 2.2 0 002.2-2.2h-4.4a2.2 2.2 0 002.2 2.2zm6.6-6.6V9.9c0-3.37-1.79-6.2-4.95-6.95V2.2c0-.91-.75-1.65-1.65-1.65s-1.65.74-1.65 1.65v.75C6.19 3.7 4.4 6.53 4.4 9.9v5.5L2.2 17.6v1.1h19.6v-1.1l-2.2-2.2z">
+          </path>
+        </svg>
         <span class="notification-badge" *ngIf="unreadCount > 0" [class.flashing]="unreadCount > 0">
           {{ unreadCount > 9 ? '9+' : unreadCount }}
         </span>
       </button>
-      <div class="notification-dropdown" *ngIf="isNotificationDropdownOpen" (clickOutside)="closeNotificationDropdown()">
+      <div class="notification-dropdown" *ngIf="isNotificationDropdownOpen"
+        (clickOutside)="closeNotificationDropdown()">
         <div class="dropdown-header notifications-header">
           <span>Notifiche</span>
           <!-- <button class="mark-all-read-btn" (click)="markAllNotificationsAsRead(allNotifications$ | async)" *ngIf="(allNotifications$ | async)?.length">
@@ -20,51 +86,65 @@
           </button> -->
         </div>
         <ul class="notification-list" *ngIf="(allNotifications$ | async) as notifications; else noNotifications">
-          <li *ngFor="let notification of notifications"
-              class="notification-item-wrapper"
-              [class.unread]="!notification.isRead"
-              [class.interacted]="notification.interacted"
-              (click)="setNotificationInteracted(notification, $event)"> <!-- Click sull'intero item per settare 'interacted' -->
+          <li *ngFor="let notification of notifications" class="notification-item-wrapper"
+            [class.unread]="!notification.isRead" [class.interacted]="notification.interacted"
+            (click)="setNotificationInteracted(notification, $event)">
+            <!-- Click sull'intero item per settare 'interacted' -->
 
-            <div class="notification-main-content" (click)="handleNotificationMainAction(notification)"> <!-- Click sulla parte principale per navigare/azione -->
+            <div class="notification-main-content" (click)="handleNotificationMainAction(notification)">
+              <!-- Click sulla parte principale per navigare/azione -->
               <div class="notification-icon-placeholder">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,16.5V15H13V16.5H11M11,7.5V13H13V7.5H11Z"></path></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <path
+                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,16.5V15H13V16.5H11M11,7.5V13H13V7.5H11Z">
+                  </path>
+                </svg>
               </div>
               <div class="notification-content-text"> <!-- Nome classe aggiornato -->
                 <p class="notification-message">{{ notification.message }}</p>
-                <span class="notification-timestamp">{{ notification.timestamp?.seconds ? (notification.timestamp.seconds * 1000 | date:'short') : 'N/D' }}</span>
+                <span class="notification-timestamp">{{ notification.timestamp?.seconds ?
+                  (notification.timestamp.seconds * 1000 | date:'short') : 'N/D' }}</span>
               </div>
             </div>
 
-            <div class="notification-actions" *ngIf="notification.interacted"> <!-- Mostra solo se 'interacted' è true -->
-              <button class="delete-notification-btn" (click)="deleteNotification(notification, $event)" aria-label="Elimina notifica">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+            <div class="notification-actions" *ngIf="notification.interacted">
+              <!-- Mostra solo se 'interacted' è true -->
+              <button class="delete-notification-btn" (click)="deleteNotification(notification, $event)"
+                aria-label="Elimina notifica">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                </svg>
               </button>
             </div>
           </li>
           <li *ngIf="notifications.length === 0" class="no-notifications-item">Nessuna notifica.</li>
         </ul>
         <ng-template #noNotifications>
-            <div class="no-notifications-item">Nessuna notifica.</div>
+          <div class="no-notifications-item">Nessuna notifica.</div>
         </ng-template>
         <!-- Footer del dropdown  -->
       </div>
     </div>
 
     <button class="icon-button" aria-label="Messaggi">
-       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 4H2.01L2 22l4-4h16V4zm-2 12H6l-2 2V6h16v10z"></path></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22 4H2.01L2 22l4-4h16V4zm-2 12H6l-2 2V6h16v10z"></path>
+      </svg>
     </button>
 
     <div class="profile-section-wrapper">
       <div class="profile-section" (click)="toggleProfileDropdown()">
         <img [src]="currentUser?.photoURL || authService.defaultPhotoURL" alt="Foto Profilo" class="profile-pic">
         <span class="profile-name" *ngIf="currentUser">{{ currentUser.firstName || 'Profilo' }}</span>
-        <svg class="profile-dropdown-icon" [class.open]="isProfileDropdownOpen" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5H7z"></path></svg>
+        <svg class="profile-dropdown-icon" [class.open]="isProfileDropdownOpen" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7 10l5 5 5-5H7z"></path>
+        </svg>
       </div>
 
       <div class="profile-dropdown" *ngIf="isProfileDropdownOpen" (clickOutside)="closeProfileDropdown()">
         <div class="dropdown-header" *ngIf="currentUser">
-          <img [src]="currentUser?.photoURL || authService.defaultPhotoURL" alt="Foto Profilo" class="dropdown-profile-pic">
+          <img [src]="currentUser?.photoURL || authService.defaultPhotoURL" alt="Foto Profilo"
+            class="dropdown-profile-pic">
           <div class="dropdown-user-info">
             <span class="dropdown-user-name">{{ currentUser.firstName }}</span>
             <span class="dropdown-user-email">{{ currentUser.email }}</span>
@@ -73,19 +153,31 @@
         <ul class="dropdown-menu">
           <li>
             <button (click)="navigateToProfile()">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z">
+                </path>
+              </svg>
               Il Mio Profilo
             </button>
           </li>
           <li>
             <button (click)="navigateToSettings()">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69-.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24-.42.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69-.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38 2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path
+                  d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69-.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24-.42.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69-.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38 2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z">
+                </path>
+              </svg>
               Impostazioni
             </button>
           </li>
           <li>
             <button (click)="logout()">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"></path></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path
+                  d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z">
+                </path>
+              </svg>
               Logout
             </button>
           </li>
