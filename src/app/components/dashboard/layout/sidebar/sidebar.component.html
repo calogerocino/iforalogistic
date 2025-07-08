@@ -7,9 +7,11 @@
         <span class="logo-main-name">PixelSmart</span>
       </div>
     </div>
-    <button class="sidebar-toggle-button" (click)="onToggleCollapse()" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle sidebar">
+    <button class="sidebar-toggle-button" (click)="onToggleCollapse()" [attr.aria-expanded]="!isCollapsed"
+      aria-label="Toggle sidebar">
       <svg *ngIf="!isCollapsed" viewBox="0 0 24 24" class="toggle-icon">
-        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z">
+        </path>
       </svg>
       <svg *ngIf="isCollapsed" viewBox="0 0 24 24" class="toggle-icon">
         <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
@@ -21,7 +23,8 @@
     <ul>
       <li class="menu-header" [class.hidden]="isCollapsed">MAIN</li>
       <li>
-        <a routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" [title]="isCollapsed ? 'Dashboard' : null">
+        <a routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+          [title]="isCollapsed ? 'Dashboard' : null">
           <svg viewBox="0 0 24 24">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
           </svg>
@@ -31,23 +34,31 @@
 
       <li class="menu-header" [class.hidden]="isCollapsed">SITO</li>
       <li>
-        <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" [title]="isCollapsed ? 'Accedi al Sito' : null">
+        <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+          [title]="isCollapsed ? 'Accedi al Sito' : null">
           <svg viewBox="0 0 24 24">
-             <path d="M10.71 12.29l4.88-4.88c.39-.39.39-1.02 0-1.41a.9959.9959 0 00-1.41 0L9.31 11.59a.9959.9959 0 000 1.41l4.88 4.88c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L10.71 12.29zM4 3h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0 16h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0-8h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1z"></path>
+            <path
+              d="M10.71 12.29l4.88-4.88c.39-.39.39-1.02 0-1.41a.9959.9959 0 00-1.41 0L9.31 11.59a.9959.9959 0 000 1.41l4.88 4.88c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L10.71 12.29zM4 3h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0 16h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1zm0-8h6c.55 0 1 .45 1 1s-.45 1-1 1H4c-.55 0-1-.45-1-1s.45-1 1-1z">
+            </path>
           </svg>
           <span class="nav-link-text" *ngIf="!isCollapsed">Accedi al Sito</span>
         </a>
       </li>
 
-      <li class="menu-header" [class.hidden]="isCollapsed">EVENTI</li>
-      <li>
-        <a routerLink="/dashboard/eventi" routerLinkActive="active-link" [title]="isCollapsed ? 'Gestisci Eventi' : null">
-          <svg viewBox="0 0 24 24">
-            <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"></path>
-          </svg>
-          <span class="nav-link-text" *ngIf="!isCollapsed">Gestisci Eventi</span>
-        </a>
-      </li>
+      <ng-container *ngIf="isAdmin">
+        <li class="menu-header" [class.hidden]="isCollapsed">EVENTI</li>
+        <li>
+          <a routerLink="/dashboard/eventi" routerLinkActive="active-link"
+            [title]="isCollapsed ? 'Gestisci Eventi' : null">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z">
+              </path>
+            </svg>
+            <span class="nav-link-text" *ngIf="!isCollapsed">Gestisci Eventi</span>
+          </a>
+        </li>
+      </ng-container>
 
       <li class="menu-header" [class.hidden]="isCollapsed">GIOCATORI</li>
       <li>

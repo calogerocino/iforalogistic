@@ -24,19 +24,6 @@
     height: 32px;
     margin-right: 20px;
   }
-  .search-input {
-    padding: 10px 15px;
-    border-radius: 6px;
-    border: 1px solid #dfe1e5;
-    min-width: 300px;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    &:focus {
-      outline: none;
-      border-color: #4a90e2;
-      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-    }
-  }
 }
 
 .navbar-right {

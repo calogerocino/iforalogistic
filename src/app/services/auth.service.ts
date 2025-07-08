@@ -12,6 +12,7 @@ export interface AppUser {
   email: string | null;
   firstName?: string;
   photoURL?: string | null;
+  role?: "Admin" | "User" | "Editor";
 }
 
 const REMEMBER_ME_KEY = 'rememberUserActive';
