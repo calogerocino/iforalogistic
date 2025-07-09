@@ -1,4 +1,55 @@
 <div class="datahub-page-container">
   <h1>Player Datahub</h1>
-  <p>Questa è la nuova sezione per l'analisi dei dati dei giocatori.</p>
+
+  <div class="filters">
+    <div class="filters">
+      <select [(ngModel)]="selectedUserId" (change)="onUserChange()">
+        <option [ngValue]="null" disabled>Seleziona un utente</option>
+        <option *ngFor="let user of users$ | async" [value]="user.id">
+          {{ user.name || user.firstName }} ({{ user.email }})
+        </option>
+      </select>
+    </div>
+    <select>
+      <option>Luglio 2025</option>
+    </select>
   </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <span class="label">Distanza Accettata</span>
+      <span class="value">{{ monthlySummary.totalDistance }} km</span>
+    </div>
+    <div class="summary-card">
+      <span class="label">Profitto</span>
+      <span class="value">{{ monthlySummary.totalProfit | currency:'EUR' }}</span>
+    </div>
+  </div>
+
+  <div class="deliveries-table">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Da</th>
+          <th>A</th>
+          <th>Carico</th>
+          <th>Distanza</th>
+          <th>Tempo (Reale)</th>
+          <th>Azioni</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let delivery of deliveries$ | async; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ delivery.jobDetails?.sourceCity }}</td>
+          <td>{{ delivery.jobDetails?.destinationCity }}</td>
+          <td>{{ delivery.jobDetails?.cargoName }}</td>
+        </tr>
+        <tr *ngIf="!(deliveries$ | async)?.length">
+          <td colspan="7">Seleziona un utente per visualizzare le consegne.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

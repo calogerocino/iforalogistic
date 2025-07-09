@@ -26,6 +26,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ImageModalService } from '../../../services/image-modal.service';
+import { Title, Meta } from '@angular/platform-browser';
 
 interface VTCPartner {
   name: string;
@@ -48,6 +49,9 @@ interface VTCPartner {
   styleUrls: ['./public-homepage.component.scss'],
 })
 export class PublicHomepageComponent implements OnInit, OnDestroy {
+  private titleService = inject(Title);
+  private metaService = inject(Meta);
+
   currentYear: number;
   upcomingEvents$: Observable<AppEvent[]>;
   isLoadingEvents = true;
@@ -129,6 +133,15 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.titleService.setTitle(
+      'IFL Logistics - La tua VTC per Euro Truck Simulator 2'
+    );
+    this.metaService.updateTag({
+      name: 'description',
+      content:
+        'Unisciti a IFL Logistics, una Virtual Trucking Company diversa dal solito. Organizziamo eventi, abbiamo una community attiva e una grande passione per la logistica virtuale.', // [cite: 1]
+    });
+
     this.eventSubscription = this.upcomingEvents$.subscribe({
       next: () => (this.isLoadingEvents = false),
       error: (err) => {
@@ -260,7 +273,8 @@ export class PublicHomepageComponent implements OnInit, OnDestroy {
 
   getPublicEventLink(): string {
     if (this.selectedEventForModal && this.selectedEventForModal.id) {
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const baseUrl =
+        typeof window !== 'undefined' ? window.location.origin : '';
       return `${baseUrl}/?eventId=${this.selectedEventForModal.id}`;
     }
     return '';
