@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+
+# Posizione della tua sitemap (sostituisci con il tuo vero dominio).
+Sitemap: https://iforalogistics.web.app/sitemap.xml
