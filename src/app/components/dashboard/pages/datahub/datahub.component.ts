@@ -109,7 +109,6 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
   }
 
    getCountryCodeForCity(city: string | undefined): string | null {
-    console.log(city)
     if (!city) {
       return null;
     }
