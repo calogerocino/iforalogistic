@@ -42,6 +42,9 @@
         </tr>
       </thead>
       <tbody>
+        <tr *ngIf="isLoading">
+          <td colspan="9">Caricamento dei dati in corso...</td>
+        </tr>
         <tr *ngFor="let delivery of filteredDeliveries; let i = index">
           <td>{{ i + 1 }}</td>
           <td><span class="status-badge" [ngClass]="delivery.status | lowercase">{{ delivery.status }}</span></td>
@@ -51,9 +54,9 @@
           <td>{{ (delivery.acceptedDistance || 0) | number }} km</td>
           <td>{{ (delivery.profit || 0) | currency:'EUR':'symbol':'1.0-0' }}</td>
           <td>{{ (delivery.jobDetails?.cargoDamage || 0) * 100 | number:'1.0-0' }}%</td>
-            <td><button class="btn-details">Dettagli</button></td>
+          <td><button class="btn-details" (click)="onShowDetails()">Dettagli</button></td>
         </tr>
-        <tr *ngIf="filteredDeliveries.length === 0">
+        <tr *ngIf="!isLoading && filteredDeliveries.length === 0">
           <td colspan="9">
             <span *ngIf="selectedUserId">Nessuna consegna trovata per il periodo selezionato.</span>
             <span *ngIf="!selectedUserId">Seleziona un utente per visualizzare le consegne.</span>

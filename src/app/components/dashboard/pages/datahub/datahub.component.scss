@@ -1,14 +1,12 @@
-// File: datahub.component.scss
-
 :host {
   display: block;
-  font-family: 'Inter', sans-serif; // Un font moderno e pulito
+  font-family: "Inter", sans-serif;
 }
 
 .datahub-page-container {
   display: flex;
   flex-direction: column;
-  gap: 25px; // Spazio tra le sezioni
+  gap: 25px;
 
   h1 {
     font-size: 26px;
@@ -18,11 +16,10 @@
   }
 }
 
-// Stile per i filtri (selettore utente/mese)
 .filters {
   display: flex;
   gap: 15px;
-
+  align-items: center;
   select {
     padding: 8px 12px;
     border: 1px solid #dfe1e5;
@@ -39,7 +36,51 @@
   }
 }
 
-// Griglia per le card di riepilogo
+.month-selector {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dfe1e5;
+  border-radius: 6px;
+  background-color: #fff;
+  overflow: hidden;
+
+  .month-nav-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 16px;
+    color: #495057;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f1f3f4;
+    }
+
+    &:first-of-type {
+      border-right: 1px solid #dfe1e5;
+    }
+
+    &:last-of-type {
+      border-left: 1px solid #dfe1e5;
+    }
+  }
+
+  .month-display {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2c3e50;
+    white-space: nowrap;
+  }
+
+  &:focus-within {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -69,13 +110,12 @@
   }
 }
 
-// Tabella delle consegne
 .deliveries-table {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border: 1px solid #e9ecef;
-  overflow: hidden; // Per contenere i bordi della tabella
+  overflow: hidden;
 
   table {
     width: 100%;
@@ -121,6 +161,12 @@
       }
     }
   }
+  tbody tr td[colspan="9"] {
+    text-align: center;
+    padding: 40px 15px;
+    color: #6c757d;
+    font-style: italic;
+  }
 }
 
 .btn-details {
@@ -139,14 +185,13 @@
   }
 }
 
-// Stili responsivi
 @media (max-width: 768px) {
   .summary-grid {
-    grid-template-columns: 1fr; // Una colonna su schermi piccoli
+    grid-template-columns: 1fr;
   }
 
   .deliveries-table {
-    overflow-x: auto; // Rende la tabella scrollabile orizzontalmente
+    overflow-x: auto;
   }
 }
 
@@ -159,13 +204,14 @@
   color: #fff;
 
   &.consegnato {
-    background-color: #28a745; // Verde
+    background-color: #28a745;
   }
-  &.in.corso { // Gestisce lo spazio in "In Corso"
-    background-color: #ffc107; // Giallo
+  &.in.corso {
+    background-color: #ffc107;
     color: #212529;
   }
+  &.interrotto,
   &.annullato {
-    background-color: #dc3545; // Rosso
+    background-color: #dc3545;
   }
 }
