@@ -149,3 +149,23 @@
     overflow-x: auto; // Rende la tabella scrollabile orizzontalmente
   }
 }
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fff;
+
+  &.consegnato {
+    background-color: #28a745; // Verde
+  }
+  &.in.corso { // Gestisce lo spazio in "In Corso"
+    background-color: #ffc107; // Giallo
+    color: #212529;
+  }
+  &.annullato {
+    background-color: #dc3545; // Rosso
+  }
+}

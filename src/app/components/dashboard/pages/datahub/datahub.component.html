@@ -2,27 +2,27 @@
   <h1>Player Datahub</h1>
 
   <div class="filters">
-    <div class="filters">
-      <select [(ngModel)]="selectedUserId" (change)="onUserChange()">
-        <option [ngValue]="null" disabled>Seleziona un utente</option>
-        <option *ngFor="let user of users$ | async" [value]="user.id">
-          {{ user.name || user.firstName }} ({{ user.email }})
-        </option>
-      </select>
-    </div>
-    <select>
-      <option>Luglio 2025</option>
+    <select [(ngModel)]="selectedUserId" (change)="onUserChange()">
+      <option [ngValue]="null" disabled>Seleziona un utente</option>
+      <option *ngFor="let user of users$ | async" [value]="user.id">
+        {{ user.name || user.firstName }} ({{ user.email }})
+      </option>
     </select>
+    <div class="month-selector">
+      <button class="month-nav-btn" (click)="changeMonth(-1)">‹</button>
+      <span class="month-display">{{ currentDate | date:'MMMM yyyy' }}</span>
+      <button class="month-nav-btn" (click)="changeMonth(1)">›</button>
+    </div>
   </div>
 
   <div class="summary-grid">
     <div class="summary-card">
       <span class="label">Distanza Accettata</span>
-      <span class="value">{{ monthlySummary.totalDistance }} km</span>
+      <span class="value">{{ monthlySummary.totalDistance | number }} km</span>
     </div>
     <div class="summary-card">
       <span class="label">Profitto</span>
-      <span class="value">{{ monthlySummary.totalProfit | currency:'EUR' }}</span>
+      <span class="value">{{ monthlySummary.totalProfit | currency:'EUR':'symbol':'1.0-0' }}</span>
     </div>
   </div>
 
@@ -31,23 +31,33 @@
       <thead>
         <tr>
           <th>#</th>
+          <th>Stato</th>
           <th>Da</th>
           <th>A</th>
           <th>Carico</th>
           <th>Distanza</th>
-          <th>Tempo (Reale)</th>
+          <th>Profitto</th>
+          <th>Danno</th>
           <th>Azioni</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let delivery of deliveries$ | async; let i = index">
+        <tr *ngFor="let delivery of filteredDeliveries; let i = index">
           <td>{{ i + 1 }}</td>
+          <td><span class="status-badge" [ngClass]="delivery.status | lowercase">{{ delivery.status }}</span></td>
           <td>{{ delivery.jobDetails?.sourceCity }}</td>
           <td>{{ delivery.jobDetails?.destinationCity }}</td>
           <td>{{ delivery.jobDetails?.cargoName }}</td>
+          <td>{{ (delivery.acceptedDistance || 0) | number }} km</td>
+          <td>{{ (delivery.profit || 0) | currency:'EUR':'symbol':'1.0-0' }}</td>
+          <td>{{ (delivery.jobDetails?.cargoDamage || 0) * 100 | number:'1.0-0' }}%</td>
+            <td><button class="btn-details">Dettagli</button></td>
         </tr>
-        <tr *ngIf="!(deliveries$ | async)?.length">
-          <td colspan="7">Seleziona un utente per visualizzare le consegne.</td>
+        <tr *ngIf="filteredDeliveries.length === 0">
+          <td colspan="9">
+            <span *ngIf="selectedUserId">Nessuna consegna trovata per il periodo selezionato.</span>
+            <span *ngIf="!selectedUserId">Seleziona un utente per visualizzare le consegne.</span>
+          </td>
         </tr>
       </tbody>
     </table>
