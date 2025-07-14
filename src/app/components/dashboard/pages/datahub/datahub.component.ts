@@ -8,7 +8,9 @@ import {
   TelemetryService,
 } from '../../../../services/telemetry.service';
 import { ToastService } from '../../../../services/toast.service';
-import { cityToCountryCode } from '../../../../services/city-data';
+import { cityToCountryCode } from '../../../../data/city-data';
+import { CARGO_ICON_MAP, DEFAULT_CARGO_ICON } from '../../../../data/cargo-data';
+
 
 @Component({
   selector: 'app-player-datahub',
@@ -34,6 +36,7 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
   monthlySummary = {
     totalDistance: 0,
     totalProfit: 0,
+    totalDistanceUnder100Kmh: 0,
   };
 
   private tripsSubscription: Subscription | undefined;
@@ -91,6 +94,10 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
       (sum, d) => sum + (d.profit || 0),
       0
     );
+     this.monthlySummary.totalDistanceUnder100Kmh = this.filteredDeliveries
+      .filter(d => (d.maxSpeedKmh || 0) <= 100)
+      .reduce((sum, d) => sum + (d.acceptedDistance || 0), 0);
+
     this.isLoading = false;
   }
 
@@ -113,5 +120,11 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
       return null;
     }
     return this.cityCountryMap[city] || null;
+  }
+   getIconForCargo(cargoName?: string): string {
+    if (!cargoName) {
+      return DEFAULT_CARGO_ICON;
+    }
+    return CARGO_ICON_MAP[cargoName] || DEFAULT_CARGO_ICON;
   }
 }

@@ -17,7 +17,11 @@
 
   <div class="summary-grid">
     <div class="summary-card">
-      <span class="label">Distanza Accettata</span>
+      <span class="label">Distanza in reale</span>
+      <span class="value">{{ monthlySummary.totalDistanceUnder100Kmh | number }} km</span>
+    </div>
+    <div class="summary-card">
+      <span class="label">Distanza Totale</span>
       <span class="value">{{ monthlySummary.totalDistance | number }} km</span>
     </div>
     <div class="summary-card">
@@ -30,15 +34,15 @@
     <table>
       <thead>
         <tr>
-          <th>#</th>
-          <th>Stato</th>
-          <th>Da</th>
-          <th>A</th>
-          <th>Carico</th>
-          <th>Distanza</th>
-          <th>Profitto</th>
-          <th>Danno</th>
-          <th>Azioni</th>
+          <th><i class="fas fa-sort-numeric-down"></i></th>
+          <th><i class="fas fa-light fa-list ms-1"></i> Stato</th>
+          <th><i class="fas fa-arrow-right-from-bracket"></i> Da</th>
+          <th><i class="fas fa-right-to-bracket"></i> A</th>
+          <th><i class="fas fa-cubes"></i> Carico</th>
+          <th><i class="fas fa-arrows-left-right"></i> Distanza</th>
+          <th><i class="fas fa-tachometer-alt"></i> Velocità max.</th>
+          <th><i class="fas fa-car-burst"></i> Danno</th>
+          <th><i class="fas fa-cogs"></i> Azioni</th>
         </tr>
       </thead>
       <tbody>
@@ -62,9 +66,14 @@
               <span>{{ delivery.jobDetails?.destinationCity }}</span>
             </div>
           </td>
-          <td>{{ delivery.jobDetails?.cargoName }}</td>
+          <td>
+            <div class="cargo-container">
+              <i [ngClass]="getIconForCargo(delivery.jobDetails?.cargoName)"></i>
+              <span> {{ delivery.jobDetails?.cargoName }}</span>
+            </div>
+          </td>
           <td>{{ (delivery.acceptedDistance || 0) | number }} km</td>
-          <td>{{ (delivery.profit || 0) | currency:'EUR':'symbol':'1.0-0' }}</td>
+          <td>{{ (delivery.maxSpeedKmh + " km/h"|| "N/D")}}</td>
           <td>{{ (delivery.jobDetails?.cargoDamage || 0) * 100 | number:'1.0-0' }}%</td>
           <td><button class="btn-details" (click)="onShowDetails()">Dettagli</button></td>
         </tr>

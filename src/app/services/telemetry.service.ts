@@ -1,5 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, query, orderBy } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  collectionData,
+  query,
+  orderBy,
+} from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 // Interfaccia completa con tutti i campi della telemetria
@@ -14,7 +20,7 @@ export interface Delivery {
   distanceKm?: number;
   acceptedDistance?: number;
   profit?: number;
-
+  maxSpeedKmh?: number;
   // Dettagli del lavoro
   jobDetails: {
     sourceCity: string;
@@ -32,7 +38,7 @@ export interface Delivery {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TelemetryService {
   private firestore: Firestore = inject(Firestore);
