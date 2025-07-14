@@ -215,3 +215,15 @@
     background-color: #dc3545;
   }
 }
+
+.city-container {
+  display: flex;
+  align-items: center;
+  gap: 8px; // Aggiunge un po' di spazio tra la bandiera e il nome della città
+
+  .fi {
+    // La libreria flag-icons potrebbe non avere una dimensione predefinita, impostiamola
+    font-size: 1.2em; // Puoi aggiustare la dimensione come preferisci
+    flex-shrink: 0; // Impedisce alla bandiera di rimpicciolirsi se lo spazio è poco
+  }
+}

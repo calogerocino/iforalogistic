@@ -8,6 +8,7 @@ import {
   TelemetryService,
 } from '../../../../services/telemetry.service';
 import { ToastService } from '../../../../services/toast.service';
+import { cityToCountryCode } from '../../../../services/city-data';
 
 @Component({
   selector: 'app-player-datahub',
@@ -20,6 +21,7 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
   private userService = inject(UserService);
   private telemetryService = inject(TelemetryService);
   private toastService = inject(ToastService);
+  protected cityCountryMap = cityToCountryCode;
 
   users$!: Observable<DisplayUser[]>;
   selectedUserId: string | null = null;
@@ -104,5 +106,13 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
 
    onShowDetails(): void {
     this.toastService.show('La pagina dei dettagli è in lavorazione', 'info');
+  }
+
+   getCountryCodeForCity(city: string | undefined): string | null {
+    console.log(city)
+    if (!city) {
+      return null;
+    }
+    return this.cityCountryMap[city] || null;
   }
 }

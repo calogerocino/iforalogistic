@@ -48,8 +48,20 @@
         <tr *ngFor="let delivery of filteredDeliveries; let i = index">
           <td>{{ i + 1 }}</td>
           <td><span class="status-badge" [ngClass]="delivery.status | lowercase">{{ delivery.status }}</span></td>
-          <td>{{ delivery.jobDetails?.sourceCity }}</td>
-          <td>{{ delivery.jobDetails?.destinationCity }}</td>
+          <td>
+            <div class="city-container">
+              <span *ngIf="getCountryCodeForCity(delivery.jobDetails?.sourceCity) as code"
+                class="fi fi-{{ code }}"></span>
+              <span>{{ delivery.jobDetails?.sourceCity }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="city-container">
+              <span *ngIf="getCountryCodeForCity(delivery.jobDetails?.destinationCity) as code"
+                class="fi fi-{{ code }}"></span>
+              <span>{{ delivery.jobDetails?.destinationCity }}</span>
+            </div>
+          </td>
           <td>{{ delivery.jobDetails?.cargoName }}</td>
           <td>{{ (delivery.acceptedDistance || 0) | number }} km</td>
           <td>{{ (delivery.profit || 0) | currency:'EUR':'symbol':'1.0-0' }}</td>
