@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 
-type UserRole = 'Admin' | 'Eventmanager' | 'User' | 'Nuovo';
+type UserRole = 'Admin' | 'Eventmanager' | 'User' | 'Nuovo'| 'SAdmin';
 
 export const roleGuard = (allowedRoles: UserRole[]): CanActivateFn => {
   return (): Observable<boolean | UrlTree> => {

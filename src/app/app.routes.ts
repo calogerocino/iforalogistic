@@ -13,12 +13,13 @@ export const routes: Routes = [
   //   title: 'Sito in Allestimento',
   // },
   {
-    path: '',
+    path: 'home',
     loadComponent: () =>
       import(
         './components/public/public-homepage/public-homepage.component'
       ).then((m) => m.PublicHomepageComponent),
     title: 'Benvenuto su IFL',
+    canActivate: [roleGuard(['SAdmin'])],
   },
   {
     path: 'download',
@@ -61,12 +62,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
-        path: '',
+        path: 'datahub',
+        loadComponent: () =>
+          import('./components/dashboard/pages/datahub/datahub.component').then(
+            (m) => m.PlayerDatahubComponent
+          ),
+        title: 'Player Datahub',
+      },
+      {
+        path: 'dash',
         loadComponent: () =>
           import(
             './components/dashboard/pages/dashboard-home/dashboard-home.component'
           ).then((m) => m.DashboardHomeComponent),
         title: 'Dashboard Home',
+        canActivate: [roleGuard(['SAdmin'])],
       },
       {
         path: 'profilo',
@@ -76,15 +86,6 @@ export const routes: Routes = [
           ).then((m) => m.UserProfileComponent),
         title: 'Il Mio Profilo',
       },
-      {
-        path: 'datahub',
-        loadComponent: () =>
-          import('./components/dashboard/pages/datahub/datahub.component').then(
-            (m) => m.PlayerDatahubComponent
-          ),
-        title: 'Player Datahub',
-      },
-
       {
         path: 'users',
         loadComponent: () =>
@@ -104,7 +105,7 @@ export const routes: Routes = [
                 './components/dashboard/pages/events/event-list/event-list.component'
               ).then((m) => m.EventListComponent),
             title: 'Lista Eventi - IFL',
-            canActivate: [roleGuard(['Admin', 'Eventmanager'])],
+            canActivate: [roleGuard(['SAdmin'])],
           },
           {
             path: 'nuovo',
@@ -113,6 +114,7 @@ export const routes: Routes = [
                 './components/dashboard/pages/events/event-manage/event-manage.component'
               ).then((m) => m.EventManageComponent), // Assumendo un nuovo componente
             title: 'Crea Evento - IFL',
+            canActivate: [roleGuard(['SAdmin'])],
           },
           {
             path: 'modifica/:id',
@@ -121,6 +123,7 @@ export const routes: Routes = [
                 './components/dashboard/pages/events/event-manage/event-manage.component'
               ).then((m) => m.EventManageComponent), // Stesso componente
             title: 'Modifica Evento - IFL',
+            canActivate: [roleGuard(['SAdmin'])],
           },
           {
             path: ':id',
@@ -129,6 +132,7 @@ export const routes: Routes = [
                 './components/dashboard/pages/events/event-manage/event-manage.component'
               ).then((m) => m.EventManageComponent), // Stesso componente
             title: 'Dettaglio Evento - IFL',
+            canActivate: [roleGuard(['SAdmin'])],
           },
         ],
       },

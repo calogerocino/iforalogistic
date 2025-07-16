@@ -38,6 +38,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
 
+  public isSAdmin = false;
   public isAdmin = false;
   public isEventManager = false;
 
@@ -49,6 +50,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe((user) => {
+      this.isSAdmin = user?.role === 'SAdmin';
       this.isAdmin = user?.role === 'Admin';
       this.isEventManager = user?.role === 'Eventmanager';
     });
