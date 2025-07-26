@@ -5,7 +5,7 @@
     <select [(ngModel)]="selectedUserId" (change)="onUserChange()">
       <option [ngValue]="null" disabled>Seleziona un utente</option>
       <option *ngFor="let user of users$ | async" [value]="user.id">
-        {{ user.name || user.firstName }} ({{ user.email }})
+        {{ user.name || user.firstName }}
       </option>
     </select>
     <div class="month-selector">

@@ -1,125 +1,215 @@
-import { onRequest, HttpsOptions } from "firebase-functions/v2/https";
-import { onObjectFinalized, onObjectDeleted, StorageEvent } from "firebase-functions/v2/storage";
-import { logger } from "firebase-functions/v2";
+import {
+  onObjectFinalized,
+  onObjectDeleted,
+  StorageEvent,
+} from 'firebase-functions/v2/storage';
+import { logger } from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
-import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
-import sharp from "sharp";
+import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs';
+import sharp from 'sharp';
+import { onDocumentUpdated } from 'firebase-functions/firestore';
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-const THUMB_PREFIX = "thumb_";
+const THUMB_PREFIX = 'thumb_';
 const THUMB_MAX_WIDTH = 400;
 
 const BUCKET_NAME = 'iforalogistics.firebasestorage.app';
 
-const httpsOptions: HttpsOptions = {
-  region: 'us-central1',
-  cors: true,
-};
+
 
 const storageOptions = {
-    bucket: BUCKET_NAME,
-    region: 'europe-west1',
+  bucket: BUCKET_NAME,
+  region: 'europe-west1',
 };
 
-const DISCORD_EMBED_WEBHOOK_URL = 'https://discord.com/api/webhooks/1382102405319233636/w4bQRcIqAcBT5BegNVRvkxRaNxHTR0hqHLN4lZNXrP1-WvNuMX1gR0vEeX09s6zL9ul5';
+const db = admin.firestore();
+interface TripData {
+  status: string;
+  maxSpeedKmh: number;
+  acceptedDistance: number;
+  profit: number;
+  jobDetails: {
+    sourceCity: string;
+    destinationCity: string;
+    cargoName: string;
+    truckModel: string;
+    distanzaPianificata: number;
+  };
+}
 
-export const discordWebhookListener = onRequest(httpsOptions, async (req, res) => {
-  if (req.method === 'POST') {
+interface UserData {
+  firstName: string;
+  photoURL: string;
+}
+
+export const consegnaCompletata = onDocumentUpdated(
+    {
+        document: "telemetry/{userId}/trips/{tripId}",
+        region: "europe-west1",
+    },
+    async (event) => {
+        logger.info(`Funzione 'consegnaCompletata' attivata per ${event.params.tripId}`);
+
+        const snapshot = event.data;
+        if (!snapshot) {
+            logger.error("Nessun dato trovato nell'evento, la funzione non può procedere.");
+            return;
+        }
+
+        const dataPrima = snapshot.before.data() as TripData;
+        const dataDopo = snapshot.after.data() as TripData;
+
+        if (dataDopo.status !== "Consegnato" || dataPrima.status === "Consegnato") {
+            logger.log("Lo stato non è diventato 'Consegnato' in questo aggiornamento. Uscita.");
+            return;
+        }
+
+        const { userId } = event.params;
+        logger.log(`Nuova consegna rilevata per utente: ${userId}, viaggio: ${event.params.tripId}`);
+
+        try {
+            const userDoc = await db.collection("users").doc(userId).get();
+
+            if (!userDoc.exists) {
+                logger.error(`DIAGNOSI: Il documento per l'utente con ID ${userId} non è stato trovato in /users.`);
+                return;
+            }
+
+            const userData = userDoc.data() as UserData;
+
+            if (!userData.firstName || !userData.photoURL) {
+                logger.warn(`DIAGNOSI: Il documento per l'utente ${userId} esiste, ma mancano i campi 'firstName' o 'photoURL'.`);
+            }
+
+            const stats = dataDopo.maxSpeedKmh <= 100 ? "[Reali]" : "[Gara]";
+            const ricavo = dataDopo.profit || 0;
+            const distanzaPianificata = dataDopo.jobDetails?.distanzaPianificata || 0;
+
+            const embed = {
+                author: {
+                    name: userData.firstName || "Autista Sconosciuto",
+                    icon_url: userData.photoURL || undefined,
+                },
+                title: "Consegna del lavoro",
+                color: 15158332,
+                description: `**${stats} - ${distanzaPianificata} km**\nDa **${dataDopo.jobDetails.sourceCity}** a **${dataDopo.jobDetails.destinationCity}**`,
+                fields: [
+                    { name: "Carico", value: dataDopo.jobDetails.cargoName, inline: true },
+                    { name: "Distanza accettata", value: `${dataDopo.acceptedDistance || 0} km`, inline: true },
+                    { name: "Ricavo", value: `${ricavo} €`, inline: true },
+                    { name: "Camion", value: dataDopo.jobDetails.truckModel, inline: true },
+                    { name: "Statistiche", value: stats, inline: true },
+                    { name: "Posizione nell'azienda", value: "ND", inline: true },
+                ],
+                footer: {
+                    text: "IFL Telemetry",
+                    icon_url: "https://iforalogistics.web.app/assets/img/logo.png",
+                },
+                timestamp: new Date().toISOString(),
+            };
+
+            const webhookUrl = "https://discord.com/api/webhooks/1397927858571182281/Gc6wEDORmB_STwk6pCxToWVBkUeLtLUfLfRc1qhvCWWNK2yMTy2sQQ8wzQ9BiOvehPml";
+
+            await axios.post(webhookUrl, { embeds: [embed] });
+            logger.info(`Embed inviato a Discord con successo per il viaggio ${event.params.tripId}!`);
+
+        } catch (error) {
+            logger.error(`Errore imprevisto durante l'esecuzione della funzione per il viaggio ${event.params.tripId}:`, error);
+        }
+    }
+);
+
+export const updateAppUrls = onObjectFinalized(
+  storageOptions,
+  async (event) => {
+    const filePath = event.data.name;
+    const fileBucket = event.bucket;
+
+    if (!filePath) {
+      logger.info('Nessun percorso file specificato, la funzione termina.');
+      return;
+    }
+
+    const fileName = path.basename(filePath);
+
+    const targetFolder = 'download/';
+    const targetFiles = ['IFL Telemetry.exe', 'IFL.rar'];
+
+    if (!filePath.startsWith(targetFolder) || !targetFiles.includes(fileName)) {
+      logger.info(
+        `Il file "${fileName}" non si trova in "${targetFolder}" o non è un file di release rilevante. Uscita.`
+      );
+      return;
+    }
+
+    logger.info(
+      `Rilevato nuovo file di release: "${fileName}". Inizio processo di aggiornamento URL.`
+    );
+
     try {
-      const incomingData = req.body;
-      if (!incomingData || !incomingData.messageId || !incomingData.authorTag) {
-        res.status(400).send('Bad Request: Missing essential data.');
+      const bucket = admin.storage().bucket(fileBucket);
+      const file = bucket.file(filePath);
+
+      const [signedUrl] = await file.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491',
+      });
+
+      const updateData: { [key: string]: string } = {};
+
+      if (fileName === 'IFL Telemetry.exe') {
+        updateData.update_url = signedUrl;
+      } else if (fileName === 'IFL.rar') {
+        updateData.download_url = signedUrl;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        logger.warn(
+          'Nessun campo corrispondente trovato da aggiornare per il file:',
+          fileName
+        );
         return;
       }
-      const dataToSaveInFirestore = {
-        authorId: incomingData.authorId,
-        authorTag: incomingData.authorTag,
-        authorAvatar: incomingData.authorAvatar,
-        content: incomingData.content,
-        channelId: incomingData.channelId,
-        channelName: incomingData.channelName,
-        messageId: incomingData.messageId,
-        timestamp: incomingData.timestamp,
-        embeds: (incomingData.embeds && Array.isArray(incomingData.embeds)) ? incomingData.embeds : [],
-        processedAt: admin.firestore.FieldValue.serverTimestamp(),
-      };
-      const firestoreDocRef = admin.firestore().collection('discordChannelMessages').doc(incomingData.messageId);
-      await firestoreDocRef.set(dataToSaveInFirestore, { merge: true });
-      res.status(200).send({ success: true, message: "Dati ricevuti e salvati (v2).", docId: incomingData.messageId });
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Errore interno del server sconosciuto.";
-      res.status(500).send(`Internal Server Error: ${errorMessage}`);
-    }
-  } else {
-    res.status(405).send('Method Not Allowed');
-  }
-});
+      const docRef = db.collection('app_info').doc('version');
+      await docRef.update(updateData);
 
-export const eventSubscriptionWebhook = onRequest(httpsOptions, async (req, res) => {
-  if (req.method === 'POST') {
-    try {
-      const eventData = req.body;
-      if (!eventData.eventName || !eventData.vtcName || !eventData.registeredByUsername ||
-          !eventData.mainSlotName || !eventData.subSlotName ||
-          !eventData.contactName || !eventData.contactEmail || !eventData.appLink) {
-        res.status(400).send('Bad Request: Missing essential event subscription data.');
-        return;
-      }
-      const embed = {
-        color: 0x0099ff,
-        author: { name: `Nuova Iscrizione Evento VTC`, icon_url: eventData.vtcLogo || 'https://placehold.co/64x64/0099ff/ffffff?text=VTC' },
-        title: `Evento: ${eventData.eventName}`,
-        url: eventData.appLink,
-        description: `Dettagli dell'iscrizione:`,
-        fields: [
-          { name: 'VTC Iscritta', value: eventData.vtcName, inline: true },
-          { name: 'Referente', value: eventData.contactName, inline: true },
-          { name: 'Email Referente', value: eventData.contactEmail, inline: true },
-          { name: 'Zona Scelta', value: eventData.mainSlotName, inline: true },
-          { name: 'Postazione Scelta', value: eventData.subSlotName, inline: true },
-          { name: 'Server', value: eventData.server || 'N/D', inline: true },
-          { name: 'Punto di Ritrovo', value: eventData.meetingPoint || 'N/D', inline: true },
-          { name: 'Ora di Partenza', value: eventData.departureTime || 'N/D', inline: true },
-          { name: 'Luogo di Partenza', value: eventData.departureLocation || 'N/D', inline: true },
-          { name: 'Destinazione', value: eventData.destination || 'N/D', inline: true },
-          { name: 'Note Evento', value: eventData.notes || 'Nessuna nota', inline: false },
-        ],
-        timestamp: new Date().toISOString(),
-        footer: { text: `Iscritto da: ${eventData.registeredByUsername}`, icon_url: eventData.registeredByUserAvatar || 'https://placehold.co/32x32/0099ff/ffffff?text=User' },
-      };
-      await axios.post(DISCORD_EMBED_WEBHOOK_URL, { embeds: [embed] }, { headers: { 'Content-Type': 'application/json' } });
-      res.status(200).send({ success: true, message: "Dati di iscrizione ricevuti e embed inviato a Discord." });
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Errore interno del server sconosciuto.";
-      res.status(500).send(`Internal Server Error: ${errorMessage}`);
+      logger.info(
+        `Documento 'app_info/version' aggiornato con successo:`,
+        updateData
+      );
+    } catch (error) {
+      logger.error(
+        "Errore durante l'aggiornamento dell'URL dell'applicazione:",
+        error
+      );
     }
-  } else {
-    res.status(405).send('Method Not Allowed');
   }
-});
+);
 
-export const generateEventThumbnail = onObjectFinalized(storageOptions, async (event: StorageEvent): Promise<void> => {
+export const generateEventThumbnail = onObjectFinalized(
+  storageOptions,
+  async (event: StorageEvent): Promise<void> => {
     const fileBucket = event.bucket;
     const filePath = event.data.name;
     const contentType = event.data.contentType;
 
-    if (!filePath || !contentType || !contentType.startsWith("image/")) {
-        return;
+    if (!filePath || !contentType || !contentType.startsWith('image/')) {
+      return;
     }
 
     const fileName = path.basename(filePath);
     if (fileName.startsWith(THUMB_PREFIX)) {
-        return;
+      return;
     }
 
-    if (!filePath.startsWith("events/")) {
-        return;
+    if (!filePath.startsWith('events/')) {
+      return;
     }
 
     const bucket = admin.storage().bucket(fileBucket);
@@ -127,89 +217,118 @@ export const generateEventThumbnail = onObjectFinalized(storageOptions, async (e
     const metadata = { contentType: contentType };
 
     try {
-        await bucket.file(filePath).download({ destination: tempFilePath });
+      await bucket.file(filePath).download({ destination: tempFilePath });
 
-        const thumbFileName = `${THUMB_PREFIX}${fileName}`;
-        const thumbFilePath = path.join(os.tmpdir(), thumbFileName);
+      const thumbFileName = `${THUMB_PREFIX}${fileName}`;
+      const thumbFilePath = path.join(os.tmpdir(), thumbFileName);
 
-        await sharp(tempFilePath)
-            .resize({ width: THUMB_MAX_WIDTH, withoutEnlargement: true })
-            .toFile(thumbFilePath);
+      await sharp(tempFilePath)
+        .resize({ width: THUMB_MAX_WIDTH, withoutEnlargement: true })
+        .toFile(thumbFilePath);
 
-        const destinationThumbPath = path.join(path.dirname(filePath), thumbFileName);
-        await bucket.upload(thumbFilePath, {
-            destination: destinationThumbPath,
-            metadata: metadata,
+      const destinationThumbPath = path.join(
+        path.dirname(filePath),
+        thumbFileName
+      );
+      await bucket.upload(thumbFilePath, {
+        destination: destinationThumbPath,
+        metadata: metadata,
+      });
+
+      fs.unlinkSync(tempFilePath);
+      fs.unlinkSync(thumbFilePath);
+
+      const originalFile = bucket.file(filePath);
+      const thumbFile = bucket.file(destinationThumbPath);
+
+      const [originalUrl] = await originalFile.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491',
+      });
+      const [thumbnailUrl] = await thumbFile.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491',
+      });
+
+      const pathParts = filePath.split('/');
+      const eventId = pathParts[1];
+
+      if (!eventId) {
+        logger.error("ID dell'evento non trovato nel percorso", {
+          path: filePath,
         });
+        return;
+      }
 
-        fs.unlinkSync(tempFilePath);
-        fs.unlinkSync(thumbFilePath);
+      const eventRef = admin.firestore().collection('events').doc(eventId);
+      const isSlotImage = pathParts[2] === 'slots' && pathParts[3];
 
-        const originalFile = bucket.file(filePath);
-        const thumbFile = bucket.file(destinationThumbPath);
+      if (isSlotImage) {
+        const slotId = pathParts[3];
+        const eventDoc = await eventRef.get();
+        if (!eventDoc.exists) {
+          logger.error(`Evento con ID ${eventId} non trovato in Firestore.`);
+          return;
+        }
+        const eventData = eventDoc.data() as any;
+        const slots = eventData.slots || [];
+        const slotIndex = slots.findIndex((s: any) => s.id === slotId);
 
-        const [originalUrl] = await originalFile.getSignedUrl({ action: "read", expires: "03-09-2491" });
-        const [thumbnailUrl] = await thumbFile.getSignedUrl({ action: "read", expires: "03-09-2491" });
-
-        const pathParts = filePath.split("/");
-        const eventId = pathParts[1];
-
-        if (!eventId) {
-            logger.error("ID dell'evento non trovato nel percorso", { path: filePath });
-            return;
+        if (slotIndex === -1) {
+          logger.error(
+            `Slot con ID ${slotId} non trovato nell'evento ${eventId}.`
+          );
+          return;
         }
 
-        const eventRef = admin.firestore().collection("events").doc(eventId);
-        const isSlotImage = pathParts[2] === 'slots' && pathParts[3];
+        slots[slotIndex].imageUrl = originalUrl;
+        slots[slotIndex].imageThumbnailUrl = thumbnailUrl;
 
-        if (isSlotImage) {
-            const slotId = pathParts[3];
-            const eventDoc = await eventRef.get();
-            if (!eventDoc.exists) {
-                logger.error(`Evento con ID ${eventId} non trovato in Firestore.`);
-                return;
-            }
-            const eventData = eventDoc.data() as any;
-            const slots = eventData.slots || [];
-            const slotIndex = slots.findIndex((s: any) => s.id === slotId);
-
-            if (slotIndex === -1) {
-                logger.error(`Slot con ID ${slotId} non trovato nell'evento ${eventId}.`);
-                return;
-            }
-
-            slots[slotIndex].imageUrl = originalUrl;
-            slots[slotIndex].imageThumbnailUrl = thumbnailUrl;
-
-            await eventRef.update({ slots: slots });
-            logger.info(`Firestore aggiornato per lo slot ${slotId} dell'evento: ${eventId}`);
-
-        } else {
-            const imageIdentifier = path.basename(fileName, path.extname(fileName)).replace("_original", "");
-            if (!imageIdentifier) {
-                logger.error("Impossibile determinare imageIdentifier", { path: filePath });
-                return;
-            }
-            const updateData: { [key: string]: string } = {};
-            const originalUrlField = `${imageIdentifier}Url`;
-            const thumbnailUrlField = `${imageIdentifier}ThumbnailUrl`;
-            updateData[originalUrlField] = originalUrl;
-            updateData[thumbnailUrlField] = thumbnailUrl;
-            await eventRef.update(updateData);
-            logger.info("Firestore aggiornato per evento:", eventId, "con i campi", updateData);
+        await eventRef.update({ slots: slots });
+        logger.info(
+          `Firestore aggiornato per lo slot ${slotId} dell'evento: ${eventId}`
+        );
+      } else {
+        const imageIdentifier = path
+          .basename(fileName, path.extname(fileName))
+          .replace('_original', '');
+        if (!imageIdentifier) {
+          logger.error('Impossibile determinare imageIdentifier', {
+            path: filePath,
+          });
+          return;
         }
-
+        const updateData: { [key: string]: string } = {};
+        const originalUrlField = `${imageIdentifier}Url`;
+        const thumbnailUrlField = `${imageIdentifier}ThumbnailUrl`;
+        updateData[originalUrlField] = originalUrl;
+        updateData[thumbnailUrlField] = thumbnailUrl;
+        await eventRef.update(updateData);
+        logger.info(
+          'Firestore aggiornato per evento:',
+          eventId,
+          'con i campi',
+          updateData
+        );
+      }
     } catch (error) {
-        logger.error("Errore durante la creazione della thumbnail:", error);
+      logger.error('Errore durante la creazione della thumbnail:', error);
     }
-});
+  }
+);
 
-export const cleanupEventThumbnail = onObjectDeleted(storageOptions, async (event: StorageEvent): Promise<void> => {
+export const cleanupEventThumbnail = onObjectDeleted(
+  storageOptions,
+  async (event: StorageEvent): Promise<void> => {
     const filePath = event.data.name;
     const fileBucket = event.bucket;
 
-    if (!filePath || !filePath.startsWith("events/") || !filePath.includes("_original.")) {
-        return;
+    if (
+      !filePath ||
+      !filePath.startsWith('events/') ||
+      !filePath.includes('_original.')
+    ) {
+      return;
     }
 
     const fileName = path.basename(filePath);
@@ -218,8 +337,11 @@ export const cleanupEventThumbnail = onObjectDeleted(storageOptions, async (even
     const bucket = admin.storage().bucket(fileBucket);
 
     try {
-        await bucket.file(thumbFilePath).delete();
+      await bucket.file(thumbFilePath).delete();
     } catch (error) {
-        logger.log(`La thumbnail ${thumbFilePath} non esisteva o non è stato possibile eliminarla.`);
+      logger.log(
+        `La thumbnail ${thumbFilePath} non esisteva o non è stato possibile eliminarla.`
+      );
     }
-});
+  }
+);

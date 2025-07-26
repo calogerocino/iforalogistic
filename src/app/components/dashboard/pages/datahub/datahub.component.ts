@@ -9,8 +9,10 @@ import {
 } from '../../../../services/telemetry.service';
 import { ToastService } from '../../../../services/toast.service';
 import { cityToCountryCode } from '../../../../data/city-data';
-import { CARGO_ICON_MAP, DEFAULT_CARGO_ICON } from '../../../../data/cargo-data';
-
+import {
+  CARGO_ICON_MAP,
+  DEFAULT_CARGO_ICON,
+} from '../../../../data/cargo-data';
 
 @Component({
   selector: 'app-player-datahub',
@@ -75,6 +77,7 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
   }
 
   filterAndProcessData(): void {
+    this.filteredDeliveries = [];
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
 
@@ -94,8 +97,8 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
       (sum, d) => sum + (d.profit || 0),
       0
     );
-     this.monthlySummary.totalDistanceUnder100Kmh = this.filteredDeliveries
-      .filter(d => (d.maxSpeedKmh || 0) <= 100)
+    this.monthlySummary.totalDistanceUnder100Kmh = this.filteredDeliveries
+      .filter((d) => (d.maxSpeedKmh || 0) <= 100)
       .reduce((sum, d) => sum + (d.acceptedDistance || 0), 0);
 
     this.isLoading = false;
@@ -111,17 +114,17 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
     return `${hours}h ${minutes}m`;
   }
 
-   onShowDetails(): void {
+  onShowDetails(): void {
     this.toastService.show('La pagina dei dettagli è in lavorazione', 'info');
   }
 
-   getCountryCodeForCity(city: string | undefined): string | null {
+  getCountryCodeForCity(city: string | undefined): string | null {
     if (!city) {
       return null;
     }
     return this.cityCountryMap[city] || null;
   }
-   getIconForCargo(cargoName?: string): string {
+  getIconForCargo(cargoName?: string): string {
     if (!cargoName) {
       return DEFAULT_CARGO_ICON;
     }
