@@ -1,4 +1,124 @@
-<div class="dashboard-home-container">
-  <h1>Benvenuto su PixelSmart</h1>
-  <p>Questa è la pagina principale della tua dashboard. Da qui puoi accedere a tutte le funzionalità.</p>
+<div class="dashboard-container">
+  <div class="stats-grid">
+    <div class="overview-card personal">
+      <div class="card-header">
+        <h3>PERSONAL OVERVIEW</h3>
+        <div class="card-filters">
+          <button class="btn" (click)="loadPersonalStats('all-time')">Dall'inizio</button>
+          <div class="month-selector">
+            <button class="month-nav-btn" (click)="changePersonalMonth(-1)">‹</button>
+            <span class="month-display">{{ personalDate | date:'MMMM yyyy' }}</span>
+            <button class="month-nav-btn" (click)="changePersonalMonth(1)">›</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-content">
+        <div *ngIf="isLoadingPersonal" class="loading-overlay">Caricamento...</div>
+        <ng-container *ngIf="!isLoadingPersonal">
+          <div *ngIf="!personalStats || personalStats.deliveryCount === 0" class="empty-state">
+            Nessuna consegna completata in questo periodo.
+          </div>
+          <ul *ngIf="personalStats && personalStats.deliveryCount > 0" class="stats-list">
+            <li class="stat-item">
+              <i class="fas fa-route"></i>
+              <span>Distance</span>
+              <span>{{ personalStats.distance | number:'1.0-0':'it-IT' }} km</span>
+            </li>
+            <li class="stat-item">
+              <i class="fas fa-truck"></i>
+              <span>Delivery count</span>
+              <span>{{ personalStats.deliveryCount | number:'1.0-0':'it-IT' }}</span>
+            </li>
+          </ul>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="overview-card company">
+      <div class="card-header">
+        <h3>COMPANY OVERVIEW</h3>
+        <div class="card-filters">
+          <button class="btn" (click)="loadCompanyStats('all-time')">Dall'inizio</button>
+          <div class="month-selector">
+            <button class="month-nav-btn" (click)="changeCompanyMonth(-1)">‹</button>
+            <span class="month-display">{{ companyDate | date:'MMMM yyyy' }}</span>
+            <button class="month-nav-btn" (click)="changeCompanyMonth(1)">›</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-content">
+        <div *ngIf="isLoadingCompany" class="loading-overlay">Caricamento...</div>
+        <ng-container *ngIf="!isLoadingCompany">
+          <div *ngIf="!companyStats || companyStats.deliveryCount === 0" class="empty-state">
+            Nessuna consegna completata in questo periodo.
+          </div>
+          <ul *ngIf="companyStats && companyStats.deliveryCount > 0" class="stats-list">
+            <li class="stat-item">
+              <i class="fas fa-route"></i>
+              <span>Distance</span>
+              <span>{{ companyStats.distance | number:'1.0-0':'it-IT' }} km</span>
+            </li>
+            <li class="stat-item">
+              <i class="fas fa-truck"></i>
+              <span>Delivery count</span>
+              <span>{{ companyStats.deliveryCount | number:'1.0-0':'it-IT' }}</span>
+            </li>
+            <li class="stat-item">
+              <i class="fas fa-users"></i>
+              <span>Employee count</span>
+              <span>{{ companyStats.employeeCount | number:'1.0-0':'it-IT' }}</span>
+            </li>
+          </ul>
+        </ng-container>
+      </div>
+    </div>
   </div>
+
+  <div class="daily-overview">
+    <div class="card-header">
+      <h3>DAILY OVERVIEW</h3>
+      <div class="day-selector">
+        <button class="day-nav-btn" (click)="changeDay(-1)">‹</button>
+        <span class="day-display">{{ selectedDay | date:'dd/MM/yyyy' }}</span>
+        <button class="day-nav-btn" (click)="changeDay(1)">›</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="daily-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Who</th>
+            <th>Accepted distance</th>
+            <th>Delivered Jobs</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoadingDaily">
+            <td colspan="5" class="loading-cell">Caricamento...</td>
+          </tr>
+          <tr *ngIf="!isLoadingDaily && dailyDeliveries.length === 0">
+            <td colspan="5" class="empty-cell">No job deliveries were completed on the selected day.</td>
+          </tr>
+          <tr *ngFor="let delivery of dailyDeliveries">
+            <td>{{ delivery.rank }}.</td>
+            <td class="user-name">{{ delivery.userName }}</td>
+            <td>{{ delivery.distance | number:'1.0-0':'it-IT' }} km</td>
+            <td>{{ delivery.jobs }}</td>
+            <td><button class="btn-details" (click)="onShowDetails()">Logbook</button></td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="!isLoadingDaily && dailyDeliveries.length > 0">
+          <tr>
+            <td>Σ</td>
+            <td></td>
+            <td>{{ dailyTotals.distance | number:'1.0-0':'it-IT' }} km</td>
+            <td>{{ dailyTotals.jobs }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

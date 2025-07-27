@@ -89,16 +89,16 @@ export class PlayerDatahubComponent implements OnInit, OnDestroy {
       );
     });
 
-    this.monthlySummary.totalDistance = this.filteredDeliveries.reduce(
-      (sum, d) => sum + (d.acceptedDistance || 0),
-      0
-    );
-    this.monthlySummary.totalProfit = this.filteredDeliveries.reduce(
-      (sum, d) => sum + (d.profit || 0),
-      0
-    );
+    this.monthlySummary.totalProfit = this.filteredDeliveries
+        .filter(d => d.status === 'Consegnato')
+        .reduce((sum, d) => sum + (d.profit || 0), 0);
+
+    this.monthlySummary.totalDistance = this.filteredDeliveries
+      .filter(d => d.status === 'Consegnato')
+      .reduce((sum, d) => sum + (d.acceptedDistance || 0), 0);
+
     this.monthlySummary.totalDistanceUnder100Kmh = this.filteredDeliveries
-      .filter((d) => (d.maxSpeedKmh || 0) <= 100)
+      .filter((d) => d.status === 'Consegnato' && (d.maxSpeedKmh || 0) <= 100)
       .reduce((sum, d) => sum + (d.acceptedDistance || 0), 0);
 
     this.isLoading = false;

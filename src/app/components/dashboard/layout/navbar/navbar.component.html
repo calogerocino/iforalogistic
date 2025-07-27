@@ -19,8 +19,8 @@
           <span>Dashboard</span>
         </a>
       </li>
-      <ng-container *ngIf="isSAdmin ">
-        <!-- <ng-container *ngIf="isAdmin || isEventManager">  -->
+      <ng-container *ngIf="isAdmin ">
+        <!-- <ng-container *ngIf="iAdmin || isEventManager">  -->
         <li>
           <a routerLink="/dashboard/eventi" routerLinkActive="active-link">
             <svg viewBox="0 0 24 24">
@@ -56,12 +56,12 @@
 
 
   <div class="navbar-right">
-    <ng-container *ngIf="isSAdmin"> <button routerLink="/" class="language-button"
+    <ng-container *ngIf="isAdmin"> <button routerLink="/" class="language-button"
         (click)="handleLanguageButtonClick()">Vai al
         sito</button></ng-container>
     <button class="language-button" (click)="handleLanguageButtonClick()">Italiano</button>
     <ng-container *ngIf="isAdmin ||isEventManager">
-      <ng-container *ngIf="isSAdmin">
+      <ng-container *ngIf="isAdmin">
         <div class="notification-wrapper">
           <button class="icon-button notification-button" aria-label="Notifiche" (click)="toggleNotificationDropdown()">
             <svg viewBox="0 0 24 24" fill="currentColor">

@@ -17,16 +17,16 @@
 
   <div class="summary-grid">
     <div class="summary-card">
-      <span class="label">Distanza in reale</span>
-      <span class="value">{{ monthlySummary.totalDistanceUnder100Kmh | number }} km</span>
+      <span class="label">Distanza accettata</span>
+      <span class="value">{{ monthlySummary.totalDistanceUnder100Kmh | number:'1.0-0':'it-IT' }} km</span>
     </div>
     <div class="summary-card">
       <span class="label">Distanza Totale</span>
-      <span class="value">{{ monthlySummary.totalDistance | number }} km</span>
+      <span class="value">{{ monthlySummary.totalDistance | number:'1.0-0':'it-IT' }} km</span>
     </div>
     <div class="summary-card">
       <span class="label">Profitto</span>
-      <span class="value">{{ monthlySummary.totalProfit | currency:'EUR':'symbol':'1.0-0' }}</span>
+      <span class="value">{{ monthlySummary.totalProfit | currency:'EUR':'symbol':'1.0-0':'it-IT' }}</span>
     </div>
   </div>
 
@@ -72,9 +72,9 @@
               <span> {{ delivery.jobDetails?.cargoName }}</span>
             </div>
           </td>
-          <td>{{ (delivery.acceptedDistance || 0) | number }} km</td>
-          <td>{{ (delivery.maxSpeedKmh + " km/h"|| "N/D")}}</td>
-          <td>{{ (delivery.jobDetails?.cargoDamage || 0) * 100 | number:'1.0-0' }}%</td>
+          <td>{{ (delivery.acceptedDistance || 0) | number:'1.0-0':'it-IT'  }} km</td>
+          <td>{{ delivery.maxSpeedKmh ? (delivery.maxSpeedKmh | number:'1.0-0':'it-IT') + ' km/h' : 'N/D' }}</td>
+          <td>{{ (delivery.jobDetails?.cargoDamage || 0) * 100 | number }}%</td>
           <td><button class="btn-details" (click)="onShowDetails()">Dettagli</button></td>
         </tr>
         <tr *ngIf="!isLoading && filteredDeliveries.length === 0">
