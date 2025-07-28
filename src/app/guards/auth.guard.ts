@@ -28,6 +28,11 @@ export const authGuard: CanActivateFn = (
           return router.createUrlTree(['/auth/login'], {
             queryParams: { reason: 'unauthorized' },
           });
+        } else if (user.role === 'Bannato') {
+          authService.logout();
+          return router.createUrlTree(['/auth/login'], {
+            queryParams: { reason: 'banned' },
+          });
         }
       }
 

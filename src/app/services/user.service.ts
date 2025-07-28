@@ -15,7 +15,7 @@ export interface User {
   firstName: string;
   lastName?: string;
   email: string;
-  role: 'Admin' | 'User' | 'Eventmanager' | 'Nuovo';
+  role: 'Admin' | 'User' | 'Eventmanager' | 'Nuovo' | 'Bannato';
 }
 
 export interface DisplayUser extends User {
@@ -36,13 +36,11 @@ export class UserService {
     return (
       collectionData(usersCollection, { idField: 'id' }) as Observable<User[]>
     ).pipe(
-      tap((users) => console.log('Dati grezzi da Firestore:', users)), // <-- AGGIUNTA PER DEBUG
+      tap((users) => console.log('Dati grezzi da Firestore:', users)),
 
       map((users) =>
         users.map((user) => ({
           ...user,
-          // Logica corretta che usa 'firstName' e 'lastName'
-          // Gestisce anche il caso in cui 'lastName' non sia presente
           name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         }))
       )
@@ -51,7 +49,7 @@ export class UserService {
 
   updateUserRole(
     userId: string,
-    newRole: 'Admin' | 'User' | 'Nuovo'
+    newRole: 'Admin' | 'User' | 'Nuovo' | 'Eventmanager' | 'Bannato'
   ): Promise<void> {
     const userDocRef = doc(this.firestore, `users/${userId}`);
     return updateDoc(userDocRef, { role: newRole });

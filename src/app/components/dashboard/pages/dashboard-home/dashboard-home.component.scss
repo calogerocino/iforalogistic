@@ -139,6 +139,7 @@
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
   }
   thead th {
     background-color: #f8f9fa;
@@ -148,7 +149,7 @@
   }
   tbody tr:hover { background-color: #f1f3f4; }
   tbody td { font-size: 14px; }
-  tbody td.user-name { color: #007bff; font-weight: 500; }
+
   tbody td.loading-cell, tbody td.empty-cell {
     text-align: center;
     color: #6c757d;

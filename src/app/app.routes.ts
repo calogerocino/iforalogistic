@@ -13,13 +13,12 @@ export const routes: Routes = [
   //   title: 'Sito in Allestimento',
   // },
   {
-    path: 'home',
+    path: '',
     loadComponent: () =>
       import(
         './components/public/public-homepage/public-homepage.component'
       ).then((m) => m.PublicHomepageComponent),
     title: 'Benvenuto su IFL',
-    canActivate: [roleGuard(['Admin'])],
   },
   {
     path: 'download',

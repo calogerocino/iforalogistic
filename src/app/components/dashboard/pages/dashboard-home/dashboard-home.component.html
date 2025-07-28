@@ -2,7 +2,7 @@
   <div class="stats-grid">
     <div class="overview-card personal">
       <div class="card-header">
-        <h3>PERSONAL OVERVIEW</h3>
+        <h3>RIEPILOGO PERSONALE</h3>
         <div class="card-filters">
           <button class="btn" (click)="loadPersonalStats('all-time')">Dall'inizio</button>
           <div class="month-selector">
@@ -21,12 +21,12 @@
           <ul *ngIf="personalStats && personalStats.deliveryCount > 0" class="stats-list">
             <li class="stat-item">
               <i class="fas fa-route"></i>
-              <span>Distance</span>
+              <span>Distanza</span>
               <span>{{ personalStats.distance | number:'1.0-0':'it-IT' }} km</span>
             </li>
             <li class="stat-item">
               <i class="fas fa-truck"></i>
-              <span>Delivery count</span>
+              <span>Consegne</span>
               <span>{{ personalStats.deliveryCount | number:'1.0-0':'it-IT' }}</span>
             </li>
           </ul>
@@ -36,7 +36,7 @@
 
     <div class="overview-card company">
       <div class="card-header">
-        <h3>COMPANY OVERVIEW</h3>
+        <h3>RIEPILOGO AZIENDA</h3>
         <div class="card-filters">
           <button class="btn" (click)="loadCompanyStats('all-time')">Dall'inizio</button>
           <div class="month-selector">
@@ -55,17 +55,17 @@
           <ul *ngIf="companyStats && companyStats.deliveryCount > 0" class="stats-list">
             <li class="stat-item">
               <i class="fas fa-route"></i>
-              <span>Distance</span>
+              <span>Distanza</span>
               <span>{{ companyStats.distance | number:'1.0-0':'it-IT' }} km</span>
             </li>
             <li class="stat-item">
               <i class="fas fa-truck"></i>
-              <span>Delivery count</span>
+              <span>Consegne</span>
               <span>{{ companyStats.deliveryCount | number:'1.0-0':'it-IT' }}</span>
             </li>
             <li class="stat-item">
               <i class="fas fa-users"></i>
-              <span>Employee count</span>
+              <span>Autisti</span>
               <span>{{ companyStats.employeeCount | number:'1.0-0':'it-IT' }}</span>
             </li>
           </ul>
@@ -76,7 +76,7 @@
 
   <div class="daily-overview">
     <div class="card-header">
-      <h3>DAILY OVERVIEW</h3>
+      <h3>RIEPILOGO GIORNALIERO</h3>
       <div class="day-selector">
         <button class="day-nav-btn" (click)="changeDay(-1)">‹</button>
         <span class="day-display">{{ selectedDay | date:'dd/MM/yyyy' }}</span>
@@ -87,35 +87,35 @@
       <table class="daily-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Who</th>
-            <th>Accepted distance</th>
-            <th>Delivered Jobs</th>
-            <th>Actions</th>
+            <th>Autista</th>
+            <th>Carico</th>
+            <th>Da</th>
+            <th>A</th>
+            <th>Distanza</th>
+            <th>Azioni</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="isLoadingDaily">
-            <td colspan="5" class="loading-cell">Caricamento...</td>
+            <td colspan="6" class="loading-cell">Caricamento...</td>
           </tr>
           <tr *ngIf="!isLoadingDaily && dailyDeliveries.length === 0">
-            <td colspan="5" class="empty-cell">No job deliveries were completed on the selected day.</td>
+            <td colspan="6" class="empty-cell">Nessuna consegna completata nel giorno selezionato.</td>
           </tr>
           <tr *ngFor="let delivery of dailyDeliveries">
-            <td>{{ delivery.rank }}.</td>
-            <td class="user-name">{{ delivery.userName }}</td>
+            <td>{{ delivery.userName }}</td>
+            <td>{{ delivery.jobDetails.cargoName }}</td>
+            <td>{{ delivery.jobDetails.sourceCity }}</td>
+            <td>{{ delivery.jobDetails.destinationCity }}</td>
             <td>{{ delivery.distance | number:'1.0-0':'it-IT' }} km</td>
-            <td>{{ delivery.jobs }}</td>
-            <td><button class="btn-details" (click)="onShowDetails()">Logbook</button></td>
+            <td><button class="btn-details" (click)="onShowDetails()">Dettagli</button></td>
           </tr>
         </tbody>
         <tfoot *ngIf="!isLoadingDaily && dailyDeliveries.length > 0">
           <tr>
-            <td>Σ</td>
-            <td></td>
+            <td colspan="4">Totale</td>
             <td>{{ dailyTotals.distance | number:'1.0-0':'it-IT' }} km</td>
-            <td>{{ dailyTotals.jobs }}</td>
-            <td></td>
+            <td>{{ dailyTotals.jobs }} Viaggi</td>
           </tr>
         </tfoot>
       </table>

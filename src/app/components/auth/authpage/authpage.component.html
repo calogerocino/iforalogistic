@@ -6,7 +6,7 @@
       <h1 class="welcome-title">
         {{ pageTitle }}
       </h1>
-      <p class="welcome-subtitle" *ngIf="!infoMessage">
+      <p class="welcome-subtitle" *ngIf="!infoMessage && !accountBanned">
         {{ isLoginMode ? 'Inserisci le tue credenziali per accedere' : 'Compila i campi per creare il tuo account' }}
       </p>
 
@@ -14,12 +14,16 @@
         <p>{{ infoMessage }}</p>
       </div>
 
-      <div class="auth-tabs" *ngIf="!infoMessage">
+      <div *ngIf="accountBanned" class="banned-message-box">
+        <p>{{ accountBanned }}</p>
+      </div>
+
+      <div class="auth-tabs" *ngIf="!infoMessage && !accountBanned">
         <a routerLink="/auth/login" routerLinkActive="active" class="tab-item">Accedi</a>
         <a routerLink="/auth/registrazione" routerLinkActive="active" class="tab-item">Registrati</a>
       </div>
 
-      <form *ngIf="isLoginMode && !infoMessage" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <form *ngIf="isLoginMode && !infoMessage && !accountBanned" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
         <div class="input-group">
           <svg class="input-icon" viewBox="0 0 24 24">
             <path
@@ -57,7 +61,7 @@
 
       </form>
 
-      <form *ngIf="!isLoginMode && allowRegistration && !infoMessage" [formGroup]="registerForm" (ngSubmit)="onSubmit()"
+      <form *ngIf="!isLoginMode && allowRegistration && !infoMessage && !accountBanned" [formGroup]="registerForm" (ngSubmit)="onSubmit()"
         class="auth-form">
         <div class="input-group">
           <input type="text" placeholder="Nome" formControlName="firstName">

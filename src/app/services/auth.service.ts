@@ -38,9 +38,9 @@ import { UpdateData } from 'firebase/firestore';
 export interface AppUser {
   uid: string;
   email: string | null;
-  firstName?: string; 
+  firstName?: string;
   photoURL?: string | null;
-  role?: 'Admin' | 'User' | 'Eventmanager' | 'Nuovo'| 'SAdmin';
+  role?: 'Admin' | 'User' | 'Eventmanager' | 'Nuovo' | 'SAdmin'| 'Bannato';
 }
 
 const REMEMBER_ME_KEY = 'rememberUserActive';

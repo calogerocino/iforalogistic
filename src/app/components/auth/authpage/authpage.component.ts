@@ -1,4 +1,10 @@
-import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  OnDestroy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -24,6 +30,7 @@ export class AuthPageComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
   errorMessage: string | null = null;
   infoMessage: string | null = null;
+  accountBanned: string | null = null;
   pageTitle: string = 'Accedi';
   allowRegistration = true;
 
@@ -56,14 +63,20 @@ export class AuthPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const routeParamsSub = this.activatedRoute.queryParamMap.subscribe(params => {
-      const reason = params.get('reason');
-      if (reason === 'unauthorized') {
-        console.log('AUTHPAGE: Rilevato motivo "unauthorized". Imposto il messaggio.');
-        this.infoMessage = "Il tuo account è in attesa di approvazione da parte di un amministratore.";
-         this.cdr.detectChanges();
+    const routeParamsSub = this.activatedRoute.queryParamMap.subscribe(
+      (params) => {
+        const reason = params.get('reason');
+        if (reason === 'unauthorized') {
+          this.infoMessage =
+            'Il tuo account è in attesa di approvazione da parte di un amministratore.';
+          this.cdr.detectChanges();
+        }
+        if (reason === 'banned') {
+          this.accountBanned = 'Il tuo account è stato bannato.';
+          this.cdr.detectChanges();
+        }
       }
-    });
+    );
     if (this.authService.isRememberMeActive() && !this.autoLoginInProgress) {
       this.autoLoginInProgress = true;
       this.isLoginMode = true;
@@ -109,6 +122,7 @@ export class AuthPageComponent implements OnInit, OnDestroy {
       this.pageTitle = this.isLoginMode ? 'Accedi' : 'Registrati';
       this.errorMessage = null;
       this.infoMessage = null;
+      this.accountBanned = null;
 
       if (this.isLoginMode) {
         this.loginForm.enable();
@@ -133,6 +147,8 @@ export class AuthPageComponent implements OnInit, OnDestroy {
   async onSubmit(): Promise<void> {
     this.errorMessage = null;
     this.infoMessage = null;
+    this.accountBanned = null;
+
 
     if (this.isLoginMode) {
       if (this.loginForm.invalid) {
@@ -221,6 +237,7 @@ export class AuthPageComponent implements OnInit, OnDestroy {
       });
       this.infoMessage = null;
       this.errorMessage = null;
+      this.accountBanned = null;
     } else if (this.isLoginMode) {
       this.isLoginMode = true;
       this.pageTitle = 'Accedi';
@@ -232,6 +249,7 @@ export class AuthPageComponent implements OnInit, OnDestroy {
       this.registerForm.reset();
       this.infoMessage = null;
       this.errorMessage = null;
+      this.accountBanned = null;
     }
   }
 

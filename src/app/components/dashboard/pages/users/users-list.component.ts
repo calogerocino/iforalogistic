@@ -19,12 +19,13 @@ export class UsersListComponent implements OnInit {
   private currentUserSubscription: Subscription | undefined;
 
   private toastService = inject(ToastService);
-  public availableRoles: ('Admin' | 'User' | 'Eventmanager' | 'Nuovo')[] = [
-    'Admin',
-    'Nuovo',
-    'Eventmanager',
-    'User',
-  ];
+  public availableRoles: (
+    | 'Admin'
+    | 'User'
+    | 'Eventmanager'
+    | 'Nuovo'
+    | 'Bannato'
+  )[] = ['Admin', 'Nuovo', 'Eventmanager', 'User', 'Bannato'];
 
   constructor(
     private userService: UserService,
@@ -48,10 +49,7 @@ export class UsersListComponent implements OnInit {
 
   onRoleChange(event: Event, user: DisplayUser): void {
     const selectElement = event.target as HTMLSelectElement;
-    const newRole = selectElement.value as
-      | 'Admin'
-      | 'User'
-      | 'Nuovo';
+    const newRole = selectElement.value as 'Admin' | 'User' | 'Nuovo' | 'Bannato';
 
     this.userService
       .updateUserRole(user.id, newRole)

@@ -90,7 +90,7 @@ export class DashboardHomeComponent implements OnInit {
 
   calculateDailyTotals(): void {
     this.dailyTotals.distance = this.dailyDeliveries.reduce((sum, d) => sum + d.distance, 0);
-    this.dailyTotals.jobs = this.dailyDeliveries.reduce((sum, d) => sum + d.jobs, 0);
+    this.dailyTotals.jobs = this.dailyDeliveries.length;
   }
 
   onShowDetails(): void {
